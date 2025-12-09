@@ -92,52 +92,70 @@ export default function App() {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar style="dark" />
-      {isSplashVisible ? (
-        <View style={styles.splashWrapper}>
-          <View style={styles.logoGroup}>
-            <View style={[styles.logoBadge, { backgroundColor: theme.colors.primary }]}>
-              <Image
-                source={require("./assets/icon.png")}
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
-            </View>
-            <Text style={[styles.splashTitle, { color: theme.colors.textPrimary }]}>Move Up</Text>
-            <Text style={[styles.splashSubtitle, { color: theme.colors.textSecondary }]}>{valuePropText}</Text>
-          </View>
-
-          <View style={styles.splashImageWrapper}>
+    {isSplashVisible ? (
+      <View style={styles.splashWrapper}>
+        <View style={styles.topSection}>
+          <View style={[styles.logoBadge, { backgroundColor: theme.colors.surface }]}>
             <Image
-              source={require("./assets/splash-icon.png")}
-              style={styles.splashImage}
+              source={require("./assets/icon.png")}
+              style={styles.logoImage}
               resizeMode="contain"
             />
           </View>
+          <Text style={[styles.splashTitle, { color: theme.colors.textPrimary }]}>Move Up</Text>
+          <Text style={[styles.splashSubtitle, { color: theme.colors.textSecondary }]}>{valuePropText}</Text>
+        </View>
 
-          <View style={styles.progressSection}>
-            <View style={[styles.progressTrack, { backgroundColor: theme.colors.border }]}
-            >
-              <View
-                style={[
-                  styles.progressFill,
-                  { backgroundColor: theme.colors.primary, width: `${progress}%` },
-                ]}
-              />
+        <View style={styles.graphicWrapper}>
+          <View style={[styles.graphicCard, { backgroundColor: theme.colors.surface }]}>
+            <View style={styles.gridOverlay}>
+              {Array.from({ length: 6 }).map((_, index) => (
+                <View
+                  key={`v-${index}`}
+                  style={[styles.gridLine, styles.verticalLine, { left: `${((index + 1) / 7) * 100}%` }]}
+                />
+              ))}
+              {Array.from({ length: 6 }).map((_, index) => (
+                <View
+                  key={`h-${index}`}
+                  style={[styles.gridLine, styles.horizontalLine, { top: `${((index + 1) / 7) * 100}%` }]}
+                />
+              ))}
             </View>
-            <Text style={[styles.progressText, { color: theme.colors.textSecondary }]}>
-              {loadingMessage}
-            </Text>
-            <Text style={[styles.percentText, { color: theme.colors.textSecondary }]}>{`${progress}%`}</Text>
-          </View>
 
-          <View style={styles.splashFooter}>
-            <Text style={[styles.brandLine, { color: theme.colors.textSecondary }]}>{brandLine}</Text>
-            <View style={[styles.footerIconOuter, { borderColor: theme.colors.primary }]}>
-              <View style={[styles.footerIconInner, { backgroundColor: theme.colors.primary }]} />
+            <View style={styles.targetWrapper}>
+              <View style={[styles.ring, styles.ringLarge, { borderColor: theme.colors.border }]} />
+              <View style={[styles.ring, styles.ringMedium, { borderColor: theme.colors.border }]} />
+              <View style={[styles.ring, styles.ringSmall, { borderColor: theme.colors.primary }]} />
+              <View style={[styles.ring, styles.ringTiny, { borderColor: theme.colors.primary }]} />
+              <View style={[styles.centerDot, { backgroundColor: theme.colors.primary }]} />
+            </View>
+
+            <View style={styles.cursor}>
+              <View style={[styles.cursorStem, { backgroundColor: theme.colors.primary }]} />
+              <View style={[styles.cursorHead, { backgroundColor: theme.colors.primary }]} />
             </View>
           </View>
         </View>
-      ) : showExercises ? (
+
+        <View style={styles.progressSection}>
+          <Text style={[styles.progressLabel, { color: theme.colors.textSecondary }]}>
+            {loadingMessage}
+          </Text>
+          <View style={[styles.progressTrack, { backgroundColor: theme.colors.border }]}>
+            <View
+              style={[
+                styles.progressFill,
+                { backgroundColor: theme.colors.primary, width: `${progress}%` },
+              ]}
+            />
+          </View>
+          <Text style={[styles.percentText, { color: theme.colors.textSecondary }]}>{`${progress}%`}</Text>
+        </View>
+
+        <Text style={[styles.brandLine, { color: theme.colors.textSecondary }]}>{brandLine}</Text>
+      </View>
+    ) : showExercises ? (
         <View
           style={[styles.card, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
         >
@@ -232,58 +250,135 @@ const styles = StyleSheet.create({
   splashWrapper: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "space-evenly",
-    paddingVertical: 64,
-    paddingHorizontal: 24,
+    justifyContent: "space-between",
+    paddingVertical: 52,
+    paddingHorizontal: 28,
   },
-  logoGroup: {
+  topSection: {
     alignItems: "center",
-    gap: 16,
-    marginTop: 26,
+    gap: 14,
   },
   logoBadge: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 116,
+    height: 116,
+    borderRadius: 58,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#0B5563",
-    shadowOpacity: 0.2,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 6,
     padding: 16,
-    overflow: "hidden",
   },
   logoImage: {
-    width: "86%",
-    height: "86%",
+    width: "78%",
+    height: "78%",
   },
   splashTitle: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: "800",
     textAlign: "center",
     letterSpacing: 0.2,
   },
   splashSubtitle: {
-    fontSize: 16,
+    fontSize: 15,
     textAlign: "center",
     opacity: 0.9,
   },
-  splashImageWrapper: {
+  graphicWrapper: {
     flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
   },
-  splashImage: {
-    width: 260,
-    height: 260,
+  graphicCard: {
+    width: 280,
+    height: 280,
+    borderRadius: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: "#0B5563",
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 12,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+  gridOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  gridLine: {
+    position: "absolute",
+    backgroundColor: "#E5E7EB",
+  },
+  verticalLine: {
+    top: 0,
+    bottom: 0,
+    width: 1,
+  },
+  horizontalLine: {
+    left: 0,
+    right: 0,
+    height: 1,
+    width: "100%",
+  },
+  targetWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 190,
+    height: 190,
+  },
+  ring: {
+    position: "absolute",
+    borderWidth: 1,
+    borderRadius: 999,
+  },
+  ringLarge: {
+    width: 200,
+    height: 200,
+    opacity: 0.9,
+  },
+  ringMedium: {
+    width: 140,
+    height: 140,
+    opacity: 0.9,
+  },
+  ringSmall: {
+    width: 86,
+    height: 86,
+    borderWidth: 2,
+    opacity: 0.9,
+  },
+  ringTiny: {
+    width: 44,
+    height: 44,
+    borderWidth: 2,
+    opacity: 0.9,
+  },
+  centerDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+  },
+  cursor: {
+    position: "absolute",
+    right: 60,
+    bottom: 64,
+    alignItems: "center",
+  },
+  cursorStem: {
+    width: 6,
+    height: 44,
+    borderRadius: 12,
+  },
+  cursorHead: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    marginTop: 4,
   },
   progressSection: {
     width: "100%",
@@ -292,15 +387,15 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     width: "100%",
-    height: 10,
-    borderRadius: 12,
+    height: 8,
+    borderRadius: 10,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    borderRadius: 12,
+    borderRadius: 10,
   },
-  progressText: {
+  progressLabel: {
     fontSize: 15,
     textAlign: "center",
     letterSpacing: 0.1,
@@ -309,28 +404,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
   },
-  splashFooter: {
-    alignItems: "center",
-    gap: 12,
-  },
   brandLine: {
-    fontSize: 12,
+    fontSize: 13,
     textAlign: "center",
-    opacity: 0.8,
-  },
-  footerIconOuter: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(15,155,168,0.06)",
-  },
-  footerIconInner: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    opacity: 0.82,
+    marginTop: 8,
   },
   card: {
     borderRadius: 16,
