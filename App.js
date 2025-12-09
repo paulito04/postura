@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
 export default function App() {
@@ -95,12 +95,12 @@ export default function App() {
       {isSplashVisible ? (
         <View style={styles.splashWrapper}>
           <View style={styles.logoGroup}>
-            <View style={styles.logoBadge}>
-              <View style={styles.logoArrowStem} />
-              <View style={styles.logoArrowHead}>
-                <View style={styles.logoArrowArm} />
-                <View style={[styles.logoArrowArm, styles.logoArrowArmRight]} />
-              </View>
+            <View style={[styles.logoBadge, { backgroundColor: theme.colors.primary }]}>
+              <Image
+                source={require("./assets/icon.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
             <Text style={[styles.splashTitle, { color: theme.colors.textPrimary }]}>Move Up</Text>
             <Text style={[styles.splashSubtitle, { color: theme.colors.textSecondary }]}>{valuePropText}</Text>
@@ -230,46 +230,26 @@ const styles = StyleSheet.create({
   },
   logoGroup: {
     alignItems: "center",
-    gap: 12,
+    gap: 16,
+    marginTop: 26,
   },
   logoBadge: {
-    width: 104,
-    height: 104,
-    borderRadius: 52,
-    backgroundColor: "rgba(15,155,168,0.12)",
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     alignItems: "center",
     justifyContent: "center",
-    position: "relative",
+    shadowColor: "#0B5563",
+    shadowOpacity: 0.2,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+    padding: 16,
+    overflow: "hidden",
   },
-  logoArrowStem: {
-    width: 18,
-    height: 60,
-    backgroundColor: "#0F9BA8",
-    borderRadius: 12,
-    position: "absolute",
-    bottom: 20,
-  },
-  logoArrowHead: {
-    position: "absolute",
-    top: 20,
-    width: 50,
-    height: 28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoArrowArm: {
-    position: "absolute",
-    width: 18,
-    height: 30,
-    borderRadius: 12,
-    backgroundColor: "#0F9BA8",
-    transform: [{ rotate: "-42deg" }],
-    left: 6,
-  },
-  logoArrowArmRight: {
-    transform: [{ rotate: "42deg" }],
-    left: undefined,
-    right: 6,
+  logoImage: {
+    width: "86%",
+    height: "86%",
   },
   splashTitle: {
     fontSize: 32,
