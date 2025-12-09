@@ -1,11 +1,16 @@
-import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
 export default function App() {
   const [showExercises, setShowExercises] = useState(false);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSplashVisible, setIsSplashVisible] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [valuePropText] = useState("Mejora tu postura mientras estudias");
+  const [loadingMessage] = useState("Preparando tu rutina de hoy...");
+  const [brandLine] = useState("Move Up · Postura · Pausas activas · Bienestar");
 
   const theme = useMemo(
     () => ({
@@ -63,10 +68,68 @@ export default function App() {
     setUser(null);
   };
 
+  useEffect(() => {
+    if (!isSplashVisible) return;
+
+    setProgress(0);
+
+    const timer = setInterval(() => {
+      setProgress((current) => {
+        const nextValue = Math.min(current + 12, 100);
+
+        if (nextValue >= 100) {
+          clearInterval(timer);
+          setTimeout(() => setIsSplashVisible(false), 420);
+        }
+
+        return nextValue;
+      });
+    }, 180);
+
+    return () => clearInterval(timer);
+  }, [isSplashVisible]);
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar style="dark" />
-      {showExercises ? (
+      {isSplashVisible ? (
+        <View style={styles.splashWrapper}>
+          <View style={styles.logoGroup}>
+            <View style={[styles.logoBadge, { backgroundColor: theme.colors.primary }]}>
+              <Image
+                source={require("./assets/icon.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={[styles.splashTitle, { color: theme.colors.textPrimary }]}>Move Up</Text>
+            <Text style={[styles.splashSubtitle, { color: theme.colors.textSecondary }]}>{valuePropText}</Text>
+          </View>
+
+          <View style={styles.progressSection}>
+            <View style={[styles.progressTrack, { backgroundColor: theme.colors.border }]}
+            >
+              <View
+                style={[
+                  styles.progressFill,
+                  { backgroundColor: theme.colors.primary, width: `${progress}%` },
+                ]}
+              />
+            </View>
+            <Text style={[styles.progressText, { color: theme.colors.textSecondary }]}>
+              {loadingMessage}
+            </Text>
+            <Text style={[styles.percentText, { color: theme.colors.textSecondary }]}>{`${progress}%`}</Text>
+          </View>
+
+          <View style={styles.splashFooter}>
+            <Text style={[styles.brandLine, { color: theme.colors.textSecondary }]}>{brandLine}</Text>
+            <View style={[styles.footerIconOuter, { borderColor: theme.colors.primary }]}>
+              <View style={[styles.footerIconInner, { backgroundColor: theme.colors.primary }]} />
+            </View>
+          </View>
+        </View>
+      ) : showExercises ? (
         <View
           style={[styles.card, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
         >
@@ -157,6 +220,94 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "stretch",
     padding: 24,
+  },
+  splashWrapper: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 64,
+    paddingHorizontal: 24,
+  },
+  logoGroup: {
+    alignItems: "center",
+    gap: 16,
+    marginTop: 26,
+  },
+  logoBadge: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#0B5563",
+    shadowOpacity: 0.2,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+    padding: 16,
+    overflow: "hidden",
+  },
+  logoImage: {
+    width: "86%",
+    height: "86%",
+  },
+  splashTitle: {
+    fontSize: 32,
+    fontWeight: "800",
+    textAlign: "center",
+    letterSpacing: 0.2,
+  },
+  splashSubtitle: {
+    fontSize: 16,
+    textAlign: "center",
+    opacity: 0.9,
+  },
+  progressSection: {
+    width: "100%",
+    gap: 10,
+    alignItems: "center",
+  },
+  progressTrack: {
+    width: "100%",
+    height: 10,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 12,
+  },
+  progressText: {
+    fontSize: 15,
+    textAlign: "center",
+    letterSpacing: 0.1,
+  },
+  percentText: {
+    fontSize: 14,
+    textAlign: "center",
+  },
+  splashFooter: {
+    alignItems: "center",
+    gap: 12,
+  },
+  brandLine: {
+    fontSize: 12,
+    textAlign: "center",
+    opacity: 0.8,
+  },
+  footerIconOuter: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(15,155,168,0.06)",
+  },
+  footerIconInner: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
   },
   card: {
     borderRadius: 16,
