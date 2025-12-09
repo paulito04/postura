@@ -1,10 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
 import { StatusBar } from "expo-status-bar";
-
-WebBrowser.maybeCompleteAuthSession();
 
 export default function App() {
   const [showExercises, setShowExercises] = useState(false);
@@ -31,58 +27,13 @@ export default function App() {
     []
   );
 
-  const clientIds = useMemo(
+  const demoProfile = useMemo(
     () => ({
-      expoClientId:
-        process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID ||
-        "YOUR_EXPO_GOOGLE_CLIENT_ID",
-      androidClientId:
-        process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ||
-        "YOUR_ANDROID_CLIENT_ID",
-      webClientId:
-        process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
-        "YOUR_WEB_CLIENT_ID",
+      name: "Sesión de prueba",
+      email: "demo@posturau.app",
     }),
     []
   );
-
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    scopes: ["openid", "profile", "email"],
-    ...clientIds,
-  });
-
-  useEffect(() => {
-    const authenticate = async () => {
-      if (response?.type === "success") {
-        setIsLoading(true);
-        try {
-          const userInfoResponse = await fetch(
-            "https://www.googleapis.com/oauth2/v3/userinfo",
-            {
-              headers: { Authorization: `Bearer ${response.authentication.accessToken}` },
-            }
-          );
-
-          if (!userInfoResponse.ok) {
-            throw new Error("No se pudo obtener la información del perfil");
-          }
-
-          const profile = await userInfoResponse.json();
-          setUser({
-            name: profile.name,
-            email: profile.email,
-            picture: profile.picture,
-          });
-        } catch (error) {
-          console.warn("Error al autenticar con Google", error);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    authenticate();
-  }, [response]);
 
   const exercises = [
     "Estiramiento de cuello lateral",
@@ -101,20 +52,16 @@ export default function App() {
   };
 
   const handleLogin = () => {
-    promptAsync({ showInRecents: true, useProxy: true });
+    setIsLoading(true);
+    setTimeout(() => {
+      setUser(demoProfile);
+      setIsLoading(false);
+    }, 650);
   };
 
   const handleLogout = () => {
     setUser(null);
   };
-
-  const hasClientIdsConfigured = useMemo(
-    () =>
-      clientIds.expoClientId !== "YOUR_EXPO_GOOGLE_CLIENT_ID" &&
-      clientIds.androidClientId !== "YOUR_ANDROID_CLIENT_ID" &&
-      clientIds.webClientId !== "YOUR_WEB_CLIENT_ID",
-    [clientIds]
-  );
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -149,8 +96,8 @@ export default function App() {
         >
           <Text style={[styles.title, { color: theme.colors.textPrimary }]}>Cuida tu postura</Text>
           <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-            Conéctate con Google para guardar tu progreso y personalizar tus
-            ejercicios.
+            Inicia sesión de prueba para simular el guardado de tu progreso y
+            recibir recomendaciones personalizadas.
           </Text>
 
           {user ? (
@@ -179,30 +126,18 @@ export default function App() {
               style={[
                 styles.button,
                 { backgroundColor: theme.colors.primary },
-                !hasClientIdsConfigured && { backgroundColor: "rgba(15,155,168,0.45)" },
+                user && { backgroundColor: "rgba(15,155,168,0.45)" },
               ]}
               onPress={handleLogin}
-              disabled={!request || isLoading || !hasClientIdsConfigured}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={[styles.buttonText, { color: theme.colors.surface }]}>
-                  {hasClientIdsConfigured
-                    ? "Iniciar sesión con Google"
-                    : "Configura tus credenciales de Google"}
-                </Text>
-              )}
-            </TouchableOpacity>
-          )}
-
-          {!hasClientIdsConfigured && (
-            <Text style={[styles.helperText, { color: theme.colors.warning }]}>
-              Añade tus IDs de cliente a variables de entorno públicas (por ejemplo,
-              EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID) para habilitar el inicio de sesión.
-              Consulta las instrucciones del README de tu proyecto de Google Cloud.
-            </Text>
-          )}
+              disabled={isLoading || Boolean(user)}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={[styles.buttonText, { color: theme.colors.surface }]}>Iniciar sesión de prueba</Text>
+            )}
+          </TouchableOpacity>
+        )}
 
           <TouchableOpacity
             style={[styles.button, { backgroundColor: theme.colors.accent }]}
