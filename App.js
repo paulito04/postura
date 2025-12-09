@@ -13,10 +13,10 @@ export default function App() {
       <StatusBar style="light" />
       <Video
         source={require("./assets/intro.mp4")}
-        style={styles.video}
+        style={[styles.video, StyleSheet.absoluteFill]}
         shouldPlay
         isLooping={false}
-        resizeMode="contain"
+        resizeMode="cover"
         onPlaybackStatusUpdate={(status) => {
           if (status.didJustFinish) {
             setScreen("home");
@@ -67,17 +67,10 @@ export default function App() {
 const styles = StyleSheet.create({
   videoContainer: {
     flex: 1,
-    backgroundColor: "#0B5563",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 24,
+    backgroundColor: "#003b46",
   },
   video: {
-    width: "100%",
-    height: "80%",
-    borderRadius: 16,
-    overflow: "hidden",
+    backgroundColor: "transparent",
   },
   heroContainer: {
     flex: 1,
