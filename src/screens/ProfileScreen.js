@@ -1,7 +1,6 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme } from "@react-navigation/native";
+import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { useAppTheme } from "../themeContext";
 
 const profile = {
   name: "María Postura",
@@ -10,7 +9,7 @@ const profile = {
 };
 
 export default function ProfileScreen() {
-  const { colors } = useTheme();
+  const { colors } = useAppTheme();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
