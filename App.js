@@ -106,6 +106,14 @@ export default function App() {
             <Text style={[styles.splashSubtitle, { color: theme.colors.textSecondary }]}>{valuePropText}</Text>
           </View>
 
+          <View style={styles.splashImageWrapper}>
+            <Image
+              source={require("./assets/splash-icon.png")}
+              style={styles.splashImage}
+              resizeMode="contain"
+            />
+          </View>
+
           <View style={styles.progressSection}>
             <View style={[styles.progressTrack, { backgroundColor: theme.colors.border }]}
             >
@@ -224,7 +232,7 @@ const styles = StyleSheet.create({
   splashWrapper: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "space-evenly",
     paddingVertical: 64,
     paddingHorizontal: 24,
   },
@@ -261,6 +269,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     opacity: 0.9,
+  },
+  splashImageWrapper: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+  },
+  splashImage: {
+    width: 260,
+    height: 260,
+    shadowColor: "#0B5563",
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
   },
   progressSection: {
     width: "100%",
