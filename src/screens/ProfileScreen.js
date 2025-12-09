@@ -1,0 +1,55 @@
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "@react-navigation/native";
+
+const profile = {
+  name: "María Postura",
+  email: "maria@posturau.app",
+  goal: "Mejorar la higiene postural en jornada de oficina",
+};
+
+export default function ProfileScreen() {
+  const { colors } = useTheme();
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}> 
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Perfil</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>Nombre</Text>
+        <Text style={[styles.value, { color: colors.textPrimary }]}>{profile.name}</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>Correo</Text>
+        <Text style={[styles.value, { color: colors.textPrimary }]}>{profile.email}</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>Objetivo</Text>
+        <Text style={[styles.value, { color: colors.textPrimary }]}>{profile.goal}</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  card: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 20,
+    gap: 8,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+  },
+  label: {
+    marginTop: 12,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  value: {
+    fontSize: 16,
+    lineHeight: 22,
+  },
+});
