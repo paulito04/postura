@@ -1,35 +1,65 @@
 import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
+import { Video } from "expo-av";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { BottomTabs } from "./src/navigation/BottomTabs";
 import { ThemeProvider } from "./src/themeContext";
+import ExercisesScreen from "./src/screens/ExercisesScreen";
 
 export default function App() {
   const [screen, setScreen] = useState("intro");
 
+  const renderIntro = () => (
+    <View style={styles.videoContainer}>
+      <StatusBar style="light" />
+      <Video
+        source={require("./assets/intro.mp4")}
+        style={styles.video}
+        shouldPlay
+        isLooping={false}
+        resizeMode="contain"
+        onPlaybackStatusUpdate={(status) => {
+          if (status.didJustFinish) {
+            setScreen("home");
+          }
+        }}
+      />
+      <TouchableOpacity style={styles.skipButton} onPress={() => setScreen("home")}>
+        <Text style={styles.skipButtonText}>Omitir</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderHome = () => (
+    <View style={styles.heroContainer}>
+      <StatusBar style="light" />
+      <View style={styles.heroContent}>
+        <Image source={require("./assets/splash-icon.png")} style={styles.logo} />
+        <Text style={styles.title}>Bienvenido a PosturaU</Text>
+        <Text style={styles.subtitle}>
+          Mejora tu bienestar postural con rutinas guiadas, seguimiento de progreso y consejos prácticos.
+        </Text>
+      </View>
+      <TouchableOpacity style={styles.primaryButton} onPress={() => setScreen("exercises")}>
+        <Text style={styles.primaryButtonText}>Ver ejercicios</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderExercises = () => (
+    <View style={styles.exercisesContainer}>
+      <StatusBar style="dark" />
+      <ExercisesScreen />
+      <TouchableOpacity style={styles.skipButton} onPress={() => setScreen("home")}>
+        <Text style={styles.skipButtonText}>Volver</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <ThemeProvider>
-      {screen === "intro" ? (
-        <View style={styles.videoContainer}>
-          <StatusBar style="light" />
-          <View style={styles.heroContent}>
-            <Image source={require("./assets/splash-icon.png")} style={styles.logo} />
-            <Text style={styles.title}>Bienvenido a PosturaU</Text>
-            <Text style={styles.subtitle}>
-              Mejora tu bienestar postural con rutinas guiadas, seguimiento de progreso y
-              consejos prácticos.
-            </Text>
-          </View>
-          <TouchableOpacity style={styles.skipButton} onPress={() => setScreen("home")}>
-            <Text style={styles.skipButtonText}>Omitir</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <>
-          <StatusBar style="dark" />
-          <BottomTabs />
-        </>
-      )}
+      {screen === "intro" && renderIntro()}
+      {screen === "home" && renderHome()}
+      {screen === "exercises" && renderExercises()}
     </ThemeProvider>
   );
 }
@@ -39,6 +69,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0B5563",
     justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 24,
+  },
+  video: {
+    width: "100%",
+    height: "80%",
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  heroContainer: {
+    flex: 1,
+    backgroundColor: "#0B5563",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 32,
   },
   heroContent: {
     alignItems: "center",
@@ -61,6 +107,18 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     textAlign: "center",
   },
+  primaryButton: {
+    marginHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: "#F4A261",
+    alignItems: "center",
+  },
+  primaryButtonText: {
+    color: "#0B1D26",
+    fontWeight: "700",
+    fontSize: 16,
+  },
   skipButton: {
     position: "absolute",
     bottom: 32,
@@ -74,5 +132,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: 14,
+  },
+  exercisesContainer: {
+    flex: 1,
+    position: "relative",
   },
 });
