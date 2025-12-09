@@ -96,7 +96,8 @@ export default function App() {
         <View style={styles.splashWrapper}>
           <View style={styles.logoGroup}>
             <View style={[styles.logoBadge, { backgroundColor: theme.colors.primary }]}>
-              <Image source={require("./assets/splash-icon.png")}
+              <Image
+                source={require("./assets/icon.png")}
                 style={styles.logoImage}
                 resizeMode="contain"
               />
@@ -229,8 +230,8 @@ const styles = StyleSheet.create({
   },
   logoGroup: {
     alignItems: "center",
-    gap: 14,
-    marginTop: 12,
+    gap: 16,
+    marginTop: 26,
   },
   logoBadge: {
     width: 120,
@@ -240,14 +241,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     shadowColor: "#0B5563",
     shadowOpacity: 0.2,
-    shadowRadius: 12,
+    shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
-    padding: 18,
+    elevation: 8,
+    padding: 16,
+    overflow: "hidden",
   },
   logoImage: {
-    width: "100%",
-    height: "100%",
+    width: "86%",
+    height: "86%",
   },
   splashTitle: {
     fontSize: 32,
