@@ -1,34 +1,25 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Video } from "expo-av";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { BottomTabs } from "./src/navigation/BottomTabs";
 import { ThemeProvider } from "./src/themeContext";
 
 export default function App() {
-  const videoRef = useRef(null);
   const [screen, setScreen] = useState("intro");
-
-  const handlePlaybackStatusUpdate = (status) => {
-    if (status.didJustFinish) {
-      setScreen("home");
-    }
-  };
 
   return (
     <ThemeProvider>
       {screen === "intro" ? (
         <View style={styles.videoContainer}>
           <StatusBar style="light" />
-          <Video
-            ref={videoRef}
-            style={styles.video}
-            source={require("./assets/intro.mp4")}
-            resizeMode="cover"
-            shouldPlay
-            isLooping={false}
-            onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
-          />
+          <View style={styles.heroContent}>
+            <Image source={require("./assets/splash-icon.png")} style={styles.logo} />
+            <Text style={styles.title}>Bienvenido a PosturaU</Text>
+            <Text style={styles.subtitle}>
+              Mejora tu bienestar postural con rutinas guiadas, seguimiento de progreso y
+              consejos prácticos.
+            </Text>
+          </View>
           <TouchableOpacity style={styles.skipButton} onPress={() => setScreen("home")}>
             <Text style={styles.skipButtonText}>Omitir</Text>
           </TouchableOpacity>
@@ -46,12 +37,29 @@ export default function App() {
 const styles = StyleSheet.create({
   videoContainer: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#0B5563",
     justifyContent: "center",
   },
-  video: {
-    width: "100%",
-    height: "100%",
+  heroContent: {
+    alignItems: "center",
+    paddingHorizontal: 32,
+    gap: 12,
+  },
+  logo: {
+    width: 160,
+    height: 160,
+    resizeMode: "contain",
+  },
+  title: {
+    color: "#fff",
+    fontSize: 26,
+    fontWeight: "800",
+  },
+  subtitle: {
+    color: "#E8F1F2",
+    fontSize: 16,
+    lineHeight: 22,
+    textAlign: "center",
   },
   skipButton: {
     position: "absolute",
