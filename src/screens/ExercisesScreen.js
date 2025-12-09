@@ -1,7 +1,6 @@
 import React from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme } from "@react-navigation/native";
+import { FlatList, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { useAppTheme } from "../themeContext";
 
 const data = [
   "Estiramiento de cuello lateral",
@@ -12,7 +11,7 @@ const data = [
 ];
 
 export default function ExercisesScreen() {
-  const { colors } = useTheme();
+  const { colors } = useAppTheme();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
