@@ -11,8 +11,9 @@ import {
   View,
 } from "react-native";
 import { areas, exercises, levels } from "../data/exercises";
-import { computeStatsFromHistory, getActivityHistory, recordSession } from "../activityTracker";
+import { getActivityHistory, recordSession } from "../activityTracker";
 import { usePoints } from "../PointsManager";
+import { useUser } from "../UserContext";
 import { useAppTheme } from "../themeContext";
 
 const ExerciseCard = ({ exercise, onPress, onToggleFavorite, isFavorite, colors }) => {
@@ -156,9 +157,10 @@ const RoutinePlayer = ({
   );
 };
 
-export default function ExercisesScreen({ tabParams, isPremium }) {
+export default function ExercisesScreen({ tabParams }) {
   const { colors } = useAppTheme();
   const { addPoints } = usePoints();
+  const { user } = useUser();
   const [exerciseAreaFilter, setExerciseAreaFilter] = useState("todos");
   const [exerciseLevelFilter, setExerciseLevelFilter] = useState("todos");
   const [favoriteExerciseIds, setFavoriteExerciseIds] = useState([]);
@@ -190,9 +192,10 @@ export default function ExercisesScreen({ tabParams, isPremium }) {
     setCurrentStepIndex(0);
   }, []);
 
-  const handleFinish = useCallback(async () => {
+  const isProUser = user?.plan === "MoveUp Pro" || user?.isPro === true;
+
+  const handleFinishRoutine = useCallback(async () => {
     const existingHistory = await getActivityHistory();
-    const previousStats = computeStatsFromHistory(existingHistory);
 
     let updatedHistory = existingHistory;
 
@@ -202,19 +205,14 @@ export default function ExercisesScreen({ tabParams, isPremium }) {
 
       updatedHistory = await recordSession({ date: todayKey, minutes, exercises: 1 });
 
-      addPoints(20, "Rutina de ejercicios completada", isPremium);
-    }
-
-    const updatedStats = computeStatsFromHistory(updatedHistory);
-    if (updatedStats.currentStreak > previousStats.currentStreak) {
-      addPoints(10, `Racha aumentada a ${updatedStats.currentStreak} días`, isPremium);
+      addPoints(20, "Rutina de ejercicios completada", isProUser);
     }
 
     setIsPlayingRoutine(false);
     setSelectedExercise(null);
     setRoutineTimeLeft(0);
     setCurrentStepIndex(0);
-  }, [addPoints, isPremium, selectedExercise]);
+  }, [addPoints, isProUser, selectedExercise]);
 
   const renderFilterRow = (items, value, onChange) => (
     <View style={styles.filterRow}>
@@ -246,7 +244,7 @@ export default function ExercisesScreen({ tabParams, isPremium }) {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
         <RoutinePlayer
           exercise={selectedExercise}
-          onFinish={handleFinish}
+          onFinish={handleFinishRoutine}
           routineTimeLeft={routineTimeLeft}
           setRoutineTimeLeft={setRoutineTimeLeft}
           currentStepIndex={currentStepIndex}

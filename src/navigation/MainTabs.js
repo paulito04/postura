@@ -7,6 +7,7 @@ import LearnScreen from "../screens/LearnScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import ProgressScreen from "../screens/ProgressScreen";
 import StreakDetailScreen from "../screens/StreakDetailScreen";
+import { UserProvider } from "../UserContext";
 import { useAppTheme } from "../themeContext";
 
 const tabs = [
@@ -82,17 +83,19 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.screenContainer}>
-        <ActiveComponent
-          navigation={navigation}
-          user={user}
-          userName={userName}
-          tabParams={activeProps}
-          isLoggedIn={isLoggedIn}
-          setIsLoggedIn={setIsLoggedIn}
-          setUser={setUser}
-          activeTabKey={activeTab.toLowerCase() === "progreso" ? "progress" : activeTab.toLowerCase()}
-          isPremium={isPremium}
-        />
+        <UserProvider user={user} isPro={isPremium} setUser={setUser} setIsPro={setIsPremium}>
+          <ActiveComponent
+            navigation={navigation}
+            user={user}
+            userName={userName}
+            tabParams={activeProps}
+            isLoggedIn={isLoggedIn}
+            setIsLoggedIn={setIsLoggedIn}
+            setUser={setUser}
+            activeTabKey={activeTab.toLowerCase() === "progreso" ? "progress" : activeTab.toLowerCase()}
+            isPremium={isPremium}
+          />
+        </UserProvider>
       </View>
 
       <View style={[styles.tabBar, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>

@@ -15,6 +15,7 @@ import SectionHeader from "../components/learning/SectionHeader";
 import { learningData as initialLearningData } from "../data/learningData";
 import LearningDetailScreen from "./LearningDetailScreen";
 import { usePoints } from "../PointsManager";
+import { useUser } from "../UserContext";
 import { useAppTheme } from "../themeContext";
 
 const STORAGE_KEYS = {
@@ -31,9 +32,10 @@ const sectionEmojis = {
   "Configuración de Espacio": "🖥️",
 };
 
-export default function LearnScreen({ isPremium }) {
+export default function LearnScreen() {
   const { colors } = useAppTheme();
   const { addPoints } = usePoints();
+  const { user } = useUser();
   const [learningItems, setLearningItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [favorites, setFavorites] = useState([]);
@@ -108,16 +110,22 @@ export default function LearnScreen({ isPremium }) {
 
   const handleSelect = (item) => {
     setSelectedItem(item);
-    handleMarkRead(item);
+    handleCompleteArticle(item);
   };
 
-  const handleMarkRead = (item) => {
-    if (!item?.id) return;
+  const isProUser = user?.plan === "MoveUp Pro" || user?.isPro === true;
+
+  const handleCompleteArticle = (article) => {
+    if (!article?.id) return;
 
     setHistory((prev) => {
-      if (prev.includes(item.id)) return prev;
-      const updated = [...prev, item.id];
-      addPoints(5, `Lección completada: ${item.title}`, isPremium);
+      if (prev.includes(article.id)) return prev;
+      const updated = [...prev, article.id];
+      addPoints(
+        10,
+        `Artículo completado: ${article.title || "contenido de aprendizaje"}`,
+        isProUser
+      );
       return updated;
     });
   };
@@ -213,12 +221,12 @@ export default function LearnScreen({ isPremium }) {
     const currentItem = learningItems.find((article) => article.id === selectedItem.id) || selectedItem;
 
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <LearningDetailScreen
           item={currentItem}
           onBack={() => setSelectedItem(null)}
           onToggleFavorite={() => toggleFavorite(currentItem.id)}
-          onMarkRead={handleMarkRead}
+          onMarkRead={handleCompleteArticle}
         />
       </SafeAreaView>
     );
