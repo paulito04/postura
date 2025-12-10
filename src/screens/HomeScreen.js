@@ -29,7 +29,7 @@ const tipList = [
   "Haz rotaciones de cuello suaves",
 ];
 
-export default function HomeScreen({ navigation, userName }) {
+export default function HomeScreen({ navigation, userName, isLoggedIn }) {
   const { colors } = useAppTheme();
   const { discomfortLevel, updateDiscomfort } = useAppState();
 
@@ -41,7 +41,6 @@ export default function HomeScreen({ navigation, userName }) {
   const [discomfortInput, setDiscomfortInput] = useState("0");
   const [showNotificationDot] = useState(true);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [greetingPhrase, setGreetingPhrase] = useState("Hola");
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
   const [carouselWidth, setCarouselWidth] = useState(0);
 
@@ -60,18 +59,6 @@ export default function HomeScreen({ navigation, userName }) {
     []
   );
 
-  const greetingPhrases = useMemo(
-    () => [
-      "Hola",
-      "Buenos días",
-      "¿Qué tal",
-      "¿Cómo andas",
-      "¿Listo para empezar...?",
-      "Dios te bendiga",
-    ],
-    []
-  );
-
   const challengeOfDay = useMemo(
     () => ({
       title: "Estiramiento de cuello lateral",
@@ -79,19 +66,6 @@ export default function HomeScreen({ navigation, userName }) {
     }),
     []
   );
-
-  useEffect(() => {
-    const hours = new Date().getHours();
-    const fallback = greetingPhrases[Math.floor(Math.random() * greetingPhrases.length)];
-
-    if (hours >= 6 && hours < 12) {
-      setGreetingPhrase("Buenos días");
-    } else if (hours >= 12 && hours < 19) {
-      setGreetingPhrase("¿Qué tal");
-    } else {
-      setGreetingPhrase(fallback);
-    }
-  }, [greetingPhrases]);
 
   useEffect(() => {
     setDiscomfortInput(String(discomfortLevel ?? 0));
@@ -119,7 +93,7 @@ export default function HomeScreen({ navigation, userName }) {
     };
   }, []);
 
-  const greeting = userName ? `${greetingPhrase}, ${userName}!` : `${greetingPhrase}!`;
+  const greeting = isLoggedIn && userName ? `¡Hola, ${userName}!` : "¡Hola!";
   const discomfortColor = useMemo(() => {
     if (discomfortLevel <= 3) return colors.success;
     if (discomfortLevel <= 6) return colors.warning;

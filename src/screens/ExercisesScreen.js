@@ -10,7 +10,14 @@ const data = [
   "Apertura de pecho en pared",
 ];
 
-export default function ExercisesScreen({ tabParams }) {
+export default function ExercisesScreen({
+  tabParams,
+  LoginCardComponent,
+  userName,
+  setUserName,
+  isLoggedIn,
+  setIsLoggedIn,
+}) {
   const { colors } = useAppTheme();
   const challenge = tabParams?.challenge;
 
@@ -39,13 +46,23 @@ export default function ExercisesScreen({ tabParams }) {
         data={exercises}
         keyExtractor={(item) => item}
         ListHeaderComponent={
-          challenge ? (
-            <View style={[styles.challengeBanner, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Text style={[styles.bannerEyebrow, { color: colors.primaryDark }]}>Desafío del día</Text>
-              <Text style={[styles.bannerTitle, { color: colors.textPrimary }]}>{challenge.title}</Text>
-              <Text style={[styles.bannerDescription, { color: colors.textSecondary }]}>{challenge.description}</Text>
-            </View>
-          ) : null
+          <View style={styles.headerStack}>
+            {LoginCardComponent ? (
+              <LoginCardComponent
+                userName={userName}
+                setUserName={setUserName}
+                isLoggedIn={isLoggedIn}
+                setIsLoggedIn={setIsLoggedIn}
+              />
+            ) : null}
+            {challenge ? (
+              <View style={[styles.challengeBanner, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Text style={[styles.bannerEyebrow, { color: colors.primaryDark }]}>Desafío del día</Text>
+                <Text style={[styles.bannerTitle, { color: colors.textPrimary }]}>{challenge.title}</Text>
+                <Text style={[styles.bannerDescription, { color: colors.textSecondary }]}>{challenge.description}</Text>
+              </View>
+            ) : null}
+          </View>
         }
         renderItem={({ item }) => (
           <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -71,6 +88,9 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 16,
+    gap: 12,
+  },
+  headerStack: {
     gap: 12,
   },
   card: {
