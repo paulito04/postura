@@ -16,6 +16,6 @@ La aplicación solicitará los alcances `openid`, `profile` y `email` y mostrar�
 ## Notificaciones push
 
 La app utiliza `expo-notifications` para programar recordatorios. Si el paquete no está
-instalado en tu entorno, Metro usará automáticamente un shim local (alertas en pantalla)
-para evitar errores de carga. Para tener notificaciones reales en segundo plano instala el
-paquete con `npx expo install expo-notifications`.
+instalado en tu entorno, Metro detectará su ausencia y usará automáticamente un shim
+local (alertas en pantalla) para evitar errores de carga. Para tener notificaciones reales
+en segundo plano instala el paquete con `npx expo install expo-notifications`.
