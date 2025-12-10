@@ -13,7 +13,6 @@ import {
 import { areas, exercises, levels } from "../data/exercises";
 import { recordSession } from "../activityTracker";
 import { useAppTheme } from "../themeContext";
-import { exerciseImages } from "../config/exerciseImages";
 
 const ExerciseCard = ({ exercise, onPress, onToggleFavorite, isFavorite, colors }) => {
   return (
@@ -49,10 +48,7 @@ const RoutinePlayer = ({
   isPlayingRoutine,
   colors,
 }) => {
-  const frames = useMemo(
-    () => exerciseImages[exercise.id] || [exercise.image || require("../../assets/logo.jpg")],
-    [exercise.id, exercise.image]
-  );
+  const frames = useMemo(() => [exercise.image || require("../../assets/logo.jpg")], [exercise.image]);
   const [frameIndex, setFrameIndex] = useState(0);
 
   useEffect(() => {
