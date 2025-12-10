@@ -14,6 +14,7 @@ import SearchBar from "../components/learning/SearchBar";
 import SectionHeader from "../components/learning/SectionHeader";
 import { learningData as initialLearningData } from "../data/learningData";
 import LearningDetailScreen from "./LearningDetailScreen";
+import { usePoints } from "../PointsManager";
 import { useAppTheme } from "../themeContext";
 
 const STORAGE_KEYS = {
@@ -30,8 +31,9 @@ const sectionEmojis = {
   "Configuración de Espacio": "🖥️",
 };
 
-export default function LearnScreen() {
+export default function LearnScreen({ isPremium }) {
   const { colors } = useAppTheme();
+  const { addPoints } = usePoints();
   const [learningItems, setLearningItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [favorites, setFavorites] = useState([]);
@@ -106,13 +108,17 @@ export default function LearnScreen() {
 
   const handleSelect = (item) => {
     setSelectedItem(item);
-    handleMarkRead(item.id);
+    handleMarkRead(item);
   };
 
-  const handleMarkRead = (id) => {
+  const handleMarkRead = (item) => {
+    if (!item?.id) return;
+
     setHistory((prev) => {
-      if (prev.includes(id)) return prev;
-      return [...prev, id];
+      if (prev.includes(item.id)) return prev;
+      const updated = [...prev, item.id];
+      addPoints(5, `Lección completada: ${item.title}`, isPremium);
+      return updated;
     });
   };
 

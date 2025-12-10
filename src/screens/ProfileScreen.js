@@ -17,6 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 import { useAppState } from "../context/AppStateContext";
 import { useNotificationManager } from "../NotificationManager";
+import { usePoints } from "../PointsManager";
 import { useAppTheme } from "../themeContext";
 
 const GOALS_KEY = "@posturaU_goals";
@@ -152,6 +153,7 @@ function PremiumBadge({ isPremium }) {
 export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeTabKey, isPremium }) {
   const { colors } = useAppTheme();
   const { userProfile, setUserProfile } = useAppState();
+  const { currentPoints, lifetimePoints, level, nextRewardAt } = usePoints();
   const {
     prefs: notificationPrefs,
     updatePreferences: updateNotificationPrefs,
@@ -267,6 +269,8 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   };
 
   const planLabel = isPremium ? "Plan: MoveUp Pro" : "Plan: Gratis";
+  const isProUser = isPremium;
+  const pointsProgress = Math.min(1, nextRewardAt ? lifetimePoints / nextRewardAt : 0);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -317,6 +321,30 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
           <InfoRow label="Nombre" value={currentName} colors={colors} />
           <InfoRow label="Correo" value={currentEmail} colors={colors} />
           <InfoRow label="Plan" value={planLabel.replace("Plan: ", "") } colors={colors} />
+        </View>
+
+        <View style={[styles.pointsCard, { backgroundColor: "#F5F8FB", borderColor: colors.border }]}>
+          <Text style={[styles.pointsTitle, { color: colors.textPrimary }]}>Sistema de puntos</Text>
+          {isProUser ? (
+            <>
+              <Text style={[styles.pointsSubtitle, { color: colors.textSecondary }]}>Nivel {level}</Text>
+              <Text style={[styles.pointsValue, { color: colors.textPrimary }]}>Puntos actuales: {currentPoints}</Text>
+              <Text style={[styles.pointsHelper, { color: colors.textSecondary }]}>Total acumulado: {lifetimePoints}</Text>
+
+              <View style={styles.progressBarBg}>
+                <View style={[styles.progressBarFill, { flex: pointsProgress }]} />
+                <View style={{ flex: Math.max(0, 1 - pointsProgress) }} />
+              </View>
+              <Text style={[styles.pointsHelper, { color: colors.textSecondary }]}>
+                Próxima recompensa a los {nextRewardAt} pts
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={[styles.pointsSubtitle, { color: colors.textSecondary }]}>Disponible solo en MoveUp Pro.</Text>
+              <Text style={[styles.pointsHelper, { color: colors.textSecondary }]}>Actualiza tu plan para acumular puntos y canjear recompensas.</Text>
+            </>
+          )}
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -624,6 +652,41 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 16,
     fontWeight: "600",
+  },
+  pointsCard: {
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginBottom: 12,
+  },
+  pointsTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 6,
+  },
+  pointsSubtitle: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  pointsValue: {
+    fontSize: 16,
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+  pointsHelper: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  progressBarBg: {
+    flexDirection: "row",
+    height: 8,
+    borderRadius: 4,
+    overflow: "hidden",
+    backgroundColor: "#E1E6EC",
+    marginVertical: 8,
+  },
+  progressBarFill: {
+    backgroundColor: "#00A9A5",
   },
   editButton: {
     paddingHorizontal: 12,
