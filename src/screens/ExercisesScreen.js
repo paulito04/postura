@@ -11,7 +11,8 @@ import {
   View,
 } from "react-native";
 import { areas, exercises, levels } from "../data/exercises";
-import { recordSession } from "../activityTracker";
+import { computeStatsFromHistory, getActivityHistory, recordSession } from "../activityTracker";
+import { usePoints } from "../PointsManager";
 import { useAppTheme } from "../themeContext";
 
 const ExerciseCard = ({ exercise, onPress, onToggleFavorite, isFavorite, colors }) => {
@@ -155,8 +156,9 @@ const RoutinePlayer = ({
   );
 };
 
-export default function ExercisesScreen({ tabParams }) {
+export default function ExercisesScreen({ tabParams, isPremium }) {
   const { colors } = useAppTheme();
+  const { addPoints } = usePoints();
   const [exerciseAreaFilter, setExerciseAreaFilter] = useState("todos");
   const [exerciseLevelFilter, setExerciseLevelFilter] = useState("todos");
   const [favoriteExerciseIds, setFavoriteExerciseIds] = useState([]);
@@ -189,18 +191,30 @@ export default function ExercisesScreen({ tabParams }) {
   }, []);
 
   const handleFinish = useCallback(async () => {
+    const existingHistory = await getActivityHistory();
+    const previousStats = computeStatsFromHistory(existingHistory);
+
+    let updatedHistory = existingHistory;
+
     if (selectedExercise) {
       const todayKey = new Date().toISOString().split("T")[0];
       const minutes = Math.max(1, Math.round(selectedExercise.duration / 60));
 
-      await recordSession({ date: todayKey, minutes, exercises: 1 });
+      updatedHistory = await recordSession({ date: todayKey, minutes, exercises: 1 });
+
+      addPoints(20, "Rutina de ejercicios completada", isPremium);
+    }
+
+    const updatedStats = computeStatsFromHistory(updatedHistory);
+    if (updatedStats.currentStreak > previousStats.currentStreak) {
+      addPoints(10, `Racha aumentada a ${updatedStats.currentStreak} días`, isPremium);
     }
 
     setIsPlayingRoutine(false);
     setSelectedExercise(null);
     setRoutineTimeLeft(0);
     setCurrentStepIndex(0);
-  }, [selectedExercise]);
+  }, [addPoints, isPremium, selectedExercise]);
 
   const renderFilterRow = (items, value, onChange) => (
     <View style={styles.filterRow}>

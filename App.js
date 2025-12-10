@@ -6,6 +6,7 @@ import { AppStateProvider, useAppState } from "./src/context/AppStateContext";
 import { ThemeProvider, useAppTheme } from "./src/themeContext";
 import LoginModal from "./src/components/LoginModal";
 import { NotificationProvider } from "./src/NotificationManager";
+import { PointsProvider } from "./src/PointsManager";
 
 function LoadingScreen() {
   const { colors } = useAppTheme();
@@ -164,17 +165,19 @@ export default function App() {
 
   return (
     <NotificationProvider>
-      <ThemeProvider>
-        <AppStateProvider>
-          <RootApp
-            user={user}
-            setUser={setUser}
-            isLoggedIn={isLoggedIn}
-            setIsLoggedIn={setIsLoggedIn}
-            handleLogin={handleLogin}
-          />
-        </AppStateProvider>
-      </ThemeProvider>
+      <PointsProvider>
+        <ThemeProvider>
+          <AppStateProvider>
+            <RootApp
+              user={user}
+              setUser={setUser}
+              isLoggedIn={isLoggedIn}
+              setIsLoggedIn={setIsLoggedIn}
+              handleLogin={handleLogin}
+            />
+          </AppStateProvider>
+        </ThemeProvider>
+      </PointsProvider>
     </NotificationProvider>
   );
 }

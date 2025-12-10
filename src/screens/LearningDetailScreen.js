@@ -15,9 +15,9 @@ export default function LearningDetailScreen({ item, onBack, onToggleFavorite, o
 
   useEffect(() => {
     if (item?.id) {
-      onMarkRead?.(item.id);
+      onMarkRead?.(item);
     }
-  }, [item?.id, onMarkRead]);
+  }, [item, onMarkRead]);
 
   const handleShare = async () => {
     try {
