@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import ExercisesScreen from "../screens/ExercisesScreen";
@@ -6,6 +6,7 @@ import HomeScreen from "../screens/HomeScreen";
 import LearnScreen from "../screens/LearnScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import ProgressScreen from "../screens/ProgressScreen";
+import StreakDetailScreen from "../screens/StreakDetailScreen";
 import { useAppTheme } from "../themeContext";
 
 const tabs = [
@@ -22,25 +23,45 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
   const [isPremium, setIsPremium] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [tabParams, setTabParams] = useState({});
+  const [stackScreen, setStackScreen] = useState(null);
 
-  const navigation = useMemo(
+  const stackRegistry = useMemo(
     () => ({
-      navigate: (screenName, params = {}) => {
-        const exists = tabs.some((tab) => tab.key === screenName);
-        if (exists) {
-          setActiveTab(screenName);
-          setTabParams((prev) => ({ ...prev, [screenName]: params }));
-        }
-      },
+      StreakDetail: StreakDetailScreen,
     }),
     []
   );
 
-  const ActiveComponent = useMemo(
-    () => tabs.find((tab) => tab.key === activeTab)?.component ?? HomeScreen,
-    [activeTab]
+  const navigate = useCallback(
+    (screenName, params = {}) => {
+      const exists = tabs.some((tab) => tab.key === screenName);
+      if (exists) {
+        setStackScreen(null);
+        setActiveTab(screenName);
+        setTabParams((prev) => ({ ...prev, [screenName]: params }));
+        return;
+      }
+
+      if (stackRegistry[screenName]) {
+        setStackScreen({ name: screenName, params });
+      }
+    },
+    [stackRegistry]
   );
-  const activeProps = tabParams[activeTab];
+
+  const goBack = useCallback(() => {
+    setStackScreen(null);
+  }, []);
+
+  const navigation = useMemo(() => ({ navigate, goBack }), [goBack, navigate]);
+
+  const ActiveComponent = useMemo(() => {
+    if (stackScreen) {
+      return stackRegistry[stackScreen.name];
+    }
+    return tabs.find((tab) => tab.key === activeTab)?.component ?? HomeScreen;
+  }, [activeTab, stackRegistry, stackScreen]);
+  const activeProps = stackScreen ? stackScreen.params : tabParams[activeTab];
 
   const handleTabPress = (tabName) => {
     if (!isLoggedIn) return;
