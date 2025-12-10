@@ -19,6 +19,8 @@ const tabs = [
 export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, setUser, onLogin, LoginCardComponent }) {
   const { colors } = useAppTheme();
   const [activeTab, setActiveTab] = useState(tabs[0].key);
+  const [isPremium, setIsPremium] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   const [tabParams, setTabParams] = useState({});
 
   const navigation = useMemo(
@@ -40,9 +42,12 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
   );
   const activeProps = tabParams[activeTab];
 
-  const handleSelectTab = (tabKey) => {
+  const handleTabPress = (tabName) => {
     if (!isLoggedIn) return;
-    setActiveTab(tabKey);
+    setActiveTab(tabName);
+    if ((tabName === "Progreso" || tabName === "Aprender") && !isPremium) {
+      setShowPaywall(true);
+    }
   };
 
   return (
@@ -69,7 +74,7 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
               key={tab.key}
               accessibilityRole="button"
               accessibilityState={isActive ? { selected: true } : undefined}
-              onPress={() => handleSelectTab(tab.key)}
+              onPress={() => handleTabPress(tab.key)}
               style={[
                 styles.tabButton,
                 isActive && { backgroundColor: `${colors.primary}15`, borderColor: colors.primary },
@@ -87,6 +92,39 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
           <LoginCardComponent user={user} onLogin={onLogin} />
         </View>
       ) : null}
+
+      {showPaywall && (
+        <View style={styles.paywallOverlay} pointerEvents="auto">
+          <View style={styles.paywallCard}>
+            <Text style={styles.paywallTitle}>Desbloquea MoveUp Pro</Text>
+            <Text style={styles.paywallPrice}>$9.99 / mes</Text>
+            <Text style={styles.paywallSubtitle}>Obtén acceso completo a:</Text>
+            <Text style={styles.paywallBullet}>• Panel de Progreso con estadísticas</Text>
+            <Text style={styles.paywallBullet}>• Logros, insignias y recompensas</Text>
+            <Text style={styles.paywallBullet}>• Módulo educativo "Aprender" con contenido ergonómico</Text>
+
+            <TouchableOpacity
+              style={styles.paywallPrimaryButton}
+              onPress={() => {
+                setIsPremium(true);
+                setShowPaywall(false);
+              }}
+            >
+              <Text style={styles.paywallPrimaryText}>Activar membresía</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.paywallSecondaryButton}
+              onPress={() => {
+                setShowPaywall(false);
+                setActiveTab("Inicio");
+              }}
+            >
+              <Text style={styles.paywallSecondaryText}>Volver al inicio</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -132,5 +170,73 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+  },
+  paywallOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    zIndex: 999,
+  },
+  paywallCard: {
+    width: "100%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 24,
+    alignItems: "flex-start",
+  },
+  paywallTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#055F67",
+    marginBottom: 4,
+  },
+  paywallPrice: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#0A393C",
+    marginBottom: 8,
+  },
+  paywallSubtitle: {
+    fontSize: 14,
+    color: "#444",
+    marginBottom: 8,
+  },
+  paywallBullet: {
+    fontSize: 13,
+    color: "#333",
+    marginBottom: 4,
+  },
+  paywallPrimaryButton: {
+    width: "100%",
+    marginTop: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: "#055F67",
+    alignItems: "center",
+  },
+  paywallPrimaryText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  paywallSecondaryButton: {
+    width: "100%",
+    marginTop: 8,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#055F67",
+    alignItems: "center",
+  },
+  paywallSecondaryText: {
+    color: "#055F67",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
