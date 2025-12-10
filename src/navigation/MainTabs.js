@@ -61,6 +61,8 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
           isLoggedIn={isLoggedIn}
           setIsLoggedIn={setIsLoggedIn}
           setUser={setUser}
+          activeTabKey={activeTab.toLowerCase() === "progreso" ? "progress" : activeTab.toLowerCase()}
+          isPremium={isPremium}
         />
       </View>
 
