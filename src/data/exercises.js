@@ -1,0 +1,88 @@
+const exerciseImage = require("../../assets/logo.jpg");
+
+export const exercises = [
+  {
+    id: "cuello-lateral",
+    name: "Estiramiento de cuello lateral",
+    image: exerciseImage,
+    duration: 180,
+    area: "cuello",
+    level: "principiante",
+    steps: [
+      "Siéntate erguido y relaja los hombros.",
+      "Inclina la cabeza hacia la derecha, acercando la oreja al hombro.",
+      "Mantén 15 segundos respirando profundo y cambia de lado.",
+      "Repite el ciclo dos veces más alternando lados.",
+    ],
+  },
+  {
+    id: "espalda-puente",
+    name: "Puente de glúteos",
+    image: exerciseImage,
+    duration: 240,
+    area: "espalda",
+    level: "intermedio",
+    steps: [
+      "Acuéstate boca arriba con rodillas flexionadas y pies apoyados.",
+      "Activa glúteos y abdomen para elevar la cadera hasta formar una línea recta.",
+      "Mantén arriba 3 segundos y baja de forma controlada.",
+      "Realiza 12 repeticiones descansando al final.",
+    ],
+  },
+  {
+    id: "plancha-abdominal",
+    name: "Plancha abdominal",
+    image: exerciseImage,
+    duration: 150,
+    area: "hombros",
+    level: "avanzado",
+    steps: [
+      "Coloca antebrazos en el suelo y alinea hombros sobre codos.",
+      "Extiende piernas y activa abdomen sin subir la cadera.",
+      "Mantén respirando profundo durante 30 segundos.",
+      "Descansa 15 segundos y repite el ciclo tres veces.",
+    ],
+  },
+  {
+    id: "gato-vaca",
+    name: "Gato-vaca en cuatro puntos",
+    image: exerciseImage,
+    duration: 210,
+    area: "espalda",
+    level: "principiante",
+    steps: [
+      "Apoya manos bajo hombros y rodillas bajo caderas.",
+      "Inhala arqueando la espalda y levantando el pecho (vaca).",
+      "Exhala redondeando la espalda y llevando barbilla al pecho (gato).",
+      "Alterna 10 repeticiones con ritmo constante.",
+    ],
+  },
+  {
+    id: "apertura-pecho",
+    name: "Apertura de pecho en pared",
+    image: exerciseImage,
+    duration: 180,
+    area: "hombros",
+    level: "intermedio",
+    steps: [
+      "Coloca el antebrazo derecho en la pared a 90° de flexión.",
+      "Gira lentamente el torso alejándolo de la pared hasta sentir estiramiento en el pecho.",
+      "Mantén 20 segundos y cambia de lado.",
+      "Repite tres ciclos por cada brazo manteniendo respiración relajada.",
+    ],
+  },
+];
+
+export const areas = [
+  { key: "todos", label: "Todos" },
+  { key: "cuello", label: "Cuello" },
+  { key: "espalda", label: "Espalda" },
+  { key: "hombros", label: "Hombros" },
+];
+
+export const levels = [
+  { key: "todos", label: "Todos" },
+  { key: "principiante", label: "Principiante" },
+  { key: "intermedio", label: "Intermedio" },
+  { key: "avanzado", label: "Avanzado" },
+];
