@@ -89,10 +89,8 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
         })}
       </View>
 
-      {!isLoggedIn && LoginCardComponent ? (
-        <View style={styles.loginOverlay} pointerEvents="auto">
-          <LoginCardComponent user={user} onLogin={onLogin} />
-        </View>
+      {LoginCardComponent ? (
+        <LoginCardComponent visible={!isLoggedIn} user={user} onLogin={onLogin} />
       ) : null}
 
       {showPaywall && (
@@ -161,17 +159,6 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 12,
     textAlign: "center",
-  },
-  loginOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
   },
   paywallOverlay: {
     position: "absolute",

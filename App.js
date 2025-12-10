@@ -1,74 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import MainTabs from "./src/navigation/MainTabs";
 import IntroScreen from "./src/screens/IntroScreen";
 import { AppStateProvider, useAppState } from "./src/context/AppStateContext";
 import { ThemeProvider, useAppTheme } from "./src/themeContext";
-
-export function LoginCard({ user, onLogin }) {
-  const { colors } = useAppTheme();
-  const [nameInput, setNameInput] = useState(user?.name ?? "");
-  const [emailInput, setEmailInput] = useState(user?.email ?? "");
-  const [passwordInput, setPasswordInput] = useState("");
-
-  useEffect(() => {
-    setNameInput(user?.name ?? "");
-    setEmailInput(user?.email ?? "");
-    setPasswordInput("");
-  }, [user?.email, user?.name]);
-
-  const handleLogin = () => {
-    const trimmedName = nameInput.trim();
-    const trimmedEmail = emailInput.trim();
-    if (!trimmedName || !trimmedEmail) return;
-
-    onLogin({ name: trimmedName, email: trimmedEmail });
-  };
-
-  return (
-    <View style={[styles.loginCard, { backgroundColor: "#FFFFFF", borderColor: colors.border }]}>
-      <Text style={[styles.loginTitle, { color: "#055F67" }]}>Iniciar sesión</Text>
-
-      <View style={styles.loginInputGroup}>
-        <Text style={[styles.loginLabel, { color: colors.textSecondary }]}>Nombre</Text>
-        <TextInput
-          placeholder="Ingresa tu nombre"
-          placeholderTextColor={colors.textSecondary}
-          value={nameInput}
-          onChangeText={setNameInput}
-          style={[styles.loginInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: "#F6F7FB" }]}
-        />
-      </View>
-      <View style={styles.loginInputGroup}>
-        <Text style={[styles.loginLabel, { color: colors.textSecondary }]}>Correo</Text>
-        <TextInput
-          placeholder="tu@email.com"
-          placeholderTextColor={colors.textSecondary}
-          value={emailInput}
-          onChangeText={setEmailInput}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          style={[styles.loginInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: "#F6F7FB" }]}
-        />
-      </View>
-      <View style={styles.loginInputGroup}>
-        <Text style={[styles.loginLabel, { color: colors.textSecondary }]}>Contraseña</Text>
-        <TextInput
-          placeholder="********"
-          placeholderTextColor={colors.textSecondary}
-          secureTextEntry
-          value={passwordInput}
-          onChangeText={setPasswordInput}
-          style={[styles.loginInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: "#F6F7FB" }]}
-        />
-      </View>
-
-      <TouchableOpacity style={[styles.loginButton, { backgroundColor: "#0F9BA8" }]} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>Login</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
+import LoginModal from "./src/components/LoginModal";
 
 function LoadingScreen() {
   const { colors } = useAppTheme();
@@ -205,7 +141,7 @@ function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin }) {
       setIsLoggedIn={setIsLoggedIn}
       setUser={setUser}
       onLogin={handleLogin}
-      LoginCardComponent={LoginCard}
+      LoginCardComponent={LoginModal}
     />
   );
 }
@@ -339,45 +275,6 @@ const styles = StyleSheet.create({
   dividerLabel: {
     fontSize: 12,
     fontWeight: "700",
-  },
-  loginCard: {
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1,
-    gap: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 5,
-    },
-  loginTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    },
-  loginInputGroup: {
-    gap: 6,
-  },
-  loginLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  loginInput: {
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
-  },
-  loginButton: {
-    paddingVertical: 15,
-    borderRadius: 16,
-    alignItems: "center",
-  },
-  loginButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "800",
-    fontSize: 16,
   },
   loggedInRow: {
     gap: 10,
