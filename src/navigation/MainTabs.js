@@ -9,7 +9,7 @@ import ProgressScreen from "../screens/ProgressScreen";
 import { useAppTheme } from "../themeContext";
 
 const tabs = [
-  { key: "Inicio", icon: "home", component: HomeScreen },
+  { key: "Inicio", icon: "🏠", component: HomeScreen },
   { key: "Ejercicios", icon: "🏋️", component: ExercisesScreen },
   { key: "Progreso", icon: "📈", component: ProgressScreen },
   { key: "Aprender", icon: "📚", component: LearnScreen },
@@ -19,13 +19,15 @@ const tabs = [
 export default function MainTabs({ userName }) {
   const { colors } = useAppTheme();
   const [activeTab, setActiveTab] = useState(tabs[0].key);
+  const [tabParams, setTabParams] = useState({});
 
   const navigation = useMemo(
     () => ({
-      navigate: (screenName) => {
+      navigate: (screenName, params = {}) => {
         const exists = tabs.some((tab) => tab.key === screenName);
         if (exists) {
           setActiveTab(screenName);
+          setTabParams((prev) => ({ ...prev, [screenName]: params }));
         }
       },
     }),
@@ -36,13 +38,14 @@ export default function MainTabs({ userName }) {
     () => tabs.find((tab) => tab.key === activeTab)?.component ?? HomeScreen,
     [activeTab]
   );
+  const activeProps = tabParams[activeTab];
 
   const handleSelectTab = useCallback((tabKey) => setActiveTab(tabKey), []);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.screenContainer}>
-        <ActiveComponent navigation={navigation} userName={userName} />
+        <ActiveComponent navigation={navigation} userName={userName} tabParams={activeProps} />
       </View>
 
       <View style={[styles.tabBar, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
@@ -56,14 +59,10 @@ export default function MainTabs({ userName }) {
               accessibilityRole="button"
               accessibilityState={isActive ? { selected: true } : undefined}
               onPress={() => handleSelectTab(tab.key)}
-              style={styles.tabButton}
+              style={[styles.tabButton, isActive && { backgroundColor: colors.background }]}
             >
-              {tab.icon === "home" ? (
-                <HomeIcon active={isActive} />
-              ) : (
-                <Text style={[styles.tabIcon, { color }]}>{tab.icon}</Text>
-              )}
-              <Text style={[styles.tabLabel, { color }]}>{tab.key}</Text>
+              <Text style={[styles.tabIcon, { color }]}>{tab.icon}</Text>
+              <Text style={[styles.tabLabel, { color, fontWeight: isActive ? "800" : "600" }]}>{tab.key}</Text>
             </TouchableOpacity>
           );
         })}
@@ -89,74 +88,14 @@ const styles = StyleSheet.create({
   tabButton: {
     alignItems: "center",
     gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 14,
   },
   tabIcon: {
     fontSize: 18,
   },
   tabLabel: {
     fontSize: 12,
-    fontWeight: "600",
-  },
-});
-
-function HomeIcon({ active }) {
-  return (
-    <View style={[homeIconStyles.wrapper, active && homeIconStyles.active]}>
-      <View style={homeIconStyles.houseBase}>
-        <View style={homeIconStyles.door} />
-        <View style={homeIconStyles.window} />
-      </View>
-      <View style={homeIconStyles.roof} />
-    </View>
-  );
-}
-
-const homeIconStyles = StyleSheet.create({
-  wrapper: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    backgroundColor: "#437118",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  active: {
-    borderWidth: 2,
-    borderColor: "#1D2A62",
-  },
-  houseBase: {
-    position: "absolute",
-    bottom: 4,
-    width: 21,
-    height: 14,
-    backgroundColor: "#F5F3D8",
-    borderRadius: 4,
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  door: {
-    width: 7,
-    height: 9,
-    backgroundColor: "#437118",
-    borderRadius: 2,
-    marginBottom: 2,
-  },
-  window: {
-    position: "absolute",
-    right: 4,
-    top: 3,
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: "#437118",
-  },
-  roof: {
-    position: "absolute",
-    top: 6,
-    width: 18,
-    height: 18,
-    backgroundColor: "#F5F3D8",
-    transform: [{ rotate: "45deg" }],
-    borderRadius: 4,
   },
 });
