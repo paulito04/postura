@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -10,10 +10,59 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { achievements as baseAchievements, activityHistory } from "../data/progress";
 import { useAppTheme } from "../themeContext";
+import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 
-const dayLabels = ["D", "L", "M", "M", "J", "V", "S"];
+const achievements = [
+  {
+    id: "streak_3",
+    title: "Racha de 3 días",
+    description: "Mantén tu postura activa durante 3 días seguidos.",
+    type: "streak",
+    threshold: 3,
+  },
+  {
+    id: "streak_7",
+    title: "Racha de 7 días",
+    description: "Completa ejercicios 7 días seguidos.",
+    type: "streak",
+    threshold: 7,
+  },
+  {
+    id: "time_60",
+    title: "1 hora de cuidado",
+    description: "Acumula 60 minutos de actividad postural.",
+    type: "minutes",
+    threshold: 60,
+  },
+  {
+    id: "time_180",
+    title: "3 horas de cuidado",
+    description: "Acumula 180 minutos de actividad.",
+    type: "minutes",
+    threshold: 180,
+  },
+  {
+    id: "ex_30",
+    title: "30 ejercicios completados",
+    description: "Alcanza 30 ejercicios terminados.",
+    type: "exercises",
+    threshold: 30,
+  },
+  {
+    id: "ex_100",
+    title: "100 ejercicios completados",
+    description: "Alcanza 100 ejercicios terminados.",
+    type: "exercises",
+    threshold: 100,
+  },
+  {
+    id: "week_consistent",
+    title: "Semana constante",
+    description: "Al menos 4 días activos en los últimos 7 días.",
+    type: "week_consistent",
+  },
+];
 
 function formatMinutes(minutes) {
   const hours = Math.floor(minutes / 60);
@@ -26,19 +75,40 @@ function formatMinutes(minutes) {
   return `${hours} h ${remaining} min`;
 }
 
-function getCurrentStreak(history) {
-  const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
-  let streak = 0;
+function getLastNDays(history, days) {
+  const today = new Date();
+  const map = history.reduce((acc, entry) => {
+    acc[entry.date] = entry;
+    return acc;
+  }, {});
 
-  for (let i = 0; i < sorted.length; i += 1) {
-    if (sorted[i].minutes > 0) {
-      streak += 1;
-    } else {
-      break;
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - index);
+    const key = date.toISOString().split("T")[0];
+
+    return { date: key, minutes: map[key]?.minutes || 0 };
+  });
+}
+
+function isAchievementUnlocked(achievement, stats, history) {
+  if (!stats) return false;
+
+  switch (achievement.type) {
+    case "streak":
+      return stats.currentStreak >= (achievement.threshold || 0);
+    case "minutes":
+      return stats.totalMinutes >= (achievement.threshold || 0);
+    case "exercises":
+      return stats.totalExercises >= (achievement.threshold || 0);
+    case "week_consistent": {
+      const recentWeek = getLastNDays(history, 7);
+      const activeDays = recentWeek.filter((day) => day.minutes > 0).length;
+      return activeDays >= 4;
     }
+    default:
+      return false;
   }
-
-  return streak;
 }
 
 function AchievementBadge({ achievement }) {
@@ -95,50 +165,45 @@ function AchievementBadge({ achievement }) {
 
 export default function ProgressScreen({ activeTabKey, isPremium }) {
   const { colors } = useAppTheme();
+  const [history, setHistory] = useState([]);
+  const [stats, setStats] = useState(null);
+
+  const loadStats = useCallback(async () => {
+    const storedHistory = await getActivityHistory();
+    setHistory(storedHistory);
+    setStats(computeStatsFromHistory(storedHistory));
+  }, []);
+
+  useEffect(() => {
+    if (activeTabKey === "progress") {
+      loadStats();
+    }
+  }, [activeTabKey, loadStats]);
 
   const shouldShowDashboard = activeTabKey === "progress" && isPremium;
 
-  const last14Days = useMemo(() => {
-    return [...activityHistory]
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .slice(-14)
-      .map((day) => ({
-        ...day,
-        label: dayLabels[new Date(day.date).getDay()],
-      }));
-  }, []);
+  const last14Days = stats?.last14Days ?? [];
+  const totalMinutes = stats?.totalMinutes ?? 0;
+  const totalExercises = stats?.totalExercises ?? 0;
+  const currentStreak = stats?.currentStreak ?? 0;
 
-  const totalMinutes = useMemo(
-    () => activityHistory.reduce((sum, entry) => sum + entry.minutes, 0),
-    []
-  );
-  const totalExercises = useMemo(
-    () => activityHistory.reduce((sum, entry) => sum + entry.exercises, 0),
-    []
-  );
-
-  const currentStreak = useMemo(() => getCurrentStreak(activityHistory), []);
-  const activeDays = useMemo(() => activityHistory.filter((day) => day.minutes > 0).length, []);
+  const activeDays = useMemo(() => history.filter((day) => day.minutes > 0).length, [history]);
   const avgPerDay = useMemo(
     () => (activeDays > 0 ? Math.round(totalMinutes / activeDays) : 0),
     [activeDays, totalMinutes]
   );
 
-  const computedAchievements = useMemo(() => {
-    return baseAchievements.map((achievement) => {
-      if (achievement.id === "streak_3") {
-        return { ...achievement, unlocked: currentStreak >= 3 };
-      }
-      if (achievement.id === "streak_7") {
-        return { ...achievement, unlocked: currentStreak >= 7 };
-      }
-      return achievement;
-    });
-  }, [currentStreak]);
+  const computedAchievements = useMemo(
+    () => achievements.map((achievement) => ({
+      ...achievement,
+      unlocked: isAchievementUnlocked(achievement, stats, history),
+    })),
+    [history, stats]
+  );
 
   const handleExport = async () => {
     const exportPayload = {
-      activityHistory,
+      activityHistory: history,
       totalMinutes,
       totalExercises,
       currentStreak,

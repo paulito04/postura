@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar";
 
 import { useAppState } from "../context/AppStateContext";
 import { useAppTheme } from "../themeContext";
+import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 
 const durationOptions = [30, 45, 60];
 const tipList = [
@@ -34,9 +35,9 @@ export default function HomeScreen({ navigation, userName, isLoggedIn }) {
   const { discomfortLevel, updateDiscomfort } = useAppState();
 
   const [selectedDuration, setSelectedDuration] = useState(45);
-  const [streakDays] = useState(3);
+  const [streakDays, setStreakDays] = useState(0);
   const [streakGoal] = useState(7);
-  const [activitiesCompleted] = useState(1);
+  const [activitiesCompleted, setActivitiesCompleted] = useState(0);
   const [activityGoal] = useState(3);
   const [discomfortInput, setDiscomfortInput] = useState("0");
   const [showNotificationDot] = useState(true);
@@ -70,6 +71,20 @@ export default function HomeScreen({ navigation, userName, isLoggedIn }) {
   useEffect(() => {
     setDiscomfortInput(String(discomfortLevel ?? 0));
   }, [discomfortLevel]);
+
+  useEffect(() => {
+    async function loadActivity() {
+      const history = await getActivityHistory();
+      const stats = computeStatsFromHistory(history);
+      const todayKey = new Date().toISOString().split("T")[0];
+      const todayEntry = history.find((entry) => entry.date === todayKey);
+
+      setStreakDays(stats.currentStreak);
+      setActivitiesCompleted(todayEntry?.exercises ?? 0);
+    }
+
+    loadActivity();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
