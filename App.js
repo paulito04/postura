@@ -1,4 +1,3 @@
-import "react-native-gesture-handler";
 import React, { useCallback, useState } from "react";
 import { ThemeProvider } from "./src/themeContext";
 import IntroScreen from "./src/screens/IntroScreen";
