@@ -4,32 +4,36 @@ import { Alert, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } fr
 const PRIMARY_COLOR = "#055F67";
 
 export default function LoginModal({ visible, onLogin, user }) {
-  const [identifier, setIdentifier] = useState(user?.email || user?.name || "");
+  const initialUsername = user?.username || user?.name || "";
+  const initialEmail = user?.email || (initialUsername ? `${initialUsername}@posturau.app` : "");
+  const [username, setUsername] = useState(initialUsername);
+  const [email, setEmail] = useState(initialEmail);
+  const [emailEditedManually, setEmailEditedManually] = useState(false);
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
-    setIdentifier(user?.email || user?.name || "");
+    const nextUsername = user?.username || user?.name || "";
+    const nextEmail = user?.email || (nextUsername ? `${nextUsername}@posturau.app` : "");
+    setUsername(nextUsername);
     setPassword("");
-  }, [user?.email, user?.name]);
+    setEmail(nextEmail);
+    setEmailEditedManually(Boolean(user?.email));
+  }, [user?.email, user?.name, user?.username]);
 
-  const derivedEmail = useMemo(() => {
-    if (user?.email) return user.email;
-    if (identifier.includes("@")) return identifier.trim();
-    if (!identifier.trim()) return "";
-    return `${identifier.trim()}@posturau.app`;
-  }, [identifier, user?.email]);
+  useEffect(() => {
+    if (!emailEditedManually) {
+      setEmail(username ? `${username.trim()}@posturau.app` : "");
+    }
+  }, [emailEditedManually, username]);
 
-  const derivedName = useMemo(() => {
-    if (user?.name) return user.name;
-    if (identifier.trim()) return identifier.trim();
-    return "";
-  }, [identifier, user?.name]);
+  const derivedEmail = useMemo(() => email.trim(), [email]);
+  const derivedName = useMemo(() => username.trim(), [username]);
 
   if (!visible) return null;
 
   const handleLogin = () => {
-    const trimmedIdentifier = identifier.trim();
+    const trimmedIdentifier = derivedName;
     const trimmedPassword = password.trim();
 
     if (!trimmedIdentifier || !trimmedPassword) {
@@ -38,6 +42,7 @@ export default function LoginModal({ visible, onLogin, user }) {
     }
 
     onLogin({
+      username: trimmedIdentifier,
       name: derivedName || trimmedIdentifier,
       email: derivedEmail || `${trimmedIdentifier}@posturau.app`,
       rememberMe,
@@ -64,14 +69,31 @@ export default function LoginModal({ visible, onLogin, user }) {
 
           <View style={styles.loginInputWrapper}>
             <View style={styles.loginInputIconCircle}>
+              <Text style={styles.loginInputIcon}>👤</Text>
+            </View>
+            <TextInput
+              style={styles.loginInput}
+              placeholder="Ingresa tu usuario"
+              placeholderTextColor="#7a7a7a"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+            />
+          </View>
+
+          <View style={styles.loginInputWrapper}>
+            <View style={styles.loginInputIconCircle}>
               <Text style={styles.loginInputIcon}>@</Text>
             </View>
             <TextInput
               style={styles.loginInput}
-              placeholder="Correo o usuario"
+              placeholder="Correo"
               placeholderTextColor="#7a7a7a"
-              value={identifier}
-              onChangeText={setIdentifier}
+              value={email}
+              onChangeText={(value) => {
+                setEmailEditedManually(true);
+                setEmail(value);
+              }}
               autoCapitalize="none"
               keyboardType="email-address"
             />

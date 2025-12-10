@@ -1,10 +1,12 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
+  Animated,
   Modal,
   SafeAreaView,
   ScrollView,
   StyleSheet,
+  Easing,
   Switch,
   Text,
   TextInput,
@@ -107,6 +109,49 @@ function InfoRow({ label, value, colors }) {
   );
 }
 
+function PremiumBadge({ isPremium }) {
+  const pulse = useRef(new Animated.Value(1)).current;
+  const colors = ["#BB3B0E", "#DD7631", "#D8C593"];
+
+  useEffect(() => {
+    if (!isPremium) return undefined;
+
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1.02,
+          duration: 1400,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0.98,
+          duration: 1400,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    loop.start();
+
+    return () => loop.stop();
+  }, [isPremium, pulse]);
+
+  if (!isPremium) return null;
+
+  return (
+    <Animated.View style={[styles.premiumBadge, { transform: [{ scale: pulse }] }]}> 
+      <View style={styles.premiumGradient}>
+        {colors.map((color, index) => (
+          <View key={`${color}-${index}`} style={[styles.premiumGradientSegment, { backgroundColor: color }]} />
+        ))}
+      </View>
+      <Text style={styles.premiumBadgeText}>Plan: MoveUp Pro</Text>
+    </Animated.View>
+  );
+}
+
 export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeTabKey, isPremium }) {
   const { colors } = useAppTheme();
   const { userProfile, setUserProfile } = useAppState();
@@ -118,13 +163,15 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   const [stats, setStats] = useState(null);
   const [showTerms, setShowTerms] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
-  const [editableName, setEditableName] = useState(user?.name || userProfile.name || "Jean Postura");
+  const [editableName, setEditableName] = useState(
+    user?.username || user?.name || userProfile.name || "Jean Postura"
+  );
   const [editableEmail, setEditableEmail] = useState(user?.email || userProfile.email || "usuario@posturau.app");
 
   const isProfileTab = activeTabKey === "perfil" || activeTabKey === "profile";
 
-  const currentName = isLoggedIn && (user?.name || userProfile.name)
-    ? user?.name || userProfile.name
+  const currentName = isLoggedIn && (user?.username || user?.name || userProfile.name)
+    ? user?.username || user?.name || userProfile.name
     : "Sin iniciar sesión";
   const currentEmail = isLoggedIn && (user?.email || userProfile.email)
     ? user?.email || userProfile.email
@@ -232,7 +279,13 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
             <View style={{ flex: 1 }}>
               <Text style={[styles.title, { color: colors.textPrimary }]}>{currentName || "Jean Postura"}</Text>
               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{currentEmail}</Text>
-              <Text style={[styles.planLabel, { color: colors.primary }]}>{planLabel}</Text>
+              <View style={styles.planRow}>
+                {isPremium ? (
+                  <PremiumBadge isPremium={isPremium} />
+                ) : (
+                  <Text style={[styles.planLabel, { color: colors.primary }]}>{planLabel}</Text>
+                )}
+              </View>
             </View>
             <TouchableOpacity
               onPress={handleEditProfile}
@@ -441,9 +494,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B6B6B",
   },
+  planRow: {
+    marginTop: 6,
+    flexDirection: "row",
+    alignItems: "center",
+  },
   planLabel: {
-    marginTop: 4,
     fontWeight: "700",
+  },
+  premiumBadge: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#D8C593",
+    backgroundColor: "#BB3B0E",
+  },
+  premiumGradient: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: "row",
+    opacity: 0.9,
+  },
+  premiumGradientSegment: {
+    flex: 1,
+  },
+  premiumBadgeText: {
+    color: "#FDF3E7",
+    fontWeight: "800",
+    letterSpacing: 0.2,
   },
   avatar: {
     width: 64,

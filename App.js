@@ -120,12 +120,17 @@ function AuthScreen({ onContinue }) {
 }
 
 function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin }) {
-  const { hydrated } = useAppState();
+  const { hydrated, setUserProfile } = useAppState();
   const [showIntro, setShowIntro] = useState(true);
 
   const handleFinishIntro = useCallback(() => setShowIntro(false), []);
 
-  const displayName = useMemo(() => user?.name || "", [user?.name]);
+  const displayName = useMemo(() => user?.username || user?.name || "", [user?.name, user?.username]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    setUserProfile(user);
+  }, [hydrated, setUserProfile, user]);
 
   if (!hydrated) {
     return <LoadingScreen />;
@@ -147,11 +152,12 @@ function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin }) {
 }
 
 export default function App() {
-  const [user, setUser] = useState({ name: "Jean", email: "jean@posturau.app" });
+  const [user, setUser] = useState({ username: "Jean", name: "Jean", email: "jean@posturau.app" });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const handleLogin = ({ name, email }) => {
-    setUser({ name, email });
+  const handleLogin = ({ username, name, email }) => {
+    const safeUsername = username || name || "";
+    setUser({ username: safeUsername, name: safeUsername || name, email });
     setIsLoggedIn(true);
   };
 

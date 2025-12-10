@@ -17,6 +17,24 @@ const tabs = [
   { key: "Perfil", icon: "👤", component: ProfileScreen },
 ];
 
+const proPalette = {
+  light: "#FCD3AA",
+  warm: "#D8C593",
+  deep: "#BB3B0E",
+  accent: "#DD7631",
+  sage: "#708160",
+};
+
+function GradientFill({ colors }) {
+  return (
+    <View style={styles.gradientFill}>
+      {colors.map((color, index) => (
+        <View key={`${color}-${index}`} style={[styles.gradientSegment, { backgroundColor: color }]} />
+      ))}
+    </View>
+  );
+}
+
 export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, setUser, onLogin, LoginCardComponent }) {
   const { colors } = useAppTheme();
   const [activeTab, setActiveTab] = useState(tabs[0].key);
@@ -116,7 +134,7 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
 
       {showPaywall && (
         <View style={styles.paywallOverlay} pointerEvents="auto">
-          <View style={styles.paywallCard}>
+          <View style={[styles.paywallCard, { borderColor: proPalette.warm }]}>
             <Text style={styles.paywallTitle}>Desbloquea MoveUp Pro</Text>
             <Text style={styles.paywallPrice}>$9.99 / mes</Text>
             <Text style={styles.paywallSubtitle}>Obtén acceso completo a:</Text>
@@ -131,6 +149,7 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
                 setShowPaywall(false);
               }}
             >
+              <GradientFill colors={[proPalette.deep, proPalette.accent, proPalette.light]} />
               <Text style={styles.paywallPrimaryText}>Activar membresía</Text>
             </TouchableOpacity>
 
@@ -195,31 +214,37 @@ const styles = StyleSheet.create({
   },
   paywallCard: {
     width: "100%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: proPalette.light,
+    borderWidth: 1,
     borderRadius: 20,
     padding: 24,
     alignItems: "flex-start",
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 10,
   },
   paywallTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#055F67",
+    fontSize: 24,
+    fontWeight: "800",
+    color: proPalette.deep,
     marginBottom: 4,
   },
   paywallPrice: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#0A393C",
+    fontSize: 19,
+    fontWeight: "700",
+    color: proPalette.accent,
     marginBottom: 8,
   },
   paywallSubtitle: {
-    fontSize: 14,
-    color: "#444",
-    marginBottom: 8,
+    fontSize: 15,
+    color: "#4B2D1C",
+    marginBottom: 10,
   },
   paywallBullet: {
     fontSize: 13,
-    color: "#333",
+    color: "#3A3A3A",
     marginBottom: 4,
   },
   paywallPrimaryButton: {
@@ -227,26 +252,37 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: "#055F67",
+    backgroundColor: proPalette.deep,
     alignItems: "center",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: proPalette.deep,
   },
   paywallPrimaryText: {
     color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   paywallSecondaryButton: {
     width: "100%",
     marginTop: 8,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#055F67",
+    borderColor: proPalette.sage,
+    backgroundColor: proPalette.light,
     alignItems: "center",
   },
   paywallSecondaryText: {
-    color: "#055F67",
+    color: proPalette.sage,
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: "700",
+  },
+  gradientFill: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: "row",
+  },
+  gradientSegment: {
+    flex: 1,
   },
 });
