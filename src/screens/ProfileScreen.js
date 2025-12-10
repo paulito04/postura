@@ -13,7 +13,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 import { useAppState } from "../context/AppStateContext";
@@ -143,15 +142,9 @@ function PremiumBadge({ isPremium }) {
 
   return (
     <Animated.View style={{ transform: [{ scale: pulse }] }}>
-      <LinearGradient
-        colors={colors}
-        locations={[0, 0.5, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.premiumBadge}
-      >
+      <View style={[styles.premiumBadge, { backgroundColor: colors[1] }]}>
         <Text style={styles.premiumBadgeText}>Plan: MoveUp Pro</Text>
-      </LinearGradient>
+      </View>
     </Animated.View>
   );
 }

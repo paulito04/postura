@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 
 import ExercisesScreen from "../screens/ExercisesScreen";
 import HomeScreen from "../screens/HomeScreen";
@@ -141,15 +140,9 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
               }}
               activeOpacity={0.9}
             >
-              <LinearGradient
-                colors={[proPalette.deep, proPalette.accent, proPalette.light]}
-                locations={[0, 0.6, 1]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.paywallPrimaryGradient}
-              >
+              <View style={[styles.paywallPrimaryGradient, { backgroundColor: proPalette.accent }]}>
                 <Text style={styles.paywallPrimaryText}>Activar membresía</Text>
-              </LinearGradient>
+              </View>
             </TouchableOpacity>
 
             <TouchableOpacity
