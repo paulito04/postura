@@ -11,6 +11,15 @@ import {
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 import { useAppTheme } from "../themeContext";
 
+const palette = {
+  primary: "#055F67",
+  softGreen: "#9EB998",
+  lightBackground: "#EDEDDD",
+  midGreen: "#67917D",
+  darkGreen: "#0A393C",
+  mutedBorder: "#D6D8D3",
+};
+
 const dayInitials = ["D", "L", "M", "M", "J", "V", "S"];
 
 export default function StreakDetailScreen({ navigation }) {
@@ -40,6 +49,20 @@ export default function StreakDetailScreen({ navigation }) {
       }, {}),
     [history]
   );
+
+  const monthActiveDays = useMemo(() => {
+    const currentYear = currentMonth.getFullYear();
+    const currentMonthIndex = currentMonth.getMonth();
+
+    return history.filter((entry) => {
+      const date = new Date(entry.date);
+      return (
+        date.getFullYear() === currentYear &&
+        date.getMonth() === currentMonthIndex &&
+        (entry.minutes || 0) > 0
+      );
+    }).length;
+  }, [currentMonth, history]);
 
   const currentStreak = stats?.currentStreak ?? 0;
   const flameStyle = useMemo(() => {
@@ -119,17 +142,39 @@ export default function StreakDetailScreen({ navigation }) {
       date.getDate() === today.getDate();
     const entry = historyMap[key];
     const isActive = (entry?.minutes || 0) > 0;
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    const isSelected = selectedDay?.key === key;
+
+    const circleStyles = [styles.dayCircle, styles.dayCircleInactive];
+
+    if (isWeekend) {
+      circleStyles.push(styles.weekendCircle);
+    }
+
+    if (isActive) {
+      circleStyles.push(styles.dayCircleActive);
+    }
+
+    if (isToday) {
+      circleStyles.push(styles.dayToday);
+    }
+
+    if (isSelected) {
+      circleStyles.push(isActive ? styles.dayCircleSelectedActive : styles.dayCircleSelected);
+    }
 
     return (
       <TouchableOpacity key={key} style={styles.dayCell} onPress={() => handleDayPress(dayNumber)}>
-        <View
-          style={[
-            styles.dayCircle,
-            isActive ? styles.dayCircleActive : styles.dayCircleInactive,
-            isToday ? styles.dayToday : null,
-          ]}
-        >
-          <Text style={[styles.dayNumber, isActive ? styles.dayNumberActive : null]}>{dayNumber}</Text>
+        <View style={circleStyles}>
+          <Text
+            style={[
+              styles.dayNumber,
+              isActive ? styles.dayNumberActive : null,
+              isSelected && !isActive ? styles.dayNumberSelected : null,
+            ]}
+          >
+            {dayNumber}
+          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -142,24 +187,34 @@ export default function StreakDetailScreen({ navigation }) {
   }, [daysInMonth, firstDayOffset]);
 
   const renderSelectedSummary = () => {
-    if (!selectedDay) {
-      return <Text style={styles.selectedEmpty}>Toca un día para ver su detalle.</Text>;
+    if (selectedDay) {
+      const { date, entry } = selectedDay;
+      if (entry) {
+        return (
+          <Text style={styles.selectedText}>
+            {`${date.getDate()} ${date.toLocaleDateString("es-ES", { month: "long" })}: ${entry.minutes} min, ${entry.exercises} ejercicios`}
+          </Text>
+        );
+      }
+
+      return <Text style={styles.selectedText}>Sin actividad registrada</Text>;
     }
 
-    const { date, entry } = selectedDay;
-    if (entry) {
-      return (
-        <Text style={styles.selectedText}>
-          {`${date.getDate()} ${date.toLocaleDateString("es-ES", { month: "long" })}: ${entry.minutes} min, ${entry.exercises} ejercicios`}
-        </Text>
-      );
+    if (monthActiveDays > 0) {
+      const label = monthActiveDays === 1 ? "día activo" : "días activos";
+      return <Text style={styles.selectedText}>{`${monthActiveDays} ${label} este mes`}</Text>;
     }
 
-    return <Text style={styles.selectedText}>Sin actividad registrada</Text>;
+    return (
+      <View style={styles.emptyStateRow}>
+        <Text style={styles.snowflakeIcon}>❄️</Text>
+        <Text style={styles.selectedText}>Sin actividad registrada</Text>
+      </View>
+    );
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background || palette.lightBackground }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation?.goBack?.()} style={styles.headerButton}>
           <Text style={styles.headerIcon}>←</Text>
@@ -230,8 +285,8 @@ export default function StreakDetailScreen({ navigation }) {
               </View>
 
               <View style={styles.weekRow}>
-                {dayInitials.map((day) => (
-                  <Text key={day} style={styles.weekLabel}>
+                {dayInitials.map((day, index) => (
+                  <Text key={`${day}-${index}`} style={styles.weekLabel}>
                     {day}
                   </Text>
                 ))}
@@ -255,6 +310,7 @@ export default function StreakDetailScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: palette.lightBackground,
   },
   header: {
     flexDirection: "row",
@@ -268,12 +324,12 @@ const styles = StyleSheet.create({
   },
   headerIcon: {
     fontSize: 20,
-    color: "#0F172A",
+    color: palette.darkGreen,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#0F172A",
+    color: palette.darkGreen,
   },
   tabRow: {
     flexDirection: "row",
@@ -285,16 +341,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     paddingVertical: 10,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#dfe7df",
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.mutedBorder,
   },
   tabButtonActive: {
-    backgroundColor: "#0B5563",
+    backgroundColor: palette.primary,
+    borderColor: palette.primary,
   },
   tabLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#475569",
+    color: palette.darkGreen,
   },
   tabLabelActive: {
     color: "#FFFFFF",
@@ -303,7 +362,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     height: 3,
     width: "40%",
-    backgroundColor: "#4FB7C2",
+    backgroundColor: palette.softGreen,
     borderRadius: 6,
   },
   content: {
@@ -315,7 +374,7 @@ const styles = StyleSheet.create({
   },
   streakHighlight: {
     alignItems: "center",
-    backgroundColor: "#0B5563",
+    backgroundColor: palette.primary,
     borderRadius: 18,
     paddingVertical: 24,
     paddingHorizontal: 16,
@@ -339,7 +398,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   messageCard: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#F5F8F6",
     borderRadius: 16,
     padding: 16,
     gap: 6,
@@ -347,21 +406,21 @@ const styles = StyleSheet.create({
   messageTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0F172A",
+    color: palette.darkGreen,
   },
   messageBody: {
-    color: "#475569",
+    color: "#4b5a55",
     fontSize: 14,
   },
   messageAction: {
-    color: "#0B5563",
+    color: palette.midGreen,
     fontWeight: "800",
     marginTop: 8,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#0F172A",
+    color: palette.darkGreen,
   },
   calendarCard: {
     backgroundColor: "#FFFFFF",
@@ -382,17 +441,22 @@ const styles = StyleSheet.create({
   monthButton: {
     padding: 8,
     borderRadius: 10,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: palette.lightBackground,
+    borderWidth: 1,
+    borderColor: palette.mutedBorder,
   },
   monthArrow: {
     fontSize: 18,
-    color: "#0F172A",
+    color: palette.darkGreen,
     fontWeight: "800",
   },
   monthLabel: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#0F172A",
+    color: palette.darkGreen,
+    textTransform: "capitalize",
+    flex: 1,
+    textAlign: "center",
   },
   weekRow: {
     flexDirection: "row",
@@ -403,7 +467,7 @@ const styles = StyleSheet.create({
   weekLabel: {
     width: `${100 / 7}%`,
     textAlign: "center",
-    color: "#475569",
+    color: palette.midGreen,
     fontWeight: "700",
   },
   grid: {
@@ -424,36 +488,63 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   dayCircleActive: {
-    backgroundColor: "#0F9BA8",
-    borderColor: "#0F9BA8",
+    backgroundColor: palette.primary,
+    borderColor: palette.primary,
   },
   dayCircleInactive: {
-    borderColor: "#E2E8F0",
+    borderColor: palette.mutedBorder,
     backgroundColor: "#FFFFFF",
   },
+  weekendCircle: {
+    backgroundColor: "#f3f5f2",
+  },
   dayToday: {
-    borderColor: "#0B5563",
+    borderColor: palette.primary,
     borderWidth: 2,
   },
+  dayCircleSelected: {
+    borderWidth: 2,
+    borderColor: palette.primary,
+    backgroundColor: "#f6faf8",
+    shadowColor: palette.primary,
+    shadowOpacity: 0.16,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  dayCircleSelectedActive: {
+    borderWidth: 2,
+    borderColor: "#cde0da",
+    backgroundColor: palette.primary,
+  },
   dayNumber: {
-    color: "#0F172A",
+    color: palette.darkGreen,
     fontWeight: "700",
   },
   dayNumberActive: {
     color: "#FFFFFF",
   },
+  dayNumberSelected: {
+    color: palette.primary,
+  },
   selectedContainer: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: "#F8FAFC",
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: palette.lightBackground,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.mutedBorder,
   },
   selectedText: {
-    color: "#0F172A",
-    fontWeight: "600",
+    color: palette.darkGreen,
+    fontWeight: "700",
   },
-  selectedEmpty: {
-    color: "#64748B",
+  emptyStateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  snowflakeIcon: {
+    fontSize: 18,
   },
   comingSoon: {
     alignItems: "center",
