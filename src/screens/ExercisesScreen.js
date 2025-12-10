@@ -10,14 +10,7 @@ const data = [
   "Apertura de pecho en pared",
 ];
 
-export default function ExercisesScreen({
-  tabParams,
-  LoginCardComponent,
-  userName,
-  setUserName,
-  isLoggedIn,
-  setIsLoggedIn,
-}) {
+export default function ExercisesScreen({ tabParams }) {
   const { colors } = useAppTheme();
   const challenge = tabParams?.challenge;
 
@@ -47,14 +40,6 @@ export default function ExercisesScreen({
         keyExtractor={(item) => item}
         ListHeaderComponent={
           <View style={styles.headerStack}>
-            {LoginCardComponent ? (
-              <LoginCardComponent
-                userName={userName}
-                setUserName={setUserName}
-                isLoggedIn={isLoggedIn}
-                setIsLoggedIn={setIsLoggedIn}
-              />
-            ) : null}
             {challenge ? (
               <View style={[styles.challengeBanner, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <Text style={[styles.bannerEyebrow, { color: colors.primaryDark }]}>Desafío del día</Text>

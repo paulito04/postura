@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import ExercisesScreen from "../screens/ExercisesScreen";
@@ -16,13 +16,7 @@ const tabs = [
   { key: "Perfil", icon: "👤", component: ProfileScreen },
 ];
 
-export default function MainTabs({
-  userName,
-  isLoggedIn,
-  setIsLoggedIn,
-  setUserName,
-  LoginCardComponent,
-}) {
+export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, setUser, onLogin, LoginCardComponent }) {
   const { colors } = useAppTheme();
   const [activeTab, setActiveTab] = useState(tabs[0].key);
   const [tabParams, setTabParams] = useState({});
@@ -46,19 +40,22 @@ export default function MainTabs({
   );
   const activeProps = tabParams[activeTab];
 
-  const handleSelectTab = useCallback((tabKey) => setActiveTab(tabKey), []);
+  const handleSelectTab = (tabKey) => {
+    if (!isLoggedIn) return;
+    setActiveTab(tabKey);
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.screenContainer}>
         <ActiveComponent
           navigation={navigation}
+          user={user}
           userName={userName}
           tabParams={activeProps}
           isLoggedIn={isLoggedIn}
           setIsLoggedIn={setIsLoggedIn}
-          setUserName={setUserName}
-          LoginCardComponent={LoginCardComponent}
+          setUser={setUser}
         />
       </View>
 
@@ -84,6 +81,12 @@ export default function MainTabs({
           );
         })}
       </View>
+
+      {!isLoggedIn && LoginCardComponent ? (
+        <View style={styles.loginOverlay} pointerEvents="auto">
+          <LoginCardComponent user={user} onLogin={onLogin} />
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -118,5 +121,16 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 12,
     textAlign: "center",
+  },
+  loginOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
   },
 });
