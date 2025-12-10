@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
@@ -7,6 +8,15 @@ import { useAppTheme } from "../themeContext";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 
 const durationOptions = [30, 45, 60];
+const GREETINGS = [
+  "Hola",
+  "Buenos días",
+  "¿Qué tal",
+  "¿Cómo andas",
+  "¿Listo para empezar",
+  "¡A darle",
+  "Dios te bendiga",
+];
 const tipList = [
   "Pantalla a la altura de los ojos",
   "Espalda recta apoyada en el respaldo",
@@ -30,7 +40,8 @@ const tipList = [
   "Haz rotaciones de cuello suaves",
 ];
 
-export default function HomeScreen({ navigation, userName, isLoggedIn }) {
+export default function HomeScreen({ userName, isLoggedIn }) {
+  const navigation = useNavigation();
   const { colors } = useAppTheme();
   const { discomfortLevel, updateDiscomfort } = useAppState();
 
@@ -44,6 +55,7 @@ export default function HomeScreen({ navigation, userName, isLoggedIn }) {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
   const [carouselWidth, setCarouselWidth] = useState(0);
+  const [greeting, setGreeting] = useState("");
 
   const scrollRef = useRef(null);
   const snackbarTimeout = useRef(null);
@@ -67,6 +79,11 @@ export default function HomeScreen({ navigation, userName, isLoggedIn }) {
     }),
     []
   );
+
+  function getRandomGreeting() {
+    const index = Math.floor(Math.random() * GREETINGS.length);
+    return GREETINGS[index];
+  }
 
   useEffect(() => {
     setDiscomfortInput(String(discomfortLevel ?? 0));
@@ -108,7 +125,17 @@ export default function HomeScreen({ navigation, userName, isLoggedIn }) {
     };
   }, []);
 
-  const greeting = isLoggedIn && userName ? `¡Hola, ${userName}!` : "¡Hola!";
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      setGreeting(getRandomGreeting());
+    });
+
+    setGreeting(getRandomGreeting());
+
+    return unsubscribe;
+  }, [navigation]);
+
+  const displayName = isLoggedIn && userName ? userName : "Tú";
   const discomfortColor = useMemo(() => {
     if (discomfortLevel <= 3) return colors.success;
     if (discomfortLevel <= 6) return colors.warning;
@@ -168,7 +195,9 @@ export default function HomeScreen({ navigation, userName, isLoggedIn }) {
                     </View>
                   </ProgressRing>
                   <View style={{ gap: 4 }}>
-                    <Text style={[styles.headerGreeting, { color: "#FFFFFF" }]}>{greeting}</Text>
+                    <Text style={[styles.headerGreeting, { color: "#FFFFFF" }]}>
+                      {greeting} {displayName}!
+                    </Text>
                     <Text style={[styles.headerSubtitle, { color: palette.softAccent }]}>Tu bienestar postural empieza aquí</Text>
                     <Text style={[styles.headerStatus, { color: "#FFFFFF" }]}>Nivel: Principiante · Racha: {streakDays} días</Text>
                   </View>
