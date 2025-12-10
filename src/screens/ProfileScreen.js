@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 import { useAppState } from "../context/AppStateContext";
@@ -141,13 +142,16 @@ function PremiumBadge({ isPremium }) {
   if (!isPremium) return null;
 
   return (
-    <Animated.View style={[styles.premiumBadge, { transform: [{ scale: pulse }] }]}> 
-      <View style={styles.premiumGradient}>
-        {colors.map((color, index) => (
-          <View key={`${color}-${index}`} style={[styles.premiumGradientSegment, { backgroundColor: color }]} />
-        ))}
-      </View>
-      <Text style={styles.premiumBadgeText}>Plan: MoveUp Pro</Text>
+    <Animated.View style={{ transform: [{ scale: pulse }] }}>
+      <LinearGradient
+        colors={colors}
+        locations={[0, 0.5, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.premiumBadge}
+      >
+        <Text style={styles.premiumBadgeText}>Plan: MoveUp Pro</Text>
+      </LinearGradient>
     </Animated.View>
   );
 }
@@ -503,21 +507,16 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   premiumBadge: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    overflow: "hidden",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: "#D8C593",
-    backgroundColor: "#BB3B0E",
-  },
-  premiumGradient: {
-    ...StyleSheet.absoluteFillObject,
-    flexDirection: "row",
-    opacity: 0.9,
-  },
-  premiumGradientSegment: {
-    flex: 1,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
   },
   premiumBadgeText: {
     color: "#FDF3E7",
