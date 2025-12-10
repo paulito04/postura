@@ -59,7 +59,10 @@ export default function MainTabs({ userName }) {
               accessibilityRole="button"
               accessibilityState={isActive ? { selected: true } : undefined}
               onPress={() => handleSelectTab(tab.key)}
-              style={[styles.tabButton, isActive && { backgroundColor: colors.background }]}
+              style={[
+                styles.tabButton,
+                isActive && { backgroundColor: `${colors.primary}15`, borderColor: colors.primary },
+              ]}
             >
               <Text style={[styles.tabIcon, { color }]}>{tab.icon}</Text>
               <Text style={[styles.tabLabel, { color, fontWeight: isActive ? "800" : "600" }]}>{tab.key}</Text>
@@ -83,6 +86,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     alignItems: "center",
     paddingVertical: 10,
+    paddingHorizontal: 10,
+    gap: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   tabButton: {
@@ -91,11 +96,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   tabIcon: {
     fontSize: 18,
   },
   tabLabel: {
     fontSize: 12,
+    textAlign: "center",
   },
 });
