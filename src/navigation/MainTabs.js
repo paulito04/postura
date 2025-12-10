@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
 import ExercisesScreen from "../screens/ExercisesScreen";
 import HomeScreen from "../screens/HomeScreen";
@@ -24,16 +25,6 @@ const proPalette = {
   accent: "#DD7631",
   sage: "#708160",
 };
-
-function GradientFill({ colors }) {
-  return (
-    <View style={styles.gradientFill}>
-      {colors.map((color, index) => (
-        <View key={`${color}-${index}`} style={[styles.gradientSegment, { backgroundColor: color }]} />
-      ))}
-    </View>
-  );
-}
 
 export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, setUser, onLogin, LoginCardComponent }) {
   const { colors } = useAppTheme();
@@ -148,9 +139,17 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
                 setIsPremium(true);
                 setShowPaywall(false);
               }}
+              activeOpacity={0.9}
             >
-              <GradientFill colors={[proPalette.deep, proPalette.accent, proPalette.light]} />
-              <Text style={styles.paywallPrimaryText}>Activar membresía</Text>
+              <LinearGradient
+                colors={[proPalette.deep, proPalette.accent, proPalette.light]}
+                locations={[0, 0.6, 1]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.paywallPrimaryGradient}
+              >
+                <Text style={styles.paywallPrimaryText}>Activar membresía</Text>
+              </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -250,13 +249,16 @@ const styles = StyleSheet.create({
   paywallPrimaryButton: {
     width: "100%",
     marginTop: 16,
-    paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: proPalette.deep,
-    alignItems: "center",
     overflow: "hidden",
     borderWidth: 1,
     borderColor: proPalette.deep,
+  },
+  paywallPrimaryGradient: {
+    width: "100%",
+    paddingVertical: 12,
+    alignItems: "center",
+    borderRadius: 12,
   },
   paywallPrimaryText: {
     color: "#FFFFFF",
@@ -277,12 +279,5 @@ const styles = StyleSheet.create({
     color: proPalette.sage,
     fontSize: 14,
     fontWeight: "700",
-  },
-  gradientFill: {
-    ...StyleSheet.absoluteFillObject,
-    flexDirection: "row",
-  },
-  gradientSegment: {
-    flex: 1,
   },
 });
