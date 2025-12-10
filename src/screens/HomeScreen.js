@@ -5,6 +5,12 @@ import { useAppTheme } from "../themeContext";
 export default function HomeScreen({ navigation }) {
   const { colors } = useAppTheme();
 
+  const handleExercisesPress = () => {
+    if (navigation?.navigate) {
+      navigation.navigate("Ejercicios");
+    }
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.primaryDark }]}>
       <StatusBar style="light" />
@@ -16,7 +22,7 @@ export default function HomeScreen({ navigation }) {
         </Text>
         <TouchableOpacity
           style={[styles.primaryButton, { backgroundColor: colors.accent }]}
-          onPress={() => navigation.navigate("Ejercicios")}
+          onPress={handleExercisesPress}
         >
           <Text style={styles.primaryButtonText}>Ver ejercicios</Text>
         </TouchableOpacity>
