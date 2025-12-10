@@ -13,6 +13,7 @@ import {
 import { areas, exercises, levels } from "../data/exercises";
 import { recordSession } from "../activityTracker";
 import { useAppTheme } from "../themeContext";
+import { exerciseImages } from "../config/exerciseImages";
 
 const ExerciseCard = ({ exercise, onPress, onToggleFavorite, isFavorite, colors }) => {
   return (
@@ -48,6 +49,31 @@ const RoutinePlayer = ({
   isPlayingRoutine,
   colors,
 }) => {
+  const frames = useMemo(
+    () => exerciseImages[exercise.id] || [exercise.image || require("../../assets/logo.jpg")],
+    [exercise.id, exercise.image]
+  );
+  const [frameIndex, setFrameIndex] = useState(0);
+
+  useEffect(() => {
+    setFrameIndex(0);
+  }, [frames]);
+
+  useEffect(() => {
+    if (!frames || frames.length <= 1) return undefined;
+
+    let isMounted = true;
+    const interval = setInterval(() => {
+      if (!isMounted) return;
+      setFrameIndex((prev) => (prev + 1) % frames.length);
+    }, 800);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [frames]);
+
   const formattedTime = useMemo(() => {
     const minutes = Math.floor(routineTimeLeft / 60)
       .toString()
@@ -77,7 +103,9 @@ const RoutinePlayer = ({
   return (
     <ScrollView contentContainerStyle={styles.playerContainer}>
       <Text style={[styles.playerTitle, { color: colors.textPrimary }]}>{exercise.name}</Text>
-      <Image source={exercise.image} style={styles.playerImage} resizeMode="cover" />
+      <View style={styles.imageContainer}>
+        <Image source={frames[frameIndex]} style={styles.exerciseImage} resizeMode="contain" />
+      </View>
 
       <View style={[styles.timerBox, { backgroundColor: `${colors.primary}10`, borderColor: colors.border }]}>
         <Text style={[styles.timerLabel, { color: colors.textSecondary }]}>Tiempo restante</Text>
@@ -479,10 +507,16 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     textAlign: "center",
   },
-  playerImage: {
+  imageContainer: {
     width: "100%",
-    height: 220,
-    borderRadius: 14,
+    aspectRatio: 16 / 9,
+    borderRadius: 16,
+    overflow: "hidden",
+    marginBottom: 16,
+  },
+  exerciseImage: {
+    width: "100%",
+    height: "100%",
   },
   timerBox: {
     padding: 16,
