@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { areas, exercises, levels } from "../data/exercises";
+import { recordSession } from "../activityTracker";
 import { useAppTheme } from "../themeContext";
 
 const ExerciseCard = ({ exercise, onPress, onToggleFavorite, isFavorite, colors }) => {
@@ -163,12 +164,19 @@ export default function ExercisesScreen({ tabParams }) {
     setCurrentStepIndex(0);
   }, []);
 
-  const handleFinish = useCallback(() => {
+  const handleFinish = useCallback(async () => {
+    if (selectedExercise) {
+      const todayKey = new Date().toISOString().split("T")[0];
+      const minutes = Math.max(1, Math.round(selectedExercise.duration / 60));
+
+      await recordSession({ date: todayKey, minutes, exercises: 1 });
+    }
+
     setIsPlayingRoutine(false);
     setSelectedExercise(null);
     setRoutineTimeLeft(0);
     setCurrentStepIndex(0);
-  }, []);
+  }, [selectedExercise]);
 
   const renderFilterRow = (items, value, onChange) => (
     <View style={styles.filterRow}>
