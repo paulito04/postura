@@ -2,7 +2,7 @@ import React from "react";
 import { Image, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../themeContext";
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation, userName }) {
   const { colors } = useAppTheme();
 
   const handleExercisesPress = () => {
@@ -11,12 +11,14 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  const greeting = userName ? `Hola, ${userName}` : "Hola";
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.primaryDark }]}>
       <StatusBar style="light" />
       <View style={styles.content}>
         <Image source={require("../../assets/splash-icon.png")} style={styles.logo} />
-        <Text style={styles.title}>Bienvenido a PosturaU</Text>
+        <Text style={styles.title}>{greeting}</Text>
         <Text style={styles.subtitle}>
           Mejora tu bienestar postural con rutinas guiadas, seguimiento de progreso y consejos prácticos.
         </Text>
