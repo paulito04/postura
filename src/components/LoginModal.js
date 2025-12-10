@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 
 const PRIMARY_COLOR = "#055F67";
 
@@ -54,11 +53,7 @@ export default function LoginModal({ visible, onLogin, user }) {
   };
 
   return (
-    <LinearGradient
-      colors={["#E3F2FD", "#E0F7FA", "#F3E5F5"]}
-      style={styles.loginOverlay}
-      pointerEvents="auto"
-    >
+    <View style={styles.loginOverlay} pointerEvents="auto">
       <View style={styles.loginCardWrapper}>
         <View style={styles.loginAvatar}>
           <Text style={styles.loginAvatarIcon}>👤</Text>
@@ -119,7 +114,7 @@ export default function LoginModal({ visible, onLogin, user }) {
           REGÍSTRATE AQUÍ
         </Text>
       </Text>
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -133,6 +128,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#E5F1F6",
   },
   loginCardWrapper: {
     width: "85%",
