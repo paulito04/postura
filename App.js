@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   SafeAreaView,
   StyleSheet,
@@ -11,6 +11,77 @@ import MainTabs from "./src/navigation/MainTabs";
 import IntroScreen from "./src/screens/IntroScreen";
 import { AppStateProvider, useAppState } from "./src/context/AppStateContext";
 import { ThemeProvider, useAppTheme } from "./src/themeContext";
+
+export function LoginCard({ userName, setUserName, isLoggedIn, setIsLoggedIn }) {
+  const { colors } = useAppTheme();
+  const [usernameInput, setUsernameInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setUsernameInput("");
+      setPasswordInput("");
+    }
+  }, [isLoggedIn]);
+
+  const handleLogin = useCallback(() => {
+    const trimmed = usernameInput.trim();
+    if (!trimmed) return;
+
+    setUserName(trimmed);
+    setIsLoggedIn(true);
+  }, [setIsLoggedIn, setUserName, usernameInput]);
+
+  const handleChangeUser = useCallback(() => {
+    setIsLoggedIn(false);
+    setUserName("");
+    setUsernameInput("");
+    setPasswordInput("");
+  }, [setIsLoggedIn, setUserName]);
+
+  return (
+    <View style={[styles.loginCard, { backgroundColor: `${colors.surface}F2`, borderColor: colors.border }]}>
+      <Text style={[styles.loginTitle, { color: colors.primaryDark }]}>Iniciar sesión</Text>
+
+      {!isLoggedIn ? (
+        <>
+          <View style={styles.loginInputGroup}>
+            <Text style={[styles.loginLabel, { color: colors.textSecondary }]}>Nombre de usuario</Text>
+            <TextInput
+              placeholder="Ingresa tu nombre"
+              placeholderTextColor={colors.textSecondary}
+              value={usernameInput}
+              onChangeText={setUsernameInput}
+              style={[styles.loginInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surface }]}
+            />
+          </View>
+          <View style={styles.loginInputGroup}>
+            <Text style={[styles.loginLabel, { color: colors.textSecondary }]}>Contraseña</Text>
+            <TextInput
+              placeholder="********"
+              placeholderTextColor={colors.textSecondary}
+              secureTextEntry
+              value={passwordInput}
+              onChangeText={setPasswordInput}
+              style={[styles.loginInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surface }]}
+            />
+          </View>
+
+          <TouchableOpacity style={[styles.loginButton, { backgroundColor: "#055F67" }]} onPress={handleLogin}>
+            <Text style={styles.loginButtonText}>Login</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <View style={styles.loggedInRow}>
+          <Text style={[styles.loggedInText, { color: colors.textPrimary }]}>Has iniciado sesión como {userName || "Sin nombre"}</Text>
+          <TouchableOpacity style={[styles.secondaryButton, { borderColor: "#055F67" }]} onPress={handleChangeUser}>
+            <Text style={[styles.secondaryButtonText, { color: "#055F67" }]}>Cambiar usuario</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+}
 
 function LoadingScreen() {
   const { colors } = useAppTheme();
@@ -125,7 +196,7 @@ function AuthScreen({ onContinue }) {
   );
 }
 
-function RootApp() {
+function RootApp({ userName, setUserName, isLoggedIn, setIsLoggedIn }) {
   const { hydrated, userProfile, setUserProfile } = useAppState();
   const [showIntro, setShowIntro] = useState(true);
 
@@ -134,11 +205,21 @@ function RootApp() {
   const handleCompleteAuth = useCallback(
     async (profile) => {
       await setUserProfile(profile);
+      setUserName(profile?.name ?? "");
+      setIsLoggedIn(Boolean(profile?.name));
     },
-    [setUserProfile]
+    [setIsLoggedIn, setUserName, setUserProfile]
   );
 
   const hasProfile = useMemo(() => Boolean(userProfile?.name), [userProfile?.name]);
+  const displayName = useMemo(() => userName || userProfile?.name || "", [userName, userProfile?.name]);
+
+  useEffect(() => {
+    if (userProfile?.name) {
+      setUserName(userProfile.name);
+      setIsLoggedIn(true);
+    }
+  }, [setIsLoggedIn, setUserName, userProfile?.name]);
 
   if (!hydrated) {
     return <LoadingScreen />;
@@ -147,17 +228,31 @@ function RootApp() {
   return showIntro ? (
     <IntroScreen onFinish={handleFinishIntro} />
   ) : hasProfile ? (
-    <MainTabs userName={userProfile.name} />
+    <MainTabs
+      userName={displayName}
+      isLoggedIn={isLoggedIn}
+      setIsLoggedIn={setIsLoggedIn}
+      setUserName={setUserName}
+      LoginCardComponent={LoginCard}
+    />
   ) : (
     <AuthScreen onContinue={handleCompleteAuth} />
   );
 }
 
 export default function App() {
+  const [userName, setUserName] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   return (
     <ThemeProvider>
       <AppStateProvider>
-        <RootApp />
+        <RootApp
+          userName={userName}
+          setUserName={setUserName}
+          isLoggedIn={isLoggedIn}
+          setIsLoggedIn={setIsLoggedIn}
+        />
       </AppStateProvider>
     </ThemeProvider>
   );
@@ -268,5 +363,61 @@ const styles = StyleSheet.create({
   dividerLabel: {
     fontSize: 12,
     fontWeight: "700",
+  },
+  loginCard: {
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    gap: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  loginTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+  },
+  loginInputGroup: {
+    gap: 6,
+  },
+  loginLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  loginInput: {
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+  },
+  loginButton: {
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: "center",
+  },
+  loginButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 16,
+  },
+  loggedInRow: {
+    gap: 10,
+  },
+  loggedInText: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  secondaryButtonText: {
+    fontSize: 14,
+    fontWeight: "800",
   },
 });

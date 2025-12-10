@@ -16,7 +16,13 @@ const tabs = [
   { key: "Perfil", icon: "👤", component: ProfileScreen },
 ];
 
-export default function MainTabs({ userName }) {
+export default function MainTabs({
+  userName,
+  isLoggedIn,
+  setIsLoggedIn,
+  setUserName,
+  LoginCardComponent,
+}) {
   const { colors } = useAppTheme();
   const [activeTab, setActiveTab] = useState(tabs[0].key);
   const [tabParams, setTabParams] = useState({});
@@ -45,7 +51,15 @@ export default function MainTabs({ userName }) {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.screenContainer}>
-        <ActiveComponent navigation={navigation} userName={userName} tabParams={activeProps} />
+        <ActiveComponent
+          navigation={navigation}
+          userName={userName}
+          tabParams={activeProps}
+          isLoggedIn={isLoggedIn}
+          setIsLoggedIn={setIsLoggedIn}
+          setUserName={setUserName}
+          LoginCardComponent={LoginCardComponent}
+        />
       </View>
 
       <View style={[styles.tabBar, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
