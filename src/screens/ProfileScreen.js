@@ -1,5 +1,5 @@
 import React from "react";
-import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../themeContext";
 
 const profile = {
@@ -8,29 +8,29 @@ const profile = {
   goal: "Mejorar la higiene postural en jornada de oficina",
 };
 
-export default function ProfileScreen({ LoginCardComponent, userName, setUserName, isLoggedIn, setIsLoggedIn }) {
+export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn }) {
   const { colors } = useAppTheme();
-  const currentName = isLoggedIn && userName ? userName : "Sin iniciar sesión";
+  const currentName = isLoggedIn && user?.name ? user.name : "Sin iniciar sesión";
+  const currentEmail = isLoggedIn && user?.email ? user.email : profile.email;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
-        {LoginCardComponent ? (
-          <LoginCardComponent
-            userName={userName}
-            setUserName={setUserName}
-            isLoggedIn={isLoggedIn}
-            setIsLoggedIn={setIsLoggedIn}
-          />
-        ) : null}
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.title, { color: colors.textPrimary }]}>Perfil</Text>
           <Text style={[styles.label, { color: colors.textSecondary }]}>Nombre</Text>
           <Text style={[styles.value, { color: colors.textPrimary }]}>{currentName}</Text>
           <Text style={[styles.label, { color: colors.textSecondary }]}>Correo</Text>
-          <Text style={[styles.value, { color: colors.textPrimary }]}>{profile.email}</Text>
+          <Text style={[styles.value, { color: colors.textPrimary }]}>{currentEmail}</Text>
           <Text style={[styles.label, { color: colors.textSecondary }]}>Objetivo</Text>
           <Text style={[styles.value, { color: colors.textPrimary }]}>{profile.goal}</Text>
+
+          <TouchableOpacity
+            style={[styles.switchButton, { backgroundColor: colors.surface, borderColor: colors.primary }]}
+            onPress={() => setIsLoggedIn(false)}
+          >
+            <Text style={[styles.switchButtonText, { color: colors.primary }]}>Cambiar cuenta</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -65,5 +65,16 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 16,
     lineHeight: 22,
+  },
+  switchButton: {
+    marginTop: 18,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  switchButtonText: {
+    fontSize: 14,
+    fontWeight: "800",
   },
 });

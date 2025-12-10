@@ -1,84 +1,71 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import MainTabs from "./src/navigation/MainTabs";
 import IntroScreen from "./src/screens/IntroScreen";
 import { AppStateProvider, useAppState } from "./src/context/AppStateContext";
 import { ThemeProvider, useAppTheme } from "./src/themeContext";
 
-export function LoginCard({ userName, setUserName, isLoggedIn, setIsLoggedIn }) {
+export function LoginCard({ user, onLogin }) {
   const { colors } = useAppTheme();
-  const [usernameInput, setUsernameInput] = useState("");
+  const [nameInput, setNameInput] = useState(user?.name ?? "");
+  const [emailInput, setEmailInput] = useState(user?.email ?? "");
   const [passwordInput, setPasswordInput] = useState("");
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      setUsernameInput("");
-      setPasswordInput("");
-    }
-  }, [isLoggedIn]);
-
-  const handleLogin = useCallback(() => {
-    const trimmed = usernameInput.trim();
-    if (!trimmed) return;
-
-    setUserName(trimmed);
-    setIsLoggedIn(true);
-  }, [setIsLoggedIn, setUserName, usernameInput]);
-
-  const handleChangeUser = useCallback(() => {
-    setIsLoggedIn(false);
-    setUserName("");
-    setUsernameInput("");
+    setNameInput(user?.name ?? "");
+    setEmailInput(user?.email ?? "");
     setPasswordInput("");
-  }, [setIsLoggedIn, setUserName]);
+  }, [user?.email, user?.name]);
+
+  const handleLogin = () => {
+    const trimmedName = nameInput.trim();
+    const trimmedEmail = emailInput.trim();
+    if (!trimmedName || !trimmedEmail) return;
+
+    onLogin({ name: trimmedName, email: trimmedEmail });
+  };
 
   return (
-    <View style={[styles.loginCard, { backgroundColor: `${colors.surface}F2`, borderColor: colors.border }]}>
-      <Text style={[styles.loginTitle, { color: colors.primaryDark }]}>Iniciar sesión</Text>
+    <View style={[styles.loginCard, { backgroundColor: "#FFFFFF", borderColor: colors.border }]}>
+      <Text style={[styles.loginTitle, { color: "#055F67" }]}>Iniciar sesión</Text>
 
-      {!isLoggedIn ? (
-        <>
-          <View style={styles.loginInputGroup}>
-            <Text style={[styles.loginLabel, { color: colors.textSecondary }]}>Nombre de usuario</Text>
-            <TextInput
-              placeholder="Ingresa tu nombre"
-              placeholderTextColor={colors.textSecondary}
-              value={usernameInput}
-              onChangeText={setUsernameInput}
-              style={[styles.loginInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surface }]}
-            />
-          </View>
-          <View style={styles.loginInputGroup}>
-            <Text style={[styles.loginLabel, { color: colors.textSecondary }]}>Contraseña</Text>
-            <TextInput
-              placeholder="********"
-              placeholderTextColor={colors.textSecondary}
-              secureTextEntry
-              value={passwordInput}
-              onChangeText={setPasswordInput}
-              style={[styles.loginInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surface }]}
-            />
-          </View>
+      <View style={styles.loginInputGroup}>
+        <Text style={[styles.loginLabel, { color: colors.textSecondary }]}>Nombre</Text>
+        <TextInput
+          placeholder="Ingresa tu nombre"
+          placeholderTextColor={colors.textSecondary}
+          value={nameInput}
+          onChangeText={setNameInput}
+          style={[styles.loginInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: "#F6F7FB" }]}
+        />
+      </View>
+      <View style={styles.loginInputGroup}>
+        <Text style={[styles.loginLabel, { color: colors.textSecondary }]}>Correo</Text>
+        <TextInput
+          placeholder="tu@email.com"
+          placeholderTextColor={colors.textSecondary}
+          value={emailInput}
+          onChangeText={setEmailInput}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          style={[styles.loginInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: "#F6F7FB" }]}
+        />
+      </View>
+      <View style={styles.loginInputGroup}>
+        <Text style={[styles.loginLabel, { color: colors.textSecondary }]}>Contraseña</Text>
+        <TextInput
+          placeholder="********"
+          placeholderTextColor={colors.textSecondary}
+          secureTextEntry
+          value={passwordInput}
+          onChangeText={setPasswordInput}
+          style={[styles.loginInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: "#F6F7FB" }]}
+        />
+      </View>
 
-          <TouchableOpacity style={[styles.loginButton, { backgroundColor: "#055F67" }]} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Login</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <View style={styles.loggedInRow}>
-          <Text style={[styles.loggedInText, { color: colors.textPrimary }]}>Has iniciado sesión como {userName || "Sin nombre"}</Text>
-          <TouchableOpacity style={[styles.secondaryButton, { borderColor: "#055F67" }]} onPress={handleChangeUser}>
-            <Text style={[styles.secondaryButtonText, { color: "#055F67" }]}>Cambiar usuario</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      <TouchableOpacity style={[styles.loginButton, { backgroundColor: "#0F9BA8" }]} onPress={handleLogin}>
+        <Text style={styles.loginButtonText}>Login</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -196,30 +183,13 @@ function AuthScreen({ onContinue }) {
   );
 }
 
-function RootApp({ userName, setUserName, isLoggedIn, setIsLoggedIn }) {
-  const { hydrated, userProfile, setUserProfile } = useAppState();
+function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin }) {
+  const { hydrated } = useAppState();
   const [showIntro, setShowIntro] = useState(true);
 
   const handleFinishIntro = useCallback(() => setShowIntro(false), []);
 
-  const handleCompleteAuth = useCallback(
-    async (profile) => {
-      await setUserProfile(profile);
-      setUserName(profile?.name ?? "");
-      setIsLoggedIn(Boolean(profile?.name));
-    },
-    [setIsLoggedIn, setUserName, setUserProfile]
-  );
-
-  const hasProfile = useMemo(() => Boolean(userProfile?.name), [userProfile?.name]);
-  const displayName = useMemo(() => userName || userProfile?.name || "", [userName, userProfile?.name]);
-
-  useEffect(() => {
-    if (userProfile?.name) {
-      setUserName(userProfile.name);
-      setIsLoggedIn(true);
-    }
-  }, [setIsLoggedIn, setUserName, userProfile?.name]);
+  const displayName = useMemo(() => user?.name || "", [user?.name]);
 
   if (!hydrated) {
     return <LoadingScreen />;
@@ -227,31 +197,37 @@ function RootApp({ userName, setUserName, isLoggedIn, setIsLoggedIn }) {
 
   return showIntro ? (
     <IntroScreen onFinish={handleFinishIntro} />
-  ) : hasProfile ? (
+  ) : (
     <MainTabs
+      user={user}
       userName={displayName}
       isLoggedIn={isLoggedIn}
       setIsLoggedIn={setIsLoggedIn}
-      setUserName={setUserName}
+      setUser={setUser}
+      onLogin={handleLogin}
       LoginCardComponent={LoginCard}
     />
-  ) : (
-    <AuthScreen onContinue={handleCompleteAuth} />
   );
 }
 
 export default function App() {
-  const [userName, setUserName] = useState("");
+  const [user, setUser] = useState({ name: "Jean", email: "jean@posturau.app" });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const handleLogin = ({ name, email }) => {
+    setUser({ name, email });
+    setIsLoggedIn(true);
+  };
 
   return (
     <ThemeProvider>
       <AppStateProvider>
         <RootApp
-          userName={userName}
-          setUserName={setUserName}
+          user={user}
+          setUser={setUser}
           isLoggedIn={isLoggedIn}
           setIsLoggedIn={setIsLoggedIn}
+          handleLogin={handleLogin}
         />
       </AppStateProvider>
     </ThemeProvider>
@@ -366,19 +342,19 @@ const styles = StyleSheet.create({
   },
   loginCard: {
     borderRadius: 18,
-    padding: 16,
+    padding: 18,
     borderWidth: 1,
     gap: 12,
     shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-  },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 5,
+    },
   loginTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "800",
-  },
+    },
   loginInputGroup: {
     gap: 6,
   },
@@ -389,13 +365,13 @@ const styles = StyleSheet.create({
   loginInput: {
     borderRadius: 12,
     borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
   },
   loginButton: {
-    paddingVertical: 14,
-    borderRadius: 14,
+    paddingVertical: 15,
+    borderRadius: 16,
     alignItems: "center",
   },
   loginButtonText: {
