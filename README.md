@@ -12,3 +12,10 @@ Aplicación Expo para mostrar ejercicios y ahora con inicio de sesión mediante 
 3. Ejecuta la aplicación con `npm start` o el script correspondiente. El botón de Google se habilitará cuando las tres variables estén configuradas.
 
 La aplicación solicitará los alcances `openid`, `profile` y `email` y mostrará el nombre y correo del usuario tras iniciar sesión.
+
+## Notificaciones push
+
+La app utiliza `expo-notifications` para programar recordatorios. Si el paquete no está
+instalado en tu entorno, Metro usará automáticamente un shim local (alertas en pantalla)
+para evitar errores de carga. Para tener notificaciones reales en segundo plano instala el
+paquete con `npx expo install expo-notifications`.
