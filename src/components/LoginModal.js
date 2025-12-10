@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Alert, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 const PRIMARY_COLOR = "#055F67";
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginModal({ visible, onLogin, user }) {
   const initialUsername = user?.username || user?.name || "";
@@ -9,6 +10,7 @@ export default function LoginModal({ visible, onLogin, user }) {
   const [username, setUsername] = useState(initialUsername);
   const [email, setEmail] = useState(initialEmail);
   const [emailEditedManually, setEmailEditedManually] = useState(false);
+  const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -30,11 +32,39 @@ export default function LoginModal({ visible, onLogin, user }) {
   const derivedEmail = useMemo(() => email.trim(), [email]);
   const derivedName = useMemo(() => username.trim(), [username]);
 
+  const validateEmail = (value) => {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+      setEmailError("Por favor ingresa tu correo electrónico.");
+      return false;
+    }
+
+    if (!emailRegex.test(trimmed)) {
+      setEmailError("Ingresa un correo válido (por ejemplo: usuario@gmail.com).");
+      return false;
+    }
+
+    // Si en algún momento quiero limitar a Gmail, descomentar:
+    // if (!trimmed.toLowerCase().endsWith("@gmail.com")) {
+    //   setEmailError("Por ahora solo aceptamos correos de Gmail (@gmail.com).");
+    //   return false;
+    // }
+
+    setEmailError("");
+    return true;
+  };
+
   if (!visible) return null;
 
   const handleLogin = () => {
+    const isEmailValid = validateEmail(email);
     const trimmedIdentifier = derivedName;
     const trimmedPassword = password.trim();
+
+    if (!isEmailValid) {
+      return;
+    }
 
     if (!trimmedIdentifier || !trimmedPassword) {
       Alert.alert("Campos requeridos", "Ingresa tus datos para continuar");
@@ -81,7 +111,7 @@ export default function LoginModal({ visible, onLogin, user }) {
             />
           </View>
 
-          <View style={styles.loginInputWrapper}>
+          <View style={[styles.loginInputWrapper, emailError ? styles.loginInputWrapperError : null]}>
             <View style={styles.loginInputIconCircle}>
               <Text style={styles.loginInputIcon}>@</Text>
             </View>
@@ -93,11 +123,17 @@ export default function LoginModal({ visible, onLogin, user }) {
               onChangeText={(value) => {
                 setEmailEditedManually(true);
                 setEmail(value);
+                if (emailError) {
+                  validateEmail(value);
+                }
               }}
               autoCapitalize="none"
               keyboardType="email-address"
+              onBlur={() => validateEmail(email)}
             />
           </View>
+
+          {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
           <View style={styles.loginInputWrapper}>
             <View style={styles.loginInputIconCircle}>
@@ -113,7 +149,11 @@ export default function LoginModal({ visible, onLogin, user }) {
             />
           </View>
 
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <TouchableOpacity
+            style={[styles.loginButton, (!derivedEmail || emailError) && styles.loginButtonDisabled]}
+            onPress={handleLogin}
+            disabled={!derivedEmail || Boolean(emailError)}
+          >
             <Text style={styles.loginButtonText}>Login</Text>
           </TouchableOpacity>
 
@@ -223,6 +263,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     paddingVertical: 8,
   },
+  loginInputWrapperError: {
+    borderColor: "#E53935",
+  },
   loginButton: {
     backgroundColor: PRIMARY_COLOR,
     borderRadius: 24,
@@ -233,6 +276,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
+  },
+  loginButtonDisabled: {
+    opacity: 0.65,
   },
   loginButtonText: {
     color: "#fff",
@@ -271,5 +317,11 @@ const styles = StyleSheet.create({
   loginBottomLink: {
     color: PRIMARY_COLOR,
     fontWeight: "700",
+  },
+  errorText: {
+    marginTop: -8,
+    marginBottom: 8,
+    fontSize: 12,
+    color: "#E53935",
   },
 });
