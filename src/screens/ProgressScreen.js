@@ -163,10 +163,11 @@ function AchievementBadge({ achievement }) {
   );
 }
 
-export default function ProgressScreen({ activeTabKey, isPremium }) {
+export default function ProgressScreen({ activeTabKey, isPremium, navigation }) {
   const { colors } = useAppTheme();
   const [history, setHistory] = useState([]);
   const [stats, setStats] = useState(null);
+  const flameScale = useRef(new Animated.Value(1)).current;
 
   const loadStats = useCallback(async () => {
     const storedHistory = await getActivityHistory();
@@ -182,7 +183,6 @@ export default function ProgressScreen({ activeTabKey, isPremium }) {
 
   const shouldShowDashboard = activeTabKey === "progress" && isPremium;
 
-  const last14Days = stats?.last14Days ?? [];
   const totalMinutes = stats?.totalMinutes ?? 0;
   const totalExercises = stats?.totalExercises ?? 0;
   const currentStreak = stats?.currentStreak ?? 0;
@@ -200,6 +200,36 @@ export default function ProgressScreen({ activeTabKey, isPremium }) {
     })),
     [history, stats]
   );
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(flameScale, { toValue: 1.08, duration: 220, useNativeDriver: true }),
+      Animated.spring(flameScale, { toValue: 1, friction: 4, useNativeDriver: true }),
+    ]).start();
+  }, [currentStreak, flameScale]);
+
+  const streakMessage = useMemo(() => {
+    if (currentStreak === 0) return "Tu llama está congelada. Empieza hoy una nueva racha.";
+    if (currentStreak > 0 && currentStreak < 3) return "Buen comienzo, no rompas la cadena.";
+    if (currentStreak >= 3 && currentStreak < 7) return "¡Gran racha! Sigue constante.";
+    return "Racha épica. Tu postura te lo agradece.";
+  }, [currentStreak]);
+
+  const flameStyle = useMemo(() => {
+    if (currentStreak === 0) {
+      return { color: "#90CAF9" };
+    }
+    if (currentStreak < 4) {
+      return { color: "#FFB74D" };
+    }
+    return { color: "#FF7043" };
+  }, [currentStreak]);
+
+  const handleStreakPress = useCallback(() => {
+    if (typeof navigation?.navigate === "function") {
+      navigation.navigate("StreakDetail");
+    }
+  }, [navigation]);
 
   const handleExport = async () => {
     const exportPayload = {
@@ -241,23 +271,18 @@ export default function ProgressScreen({ activeTabKey, isPremium }) {
         <Text style={styles.pageSubtitle}>Revisa tu constancia y logros.</Text>
       </View>
 
-      <View style={styles.streakCard}>
-        <Text style={styles.sectionTitle}>Racha de días activos</Text>
-        <View style={styles.streakRow}>
-          {last14Days.map((day) => (
-            <View key={day.date} style={styles.streakDay}>
-              <View
-                style={[
-                  styles.streakCircle,
-                  day.minutes > 0 ? styles.streakCircleActive : styles.streakCircleInactive,
-                ]}
-              />
-              <Text style={styles.streakLabel}>{day.label}</Text>
-            </View>
-          ))}
+      <TouchableOpacity style={styles.newStreakCard} onPress={handleStreakPress} activeOpacity={0.9}>
+        <View style={styles.streakIconWrapper}>
+          <Animated.Text style={[styles.streakFlame, flameStyle, { transform: [{ scale: flameScale }] }]}>
+            {currentStreak === 0 ? "❄️" : "🔥"}
+          </Animated.Text>
         </View>
-        <Text style={styles.streakSummary}>Racha actual: {currentStreak} días</Text>
-      </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.streakNumber}>{currentStreak}</Text>
+          <Text style={styles.streakSubtitle}>días de racha</Text>
+          <Text style={styles.streakMessage}>{streakMessage}</Text>
+        </View>
+      </TouchableOpacity>
 
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
@@ -314,56 +339,54 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#475569",
   },
-  streakCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
+  newStreakCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#0B5563",
+    borderRadius: 22,
+    padding: 18,
+    gap: 16,
     shadowColor: "#000",
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.12,
     shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  streakIconWrapper: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#FF7043",
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-    gap: 12,
+  },
+  streakFlame: {
+    fontSize: 36,
+  },
+  streakNumber: {
+    color: "#FFFFFF",
+    fontSize: 36,
+    fontWeight: "800",
+    marginBottom: 2,
+  },
+  streakSubtitle: {
+    color: "#E2F3F3",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  streakMessage: {
+    color: "#D7E3EC",
+    fontSize: 14,
+    marginTop: 4,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
     color: "#0F172A",
-  },
-  streakRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  streakDay: {
-    alignItems: "center",
-    width: 44,
-  },
-  streakCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#D7E3EC",
-    backgroundColor: "#F8FAFC",
-  },
-  streakCircleActive: {
-    backgroundColor: "#0F9BA8",
-    borderColor: "#0F9BA8",
-  },
-  streakCircleInactive: {
-    backgroundColor: "#F8FAFC",
-  },
-  streakLabel: {
-    marginTop: 6,
-    fontSize: 12,
-    color: "#475569",
-    fontWeight: "600",
-  },
-  streakSummary: {
-    fontSize: 14,
-    color: "#334155",
-    fontWeight: "600",
   },
   statsRow: {
     flexDirection: "row",
