@@ -16,6 +16,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 import { useAppState } from "../context/AppStateContext";
+import { useNotificationManager } from "../NotificationManager";
 import { useAppTheme } from "../themeContext";
 
 const GOALS_KEY = "@posturaU_goals";
@@ -29,7 +30,6 @@ const defaultGoals = {
 };
 
 const defaultNotifications = {
-  postureReminders: false,
   weeklySummary: false,
 };
 
@@ -152,6 +152,11 @@ function PremiumBadge({ isPremium }) {
 export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeTabKey, isPremium }) {
   const { colors } = useAppTheme();
   const { userProfile, setUserProfile } = useAppState();
+  const {
+    prefs: notificationPrefs,
+    updatePreferences: updateNotificationPrefs,
+    toggleFocusMode,
+  } = useNotificationManager();
 
   const [goals, setGoals] = useState(defaultGoals);
   const [notifications, setNotifications] = useState(defaultNotifications);
@@ -228,10 +233,6 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
     const updated = { ...notifications, [key]: value };
     setNotifications(updated);
     await AsyncStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(updated));
-
-    if (key === "postureReminders" && value) {
-      Alert.alert("Recordatorios", "Configuraremos tus recordatorios de postura pronto.");
-    }
   };
 
   const handlePrivacyChange = async (key, value) => {
@@ -392,18 +393,102 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Configuración</Text>
 
-          <View style={[styles.subCard, { borderColor: colors.border }]}> 
-            <Text style={[styles.subTitle, { color: colors.textPrimary }]}>Preferencias de notificaciones</Text>
+          <View style={[styles.subCard, { borderColor: colors.border }]}>
+            <Text style={[styles.subTitle, { color: colors.textPrimary }]}>Recordatorios de postura</Text>
+            <Text style={[styles.helperText, { color: colors.textSecondary }]}> 
+              Activo entre {notificationPrefs.activeFrom} y {notificationPrefs.activeTo}. Recibirás avisos cada
+              {` ${notificationPrefs.minIntervalMinutes}-${notificationPrefs.maxIntervalMinutes} min`} cuando la app
+              detecte que estás dentro de tu horario de trabajo.
+            </Text>
+
             <View style={styles.toggleRow}>
-              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Recordatorios de postura</Text>
+              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Notificaciones activas</Text>
               <Switch
-                value={notifications.postureReminders}
-                onValueChange={(value) => handleNotificationsChange("postureReminders", value)}
+                value={notificationPrefs.enabled}
+                onValueChange={(value) => updateNotificationPrefs({ enabled: value })}
                 trackColor={{ true: colors.primary }}
               />
             </View>
             <View style={styles.toggleRow}>
-              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Resumen semanal de progreso</Text>
+              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Modo concentración</Text>
+              <Switch
+                value={notificationPrefs.focusMode}
+                onValueChange={toggleFocusMode}
+                trackColor={{ true: colors.primary }}
+              />
+            </View>
+
+            <View style={styles.toggleRow}>
+              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Sonido</Text>
+              <Switch
+                value={notificationPrefs.reminderType.sound}
+                onValueChange={(value) =>
+                  updateNotificationPrefs({
+                    reminderType: { sound: value },
+                  })
+                }
+                trackColor={{ true: colors.primary }}
+              />
+            </View>
+            <View style={styles.toggleRow}>
+              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Vibración</Text>
+              <Switch
+                value={notificationPrefs.reminderType.vibration}
+                onValueChange={(value) =>
+                  updateNotificationPrefs({
+                    reminderType: { vibration: value },
+                  })
+                }
+                trackColor={{ true: colors.primary }}
+              />
+            </View>
+            <View style={styles.toggleRow}>
+              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Visual</Text>
+              <Switch
+                value={notificationPrefs.reminderType.visual}
+                onValueChange={(value) =>
+                  updateNotificationPrefs({
+                    reminderType: { visual: value },
+                  })
+                }
+                trackColor={{ true: colors.primary }}
+              />
+            </View>
+
+            <View style={styles.presetRow}>
+              <TouchableOpacity
+                style={[styles.presetButton, { borderColor: colors.primary }]}
+                onPress={() =>
+                  updateNotificationPrefs({
+                    activeFrom: "09:00",
+                    activeTo: "18:00",
+                    minIntervalMinutes: 45,
+                    maxIntervalMinutes: 60,
+                  })
+                }
+              >
+                <Text style={[styles.presetText, { color: colors.primary }]}>Horario 9:00 - 18:00</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.presetButton, { borderColor: colors.primary }]}
+                onPress={() =>
+                  updateNotificationPrefs({
+                    activeFrom: "08:00",
+                    activeTo: "20:00",
+                    minIntervalMinutes: 30,
+                    maxIntervalMinutes: 45,
+                  })
+                }
+              >
+                <Text style={[styles.presetText, { color: colors.primary }]}>Intensivo</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={[styles.subCard, { borderColor: colors.border }]}>
+            <Text style={[styles.subTitle, { color: colors.textPrimary }]}>Resumen semanal de progreso</Text>
+            <View style={styles.toggleRow}>
+              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Recibir los domingos</Text>
               <Switch
                 value={notifications.weeklySummary}
                 onValueChange={(value) => handleNotificationsChange("weeklySummary", value)}
@@ -649,6 +734,23 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     marginRight: 12,
+  },
+  presetRow: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  presetButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  presetText: {
+    fontWeight: "700",
+    fontSize: 13,
   },
   helperText: {
     fontSize: 12,
