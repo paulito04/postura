@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   SafeAreaView,
   StyleSheet,
@@ -7,131 +7,158 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ThemeProvider, useAppTheme } from "./src/themeContext";
-import IntroScreen from "./src/screens/IntroScreen";
 import MainTabs from "./src/navigation/MainTabs";
+import IntroScreen from "./src/screens/IntroScreen";
+import { AppStateProvider, useAppState } from "./src/context/AppStateContext";
+import { ThemeProvider, useAppTheme } from "./src/themeContext";
 
 function LoadingScreen() {
   const { colors } = useAppTheme();
 
   return (
     <SafeAreaView style={[styles.centeredContainer, { backgroundColor: colors.background }]}>
-      <Text style={[styles.loadingText, { color: colors.text }]}>Cargando…</Text>
+      <Text style={[styles.loadingText, { color: colors.textPrimary }]}>Cargando…</Text>
     </SafeAreaView>
   );
 }
 
-function RegistrationScreen({ onContinue }) {
+function AuthScreen({ onContinue }) {
   const { colors } = useAppTheme();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleContinue = useCallback(async () => {
-    const trimmedName = name.trim();
+  const hasEmailFlow = email.trim().length > 0 || password.trim().length > 0;
 
+  const handleContinue = useCallback(() => {
+    const trimmedName = name.trim();
     if (!trimmedName) {
-      setError("Por favor ingresa tu nombre");
+      setError("Elige un nombre de usuario para personalizar tu app");
+      return;
+    }
+
+    if (hasEmailFlow && (!email.trim() || !password.trim())) {
+      setError("Ingresa correo y contraseña para continuar");
       return;
     }
 
     setError("");
-    await onContinue(trimmedName, email.trim());
+    onContinue({ name: trimmedName, email: email.trim() });
+  }, [email, hasEmailFlow, name, onContinue, password]);
+
+  const handleGoogleLogin = useCallback(() => {
+    const fallbackName = name || "Usuario Google";
+    setName(fallbackName);
+    setEmail(email || "usuario@gmail.com");
+    setError("");
+    onContinue({ name: fallbackName, email: email || "usuario@gmail.com" });
   }, [email, name, onContinue]);
 
   return (
     <SafeAreaView style={[styles.registrationContainer, { backgroundColor: colors.background }]}>
       <View style={styles.registrationContent}>
-        <Text style={[styles.registrationTitle, { color: colors.primaryDark }]}>Crea tu perfil</Text>
+        <View style={styles.authHeader}>
+          <Text style={[styles.eyebrow, { color: colors.textSecondary }]}>Bienvenido</Text>
+          <Text style={[styles.registrationTitle, { color: colors.primaryDark }]}>Crea tu cuenta o inicia sesión</Text>
+          <Text style={[styles.registrationSubtitle, { color: colors.textSecondary }]}>Guarda tu racha y personaliza tu saludo.</Text>
+        </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Nombre</Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Tu nombre"
-            placeholderTextColor={colors.textSecondary}
-            style={[styles.textInput, { borderColor: colors.border, color: colors.text }]}
-          />
+        <TouchableOpacity style={[styles.googleButton, { borderColor: colors.border }]} onPress={handleGoogleLogin}>
+          <Text style={styles.googleIcon}>ⓖ</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.googleTitle, { color: colors.textPrimary }]}>Continuar con Google</Text>
+            <Text style={[styles.googleSubtitle, { color: colors.textSecondary }]}>Usaremos tu nombre o puedes editarlo</Text>
+          </View>
+        </TouchableOpacity>
+
+        <View style={styles.dividerRow}>
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <Text style={[styles.dividerLabel, { color: colors.textSecondary }]}>o con correo y contraseña</Text>
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Correo (opcional)</Text>
+          <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Nombre de usuario</Text>
           <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="tu@email.com"
+            value={name}
+            onChangeText={setName}
+            placeholder="Cómo quieres que te saludemos"
             placeholderTextColor={colors.textSecondary}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={[styles.textInput, { borderColor: colors.border, color: colors.text }]}
+            style={[styles.textInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surface }]}
           />
+        </View>
+
+        <View style={styles.inputRow}>
+          <View style={[styles.inputGroup, { flex: 1 }]}>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Correo</Text>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="tu@email.com"
+              placeholderTextColor={colors.textSecondary}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={[styles.textInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surface }]}
+            />
+          </View>
+          <View style={[styles.inputGroup, { flex: 1 }]}>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Contraseña</Text>
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Mínimo 6 caracteres"
+              placeholderTextColor={colors.textSecondary}
+              secureTextEntry
+              style={[styles.textInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surface }]}
+            />
+          </View>
         </View>
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.accent }]} onPress={handleContinue}>
-          <Text style={styles.primaryButtonText}>Continuar</Text>
+          <Text style={styles.primaryButtonText}>Empezar</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
 
-export default function App() {
+function RootApp() {
+  const { hydrated, userProfile, setUserProfile } = useAppState();
   const [showIntro, setShowIntro] = useState(true);
-  const [userName, setUserName] = useState("");
-  const [hasProfile, setHasProfile] = useState(false);
-  const [loadingProfile, setLoadingProfile] = useState(true);
 
-  const handleFinishIntro = useCallback(() => {
-    setShowIntro(false);
-  }, []);
+  const handleFinishIntro = useCallback(() => setShowIntro(false), []);
 
-  const handleCompleteRegistration = useCallback(async (name, email) => {
-    try {
-      await AsyncStorage.setItem("userName", name);
-      if (email) {
-        await AsyncStorage.setItem("userEmail", email);
-      }
-    } catch (error) {
-      console.error("Error al guardar el perfil", error);
-    } finally {
-      setUserName(name);
-      setHasProfile(true);
-    }
-  }, []);
+  const handleCompleteAuth = useCallback(
+    async (profile) => {
+      await setUserProfile(profile);
+    },
+    [setUserProfile]
+  );
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const storedName = await AsyncStorage.getItem("userName");
-        if (storedName) {
-          setUserName(storedName);
-          setHasProfile(true);
-        }
-      } catch (error) {
-        console.error("Error al cargar el perfil", error);
-      } finally {
-        setLoadingProfile(false);
-      }
-    };
+  const hasProfile = useMemo(() => Boolean(userProfile?.name), [userProfile?.name]);
 
-    loadProfile();
-  }, []);
+  if (!hydrated) {
+    return <LoadingScreen />;
+  }
 
+  return showIntro ? (
+    <IntroScreen onFinish={handleFinishIntro} />
+  ) : hasProfile ? (
+    <MainTabs userName={userProfile.name} />
+  ) : (
+    <AuthScreen onContinue={handleCompleteAuth} />
+  );
+}
+
+export default function App() {
   return (
     <ThemeProvider>
-      {loadingProfile ? (
-        <LoadingScreen />
-      ) : showIntro ? (
-        <IntroScreen onFinish={handleFinishIntro} />
-      ) : !hasProfile ? (
-        <RegistrationScreen onContinue={handleCompleteRegistration} />
-      ) : (
-        <MainTabs userName={userName} />
-      )}
+      <AppStateProvider>
+        <RootApp />
+      </AppStateProvider>
     </ThemeProvider>
   );
 }
@@ -144,7 +171,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   registrationContainer: {
     flex: 1,
@@ -155,17 +182,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 16,
   },
+  authHeader: {
+    gap: 6,
+    alignItems: "flex-start",
+  },
+  eyebrow: {
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
   registrationTitle: {
     fontSize: 26,
     fontWeight: "800",
-    textAlign: "center",
+  },
+  registrationSubtitle: {
+    fontSize: 15,
+    fontWeight: "600",
   },
   inputGroup: {
     gap: 6,
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   textInput: {
     borderWidth: 1,
@@ -174,22 +214,59 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
   },
+  inputRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
   errorText: {
     color: "#d9534f",
-    fontWeight: "600",
+    fontWeight: "700",
   },
   primaryButton: {
-    paddingVertical: 14,
+    paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 12,
+    borderRadius: 14,
     width: "100%",
-    maxWidth: 320,
+    maxWidth: 360,
     alignItems: "center",
     alignSelf: "center",
   },
   primaryButtonText: {
     color: "#0B1D26",
-    fontWeight: "700",
+    fontWeight: "800",
     fontSize: 16,
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+  },
+  googleIcon: {
+    fontSize: 20,
+  },
+  googleTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  googleSubtitle: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  divider: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+  },
+  dividerLabel: {
+    fontSize: 12,
+    fontWeight: "700",
   },
 });

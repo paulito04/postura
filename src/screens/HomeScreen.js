@@ -1,24 +1,45 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import Svg, { Circle, Defs, LinearGradient as SvgGradient, Rect, Stop } from "react-native-svg";
+
+import { useAppState } from "../context/AppStateContext";
 import { useAppTheme } from "../themeContext";
+
+const durationOptions = [30, 45, 60];
+const tipList = [
+  "Pantalla a la altura de los ojos",
+  "Espalda recta apoyada en el respaldo",
+  "Pies totalmente apoyados en el suelo",
+  "Rodillas a 90 grados",
+  "Codos a la altura de la mesa",
+  "Muñecas rectas al teclear",
+  "Hombros relajados, no elevados",
+  "Mira a lo lejos cada 20 minutos",
+  "Levántate cada 45-60 minutos",
+  "Usa apoyabrazos si están disponibles",
+  "Evita cruzar las piernas",
+  "Teclado a unos 15 cm del borde",
+  "Mouse cerca del teclado",
+  "Iluminación adecuada, sin reflejos",
+  "Ajusta el brillo de la pantalla",
+  "Cuello alineado con la columna",
+  "Respira profundamente varias veces",
+  "Gira los hombros hacia atrás",
+  "Estira los dedos y muñecas",
+  "Haz rotaciones de cuello suaves",
+];
 
 export default function HomeScreen({ navigation, userName }) {
   const { colors } = useAppTheme();
+  const { discomfortLevel, updateDiscomfort } = useAppState();
+
   const [selectedDuration, setSelectedDuration] = useState(45);
   const [streakDays] = useState(3);
-  const [activitiesCompleted] = useState(0);
+  const [streakGoal] = useState(7);
+  const [activitiesCompleted] = useState(1);
   const [activityGoal] = useState(3);
-  const [discomfortLevel, setDiscomfortLevel] = useState(2);
-  const [discomfortInput, setDiscomfortInput] = useState("2");
+  const [discomfortInput, setDiscomfortInput] = useState("0");
   const [showNotificationDot] = useState(true);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [greetingPhrase, setGreetingPhrase] = useState("Hola");
@@ -30,11 +51,12 @@ export default function HomeScreen({ navigation, userName }) {
 
   const palette = useMemo(
     () => ({
-      primary: "#055F67",
-      deepTeal: "#0A393C",
-      accent: "#67917D",
-      softAccent: "#9EB998",
-      sand: "#EDEDDD",
+      primary: "#0F9BA8",
+      deepTeal: "#0A5A63",
+      accent: "#7AC9A6",
+      softAccent: "#BFE3D0",
+      sand: "#EEF2F5",
+      card: "#FFFFFF",
     }),
     []
   );
@@ -47,32 +69,6 @@ export default function HomeScreen({ navigation, userName }) {
       "¿Cómo andas",
       "¿Listo para empezar...?",
       "Dios te bendiga",
-    ],
-    []
-  );
-
-  const tips = useMemo(
-    () => [
-      "Pantalla a la altura de los ojos",
-      "Espalda recta apoyada en el respaldo",
-      "Pies totalmente apoyados en el suelo",
-      "Rodillas a 90 grados",
-      "Codos a la altura de la mesa",
-      "Muñecas rectas al teclear",
-      "Hombros relajados, no elevados",
-      "Mira a lo lejos cada 20 minutos",
-      "Levántate cada 45-60 minutos",
-      "Usa apoyabrazos si están disponibles",
-      "Evita cruzar las piernas",
-      "Teclado a unos 15 cm del borde",
-      "Mouse cerca del teclado",
-      "Iluminación adecuada, sin reflejos",
-      "Ajusta el brillo de la pantalla",
-      "Cuello alineado con la columna",
-      "Respira profundamente varias veces",
-      "Gira los hombros hacia atrás",
-      "Estira los dedos y muñecas",
-      "Haz rotaciones de cuello suaves",
     ],
     []
   );
@@ -99,18 +95,22 @@ export default function HomeScreen({ navigation, userName }) {
   }, [greetingPhrases]);
 
   useEffect(() => {
+    setDiscomfortInput(String(discomfortLevel ?? 0));
+  }, [discomfortLevel]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTipIndex((prev) => {
-        const nextIndex = (prev + 1) % tips.length;
-        if (scrollRef.current && carouselWidth) {
-          scrollRef.current.scrollTo({ x: nextIndex * carouselWidth, animated: true });
-        }
-        return nextIndex;
-      });
+      setCurrentTipIndex((prev) => (prev + 1) % tipList.length);
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [carouselWidth, tips.length]);
+  }, []);
+
+  useEffect(() => {
+    if (scrollRef.current && carouselWidth) {
+      scrollRef.current.scrollTo({ x: currentTipIndex * carouselWidth, animated: true });
+    }
+  }, [carouselWidth, currentTipIndex]);
 
   useEffect(() => {
     return () => {
@@ -120,9 +120,7 @@ export default function HomeScreen({ navigation, userName }) {
     };
   }, []);
 
-  const greeting = userName ? `${greetingPhrase} , ${userName}!` : `${greetingPhrase}!`;
-  const durationOptions = [30, 45, 60];
-
+  const greeting = userName ? `${greetingPhrase}, ${userName}!` : `${greetingPhrase}!`;
   const discomfortColor = useMemo(() => {
     if (discomfortLevel <= 3) return colors.success;
     if (discomfortLevel <= 6) return colors.warning;
@@ -131,15 +129,16 @@ export default function HomeScreen({ navigation, userName }) {
 
   const handleDiscomfortChange = (value) => {
     const numericValue = value.replace(/[^0-9]/g, "");
+    setDiscomfortInput(numericValue);
+
     if (numericValue === "") {
-      setDiscomfortInput("");
-      setDiscomfortLevel(0);
+      updateDiscomfort(0);
       return;
     }
 
     const parsed = Math.min(10, Math.max(0, Number(numericValue)));
     setDiscomfortInput(String(parsed));
-    setDiscomfortLevel(parsed);
+    updateDiscomfort(parsed);
   };
 
   const handleStartSession = () => {
@@ -154,21 +153,34 @@ export default function HomeScreen({ navigation, userName }) {
     navigation?.navigate?.("Ejercicios", { challenge: challengeOfDay });
   };
 
+  const avatarInitials = userName ? userName.slice(0, 2).toUpperCase() : "Tú";
+  const progress = streakDays / streakGoal;
+  const discomfortIcon = discomfortLevel <= 3 ? "🙂" : discomfortLevel <= 6 ? "😐" : "😣";
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.sand }]}>
       <StatusBar style="light" />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.headerWrapper}>
-          <View style={[styles.headerGradient, { backgroundColor: palette.primary }]}>
-            <View style={[styles.gradientOverlay, { backgroundColor: palette.deepTeal }]} />
-
+          <View style={styles.headerGradient}>
+            <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+              <Defs>
+                <SvgGradient id="headerGradient" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0%" stopColor="#0A4F59" stopOpacity="1" />
+                  <Stop offset="100%" stopColor={palette.primary} stopOpacity="1" />
+                </SvgGradient>
+              </Defs>
+              <Rect x="0" y="0" width="100%" height="100%" fill="url(#headerGradient)" />
+            </Svg>
             <View style={styles.headerContent}>
               <View style={styles.headerTopRow}>
                 <View style={styles.greetingRow}>
-                  <View style={[styles.avatar, { backgroundColor: palette.deepTeal }]}>
-                    <Text style={styles.avatarText}>{userName ? userName.slice(0, 2).toUpperCase() : "Tú"}</Text>
-                  </View>
+                  <ProgressRing progress={progress} size={74} strokeWidth={6} strokeColor={palette.softAccent}>
+                    <View style={[styles.avatar, { backgroundColor: palette.deepTeal }]}>
+                      <Text style={styles.avatarText}>{avatarInitials}</Text>
+                    </View>
+                  </ProgressRing>
                   <View style={{ gap: 4 }}>
                     <Text style={[styles.headerGreeting, { color: "#FFFFFF" }]}>{greeting}</Text>
                     <Text style={[styles.headerSubtitle, { color: palette.softAccent }]}>Tu bienestar postural empieza aquí</Text>
@@ -185,7 +197,7 @@ export default function HomeScreen({ navigation, userName }) {
         </View>
 
         <View style={styles.contentArea}>
-          <View style={[styles.metricsCard, styles.shadow, { backgroundColor: "#FFFFFF", marginTop: -36 }]}>
+          <View style={[styles.metricsCard, styles.shadow, { backgroundColor: palette.card, marginTop: -36 }]}>
             <Text style={[styles.sectionEyebrow, { color: palette.deepTeal }]}>Resumen</Text>
             <View style={styles.metricsRow}>
               <MetricItem
@@ -193,8 +205,8 @@ export default function HomeScreen({ navigation, userName }) {
                 value={`${streakDays} días`}
                 palette={palette}
                 icon="🔥"
-                progress={Math.min(1, streakDays / 7)}
-                progressLabel="Objetivo 7 días"
+                progress={Math.min(1, progress)}
+                progressLabel={`Objetivo ${streakGoal} días`}
               />
               <MetricItem
                 label="Actividades de hoy"
@@ -208,28 +220,30 @@ export default function HomeScreen({ navigation, userName }) {
                 label="Nivel de molestia"
                 value={`${discomfortLevel}/10`}
                 palette={palette}
-                icon={discomfortLevel <= 3 ? "🙂" : "😣"}
+                icon={discomfortIcon}
                 progress={discomfortLevel / 10}
                 progressColor={discomfortColor}
                 progressLabel="Actualiza tu nivel"
-                accessory={
-                  <View style={styles.inputRow}>
-                    <TextInput
-                      value={discomfortInput}
-                      onChangeText={handleDiscomfortChange}
-                      keyboardType="numeric"
-                      maxLength={2}
-                      placeholder="0-10"
-                      placeholderTextColor={colors.textSecondary}
-                      style={[styles.discomfortInput, { borderColor: colors.border, color: colors.textPrimary }]}
-                    />
-                  </View>
-                }
-              />
+                  accessory={
+                    <View style={styles.inputRow}>
+                      <TextInput
+                        value={discomfortInput}
+                        onChangeText={handleDiscomfortChange}
+                        keyboardType="numeric"
+                        maxLength={2}
+                        placeholder="0-10"
+                        placeholderTextColor={colors.textSecondary}
+                        style={[styles.discomfortInput, { borderColor: colors.border, color: colors.textPrimary }]}
+                      />
+                    </View>
+                  }
+                />
             </View>
           </View>
 
-          <View style={[styles.sessionCard, styles.shadow, { backgroundColor: "#FFFFFF" }]}>
+          <Text style={[styles.miniMotivation, { color: colors.textSecondary }]}>Pequeños hábitos, grandes cambios en tu postura.</Text>
+
+          <View style={[styles.sessionCard, styles.shadow, { backgroundColor: palette.card }]}>
             <Text style={[styles.sessionTitle, { color: palette.deepTeal }]}>Tu siguiente pausa activa</Text>
             <Text style={[styles.sessionSubtitle, { color: colors.textSecondary }]}>Te recomendamos una pausa cada 45 min</Text>
             <Text style={[styles.helperText, { color: colors.textSecondary }]}>Elige la duración</Text>
@@ -245,7 +259,7 @@ export default function HomeScreen({ navigation, userName }) {
                       styles.durationButton,
                       isActive
                         ? {
-                            backgroundColor: palette.accent,
+                            backgroundColor: palette.primary,
                             borderColor: palette.deepTeal,
                             shadowColor: "#000",
                             shadowOffset: { width: 0, height: 6 },
@@ -268,11 +282,11 @@ export default function HomeScreen({ navigation, userName }) {
             <Text style={[styles.helperText, { color: colors.textSecondary }]}>Puedes cambiarlo cuando quieras en Configuración.</Text>
 
             <TouchableOpacity style={[styles.primaryButton, { backgroundColor: palette.primary }]} onPress={handleStartSession}>
-              <Text style={styles.primaryButtonText}>▶︎ Comenzar ahora</Text>
+              <Text style={styles.primaryButtonText}>▶ Comenzar ahora</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.challengeCard, styles.shadow, { backgroundColor: "#FFFFFF" }]}>
+          <View style={[styles.challengeCard, styles.shadow, { backgroundColor: palette.card }]}>
             <View style={styles.challengeHeader}>
               <Text style={[styles.sectionEyebrow, { color: palette.deepTeal }]}>Desafío del día</Text>
               <Text style={styles.challengeIcon}>💪</Text>
@@ -284,7 +298,7 @@ export default function HomeScreen({ navigation, userName }) {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.carouselCard, styles.shadow, { backgroundColor: "#FFFFFF" }]}>
+          <View style={[styles.carouselCard, styles.shadow, { backgroundColor: palette.card }]}>
             <View style={styles.carouselHeader}>
               <Text style={[styles.sectionEyebrow, { color: palette.deepTeal }]}>Tips ergonómicos</Text>
               <Text style={styles.lightbulb}>💡</Text>
@@ -294,22 +308,18 @@ export default function HomeScreen({ navigation, userName }) {
               pagingEnabled
               ref={scrollRef}
               showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={(event) => {
-                const index = Math.round(event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width);
-                setCurrentTipIndex(index);
-              }}
+              scrollEnabled={false}
               onLayout={(event) => setCarouselWidth(event.nativeEvent.layout.width)}
             >
-              {tips.map((tip) => (
-                <View
-                  key={tip}
-                  style={[styles.tipCard, { width: carouselWidth || 280 }]}>
+              {tipList.map((tip, index) => (
+                <View key={tip} style={[styles.tipCard, { width: carouselWidth || 280 }]}>
+                  <Text style={[styles.tipIndex, { color: colors.textSecondary }]}>{`Tip ergonómico ${index + 1} de ${tipList.length}`}</Text>
                   <Text style={[styles.tipText, { color: colors.textPrimary }]}>{tip}</Text>
                 </View>
               ))}
             </ScrollView>
             <View style={styles.pagination}>
-              {tips.map((_, index) => {
+              {tipList.map((_, index) => {
                 const isActive = index === currentTipIndex;
                 return (
                   <View
@@ -338,6 +348,32 @@ export default function HomeScreen({ navigation, userName }) {
   );
 }
 
+function ProgressRing({ progress, size, strokeWidth, strokeColor, children }) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - progress * circumference;
+
+  return (
+    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+      <Svg width={size} height={size}>
+        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={"rgba(255,255,255,0.18)"} strokeWidth={strokeWidth} fill="none" />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          fill="none"
+        />
+      </Svg>
+      <View style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center" }]}>{children}</View>
+    </View>
+  );
+}
+
 function MetricItem({ label, value, icon, palette, progress, progressLabel, progressColor, accessory }) {
   return (
     <View style={styles.metricItem}>
@@ -352,14 +388,17 @@ function MetricItem({ label, value, icon, palette, progress, progressLabel, prog
             <View
               style={[
                 styles.progressFill,
-                { width: `${progress * 100}%`, backgroundColor: progressColor || palette.accent },
+                {
+                  width: `${progress * 100}%`,
+                  backgroundColor: progressColor || palette.accent,
+                },
               ]}
             />
           </View>
           <Text style={styles.progressLabel}>{progressLabel}</Text>
         </View>
       ) : null}
-      {accessory}
+      {accessory ? accessory : null}
     </View>
   );
 }
@@ -375,24 +414,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   headerGradient: {
-    borderRadius: 20,
+    borderRadius: 24,
+    padding: 18,
+    marginTop: 12,
     overflow: "hidden",
-    position: "relative",
-    paddingVertical: 22,
-    paddingHorizontal: 18,
-  },
-  gradientOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.4,
   },
   headerContent: {
-    position: "relative",
-    gap: 10,
+    gap: 12,
   },
   headerTopRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
   },
   greetingRow: {
     flexDirection: "row",
@@ -401,9 +435,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   avatar: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -413,9 +447,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
+    width: 42,
+    height: 42,
+    borderRadius: 16,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -434,7 +468,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   headerGreeting: {
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: "900",
   },
   headerSubtitle: {
@@ -566,7 +600,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   inputRow: {
-    marginTop: 4,
+    marginTop: 6,
   },
   discomfortInput: {
     borderWidth: 1,
@@ -616,10 +650,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F8F5",
     borderWidth: 1,
     borderColor: "#E5E5E0",
+    gap: 6,
+  },
+  tipIndex: {
+    fontSize: 13,
+    fontWeight: "700",
   },
   tipText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "800",
     lineHeight: 22,
   },
   pagination: {
@@ -657,5 +696,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 6,
+  },
+  miniMotivation: {
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "center",
   },
 });
