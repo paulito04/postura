@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import Svg, { Circle, Defs, LinearGradient as SvgGradient, Rect, Stop } from "react-native-svg";
 
 import { useAppState } from "../context/AppStateContext";
 import { useAppTheme } from "../themeContext";
@@ -164,15 +163,13 @@ export default function HomeScreen({ navigation, userName }) {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.headerWrapper}>
           <View style={styles.headerGradient}>
-            <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-              <Defs>
-                <SvgGradient id="headerGradient" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0%" stopColor="#0A4F59" stopOpacity="1" />
-                  <Stop offset="100%" stopColor={palette.primary} stopOpacity="1" />
-                </SvgGradient>
-              </Defs>
-              <Rect x="0" y="0" width="100%" height="100%" fill="url(#headerGradient)" />
-            </Svg>
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                styles.headerBackground,
+                { backgroundColor: palette.primary },
+              ]}
+            />
             <View style={styles.headerContent}>
               <View style={styles.headerTopRow}>
                 <View style={styles.greetingRow}>
@@ -349,26 +346,34 @@ export default function HomeScreen({ navigation, userName }) {
 }
 
 function ProgressRing({ progress, size, strokeWidth, strokeColor, children }) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - progress * circumference;
+  const safeProgress = Math.max(0, Math.min(1, progress ?? 0));
+  const innerSize = Math.max(0, size - strokeWidth * 2);
+  const filledSize = innerSize * safeProgress;
 
   return (
     <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
-      <Svg width={size} height={size}>
-        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={"rgba(255,255,255,0.18)"} strokeWidth={strokeWidth} fill="none" />
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={strokeColor}
-          strokeWidth={strokeWidth}
-          strokeDasharray={`${circumference} ${circumference}`}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          fill="none"
-        />
-      </Svg>
+      <View
+        style={{
+          position: "absolute",
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: strokeWidth,
+          borderColor: "rgba(255,255,255,0.35)",
+          backgroundColor: "rgba(255,255,255,0.08)",
+        }}
+      />
+
+      <View
+        style={{
+          position: "absolute",
+          width: filledSize,
+          height: filledSize,
+          borderRadius: filledSize / 2,
+          backgroundColor: strokeColor,
+          opacity: 0.85,
+        }}
+      />
       <View style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center" }]}>{children}</View>
     </View>
   );
@@ -418,6 +423,9 @@ const styles = StyleSheet.create({
     padding: 18,
     marginTop: 12,
     overflow: "hidden",
+  },
+  headerBackground: {
+    opacity: 0.96,
   },
   headerContent: {
     gap: 12,
