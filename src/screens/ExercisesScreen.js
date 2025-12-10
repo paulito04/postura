@@ -229,7 +229,43 @@ export default function ExercisesScreen({ tabParams }) {
 
             <View style={styles.filtersBlock}>
               <Text style={[styles.filtersTitle, { color: colors.textPrimary }]}>Zona corporal</Text>
-              {renderFilterRow(areas, exerciseAreaFilter, setExerciseAreaFilter)}
+              <View style={styles.filterRow}>
+                <TouchableOpacity
+                  style={[styles.filterChip, exerciseAreaFilter === "cuello" && styles.filterChipActive]}
+                  onPress={() => setExerciseAreaFilter("cuello")}
+                >
+                  <Image source={require("../../assets/filtros/cuello.png")} style={styles.filterIcon} />
+                  <Text
+                    style={[styles.filterText, exerciseAreaFilter === "cuello" && styles.filterTextActive]}
+                  >
+                    Cuello
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.filterChip, exerciseAreaFilter === "espalda" && styles.filterChipActive]}
+                  onPress={() => setExerciseAreaFilter("espalda")}
+                >
+                  <Image source={require("../../assets/filtros/espalda.png")} style={styles.filterIcon} />
+                  <Text
+                    style={[styles.filterText, exerciseAreaFilter === "espalda" && styles.filterTextActive]}
+                  >
+                    Espalda
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.filterChip, exerciseAreaFilter === "hombros" && styles.filterChipActive]}
+                  onPress={() => setExerciseAreaFilter("hombros")}
+                >
+                  <Image source={require("../../assets/filtros/hombros.png")} style={styles.filterIcon} />
+                  <Text
+                    style={[styles.filterText, exerciseAreaFilter === "hombros" && styles.filterTextActive]}
+                  >
+                    Hombros
+                  </Text>
+                </TouchableOpacity>
+              </View>
               <Text style={[styles.filtersTitle, { color: colors.textPrimary }]}>Nivel</Text>
               {renderFilterRow(levels, exerciseLevelFilter, setExerciseLevelFilter)}
               <View style={styles.favoritesRow}>
@@ -352,8 +388,33 @@ const styles = StyleSheet.create({
   },
   filterRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  filterChip: {
+    flex: 1,
+    marginHorizontal: 4,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: "#EDEDDD",
+    alignItems: "center",
+  },
+  filterChipActive: {
+    backgroundColor: "#055F67",
+  },
+  filterIcon: {
+    width: 24,
+    height: 24,
+    marginBottom: 4,
+    resizeMode: "contain",
+  },
+  filterText: {
+    fontSize: 12,
+    color: "#0A393C",
+  },
+  filterTextActive: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
   },
   chip: {
     borderRadius: 12,
