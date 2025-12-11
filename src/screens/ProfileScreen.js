@@ -15,10 +15,12 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
+import UserAvatar from "../components/UserAvatar";
 import { useAppState } from "../context/AppStateContext";
 import { useNotificationManager } from "../NotificationManager";
 import { usePoints } from "../PointsManager";
 import { useAppTheme } from "../themeContext";
+import { useUser } from "../UserContext";
 
 const GOALS_KEY = "@posturaU_goals";
 const NOTIFICATIONS_KEY = "@posturaU_notifications";
@@ -82,66 +84,6 @@ function TermsModal({ visible, onClose, colors }) {
         </View>
       </View>
     </Modal>
-  );
-}
-
-function Avatar({ name, colors, isPremium }) {
-  const initials = useMemo(() => {
-    if (!name) return "";
-    const parts = name.trim().split(" ");
-    const first = parts[0]?.[0] || "";
-    const last = parts[1]?.[0] || "";
-    return (first + last).toUpperCase();
-  }, [name]);
-
-  const crownPalette = useMemo(
-    () => ({
-      stroke: "#BB3B0E",
-      fill: "#DD7631",
-      highlight: "#D8C593",
-    }),
-    []
-  );
-
-  const crownOptions = useMemo(
-    () => [
-      { icon: "👑", rotate: -6, scale: 0.95, color: crownPalette.fill },
-      { icon: "♕", rotate: 4, scale: 1.05, color: crownPalette.stroke },
-      { icon: "♛", rotate: -2, scale: 1, color: crownPalette.fill },
-      { icon: "♔", rotate: 6, scale: 0.98, color: crownPalette.stroke },
-      { icon: "♚", rotate: 10, scale: 1.08, color: crownPalette.fill },
-      { icon: "👑", rotate: -10, scale: 1.12, color: crownPalette.fill },
-    ],
-    [crownPalette.fill, crownPalette.stroke]
-  );
-
-  const [crownIndex] = useState(() => Math.floor(Math.random() * crownOptions.length));
-  const crownVariant = crownOptions[crownIndex];
-
-  return (
-    <View style={styles.avatarWrapper}>
-      <View style={[styles.avatar, { backgroundColor: `${colors.primary}22`, borderColor: colors.primary }]}>
-        <Text style={[styles.avatarText, { color: colors.primary }]}>{initials || "👤"}</Text>
-      </View>
-
-      {isPremium ? (
-        <View
-          style={[
-            styles.crownContainer,
-            {
-              backgroundColor: `${crownPalette.highlight}ee`,
-              borderColor: crownPalette.stroke,
-              transform: [
-                { rotate: `${crownVariant.rotate}deg` },
-                { scale: crownVariant.scale },
-              ],
-            },
-          ]}
-        >
-          <Text style={[styles.crownIcon, { color: crownVariant.color }]}>{crownVariant.icon}</Text>
-        </View>
-      ) : null}
-    </View>
   );
 }
 
@@ -242,6 +184,10 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
     updatePreferences: updateNotificationPrefs,
     toggleFocusMode,
   } = useNotificationManager();
+  const { user: contextUser } = useUser();
+
+  const resolvedUser = contextUser || user;
+  const isProUser = isPremium || resolvedUser?.plan === "MoveUp Pro" || resolvedUser?.isPro;
 
   const [goals, setGoals] = useState(defaultGoals);
   const [notifications, setNotifications] = useState(defaultNotifications);
@@ -251,18 +197,21 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   const [showTerms, setShowTerms] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [editableName, setEditableName] = useState(
-    user?.username || user?.name || userProfile.name || "Jean Postura"
+    resolvedUser?.username || resolvedUser?.name || userProfile.name || "Jean Postura"
   );
-  const [editableEmail, setEditableEmail] = useState(user?.email || userProfile.email || "usuario@posturau.app");
+  const [editableEmail, setEditableEmail] = useState(
+    resolvedUser?.email || userProfile.email || "usuario@posturau.app"
+  );
 
   const isProfileTab = activeTabKey === "perfil" || activeTabKey === "profile";
 
-  const currentName = isLoggedIn && (user?.username || user?.name || userProfile.name)
-    ? user?.username || user?.name || userProfile.name
+  const currentName = isLoggedIn && (resolvedUser?.username || resolvedUser?.name || userProfile.name)
+    ? resolvedUser?.username || resolvedUser?.name || userProfile.name
     : "Sin iniciar sesión";
-  const currentEmail = isLoggedIn && (user?.email || userProfile.email)
-    ? user?.email || userProfile.email
+  const currentEmail = isLoggedIn && (resolvedUser?.email || userProfile.email)
+    ? resolvedUser?.email || userProfile.email
     : editableEmail;
+  const currentPhotoUri = resolvedUser?.photoUrl;
 
   useEffect(() => {
     AsyncStorage.getItem(GOALS_KEY)
@@ -351,8 +300,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
     setEditingProfile(false);
   };
 
-  const planLabel = isPremium ? "Plan: MoveUp Pro" : "Plan: Gratis";
-  const isProUser = isPremium;
+  const planLabel = isProUser ? "Plan: MoveUp Pro" : "Plan: Gratis";
   const pointsProgress = Math.min(1, nextRewardAt ? lifetimePoints / nextRewardAt : 0);
 
   return (
@@ -360,13 +308,13 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.headerRow}>
-            <Avatar name={currentName} colors={colors} isPremium={isPremium} />
+            <UserAvatar photoUri={currentPhotoUri} size={96} isPro={isProUser} />
             <View style={{ flex: 1 }}>
               <Text style={[styles.title, { color: colors.textPrimary }]}>{currentName || "Jean Postura"}</Text>
               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{currentEmail}</Text>
               <View style={styles.planRow}>
-                <PlanLegend isPremium={isPremium} colors={colors} />
-                {isPremium ? <PremiumBadge isPremium={isPremium} /> : null}
+                <PlanLegend isPremium={isProUser} colors={colors} />
+                {isProUser ? <PremiumBadge isPremium={isProUser} /> : null}
               </View>
             </View>
             <TouchableOpacity
@@ -400,7 +348,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
 
           <InfoRow label="Nombre" value={currentName} colors={colors} />
           <InfoRow label="Correo" value={currentEmail} colors={colors} />
-          <InfoRow label="Plan" value={planLabel.replace("Plan: ", "") } colors={colors} />
+          <InfoRow label="Plan" value={planLabel.replace("Plan: ", "")} colors={colors} />
         </View>
 
         <View style={[styles.pointsCard, { backgroundColor: "#F5F8FB", borderColor: colors.border }]}>
@@ -630,18 +578,18 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
 
           <View style={[styles.subCard, { borderColor: colors.border }]}> 
             <Text style={[styles.subTitle, { color: colors.textPrimary }]}>Suscripción</Text>
-            <Text style={[styles.helperText, { color: colors.textSecondary }]}>Plan actual: {isPremium ? "MoveUp Pro" : "Gratis"}</Text>
+            <Text style={[styles.helperText, { color: colors.textSecondary }]}>Plan actual: {isProUser ? "MoveUp Pro" : "Gratis"}</Text>
             <TouchableOpacity
               style={[styles.primaryButton, { backgroundColor: colors.primary }]}
               onPress={() => {
-                if (isPremium) {
+                if (isProUser) {
                   Alert.alert("Suscripción activa", "Tu suscripción MoveUp Pro está activa. (Simulación)");
                 } else {
                   Alert.alert("MoveUp Pro", "Gestiona tu suscripción desde la sección Progreso.");
                 }
               }}
             >
-              <Text style={styles.primaryButtonText}>{isPremium ? "Gestionar suscripción" : "Actualizar a MoveUp Pro"}</Text>
+              <Text style={styles.primaryButtonText}>{isProUser ? "Gestionar suscripción" : "Actualizar a MoveUp Pro"}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -733,37 +681,6 @@ const styles = StyleSheet.create({
   planLegendSubtitle: {
     fontSize: 12,
     fontWeight: "600",
-  },
-  avatarWrapper: {
-    position: "relative",
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-  },
-  avatarText: {
-    fontSize: 22,
-    fontWeight: "800",
-  },
-  crownContainer: {
-    position: "absolute",
-    right: -6,
-    top: -6,
-    padding: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOpacity: 0.14,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  crownIcon: {
-    fontSize: 18,
   },
   infoRow: {
     flexDirection: "row",
