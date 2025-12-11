@@ -85,7 +85,7 @@ function TermsModal({ visible, onClose, colors }) {
   );
 }
 
-function Avatar({ name, colors }) {
+function Avatar({ name, colors, isPremium }) {
   const initials = useMemo(() => {
     if (!name) return "";
     const parts = name.trim().split(" ");
@@ -94,9 +94,53 @@ function Avatar({ name, colors }) {
     return (first + last).toUpperCase();
   }, [name]);
 
+  const crownPalette = useMemo(
+    () => ({
+      stroke: "#BB3B0E",
+      fill: "#DD7631",
+      highlight: "#D8C593",
+    }),
+    []
+  );
+
+  const crownOptions = useMemo(
+    () => [
+      { icon: "👑", rotate: -6, scale: 0.95, color: crownPalette.fill },
+      { icon: "♕", rotate: 4, scale: 1.05, color: crownPalette.stroke },
+      { icon: "♛", rotate: -2, scale: 1, color: crownPalette.fill },
+      { icon: "♔", rotate: 6, scale: 0.98, color: crownPalette.stroke },
+      { icon: "♚", rotate: 10, scale: 1.08, color: crownPalette.fill },
+      { icon: "👑", rotate: -10, scale: 1.12, color: crownPalette.fill },
+    ],
+    [crownPalette.fill, crownPalette.stroke]
+  );
+
+  const [crownIndex] = useState(() => Math.floor(Math.random() * crownOptions.length));
+  const crownVariant = crownOptions[crownIndex];
+
   return (
-    <View style={[styles.avatar, { backgroundColor: `${colors.primary}22`, borderColor: colors.primary }]}>
-      <Text style={[styles.avatarText, { color: colors.primary }]}>{initials || "👤"}</Text>
+    <View style={styles.avatarWrapper}>
+      <View style={[styles.avatar, { backgroundColor: `${colors.primary}22`, borderColor: colors.primary }]}>
+        <Text style={[styles.avatarText, { color: colors.primary }]}>{initials || "👤"}</Text>
+      </View>
+
+      {isPremium ? (
+        <View
+          style={[
+            styles.crownContainer,
+            {
+              backgroundColor: `${crownPalette.highlight}ee`,
+              borderColor: crownPalette.stroke,
+              transform: [
+                { rotate: `${crownVariant.rotate}deg` },
+                { scale: crownVariant.scale },
+              ],
+            },
+          ]}
+        >
+          <Text style={[styles.crownIcon, { color: crownVariant.color }]}>{crownVariant.icon}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -106,6 +150,45 @@ function InfoRow({ label, value, colors }) {
     <View style={styles.infoRow}>
       <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>{label}</Text>
       <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{value}</Text>
+    </View>
+  );
+}
+
+function PlanLegend({ isPremium, colors }) {
+  const palette = {
+    stroke: "#BB3B0E",
+    fill: "#DD7631",
+    highlight: "#D8C593",
+  };
+
+  const label = isPremium ? "Usuario premium" : "Plan gratis";
+  const description = isPremium ? "MoveUp Pro activo" : "Sin plan premium";
+
+  return (
+    <View
+      style={[
+        styles.planLegend,
+        {
+          borderColor: isPremium ? palette.stroke : colors.border,
+          backgroundColor: isPremium ? `${palette.highlight}33` : `${colors.surface}90`,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.planLegendIcon,
+          {
+            backgroundColor: isPremium ? palette.fill : colors.primary,
+            borderColor: isPremium ? palette.stroke : colors.primary,
+          },
+        ]}
+      />
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.planLegendTitle, { color: isPremium ? palette.stroke : colors.textPrimary }]}>{label}</Text>
+        <Text style={[styles.planLegendSubtitle, { color: isPremium ? palette.stroke : colors.textSecondary }]}>
+          {description}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -277,16 +360,13 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.headerRow}>
-            <Avatar name={currentName} colors={colors} />
+            <Avatar name={currentName} colors={colors} isPremium={isPremium} />
             <View style={{ flex: 1 }}>
               <Text style={[styles.title, { color: colors.textPrimary }]}>{currentName || "Jean Postura"}</Text>
               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{currentEmail}</Text>
               <View style={styles.planRow}>
-                {isPremium ? (
-                  <PremiumBadge isPremium={isPremium} />
-                ) : (
-                  <Text style={[styles.planLabel, { color: colors.primary }]}>{planLabel}</Text>
-                )}
+                <PlanLegend isPremium={isPremium} colors={colors} />
+                {isPremium ? <PremiumBadge isPremium={isPremium} /> : null}
               </View>
             </View>
             <TouchableOpacity
@@ -608,6 +688,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     flexDirection: "row",
     alignItems: "center",
+    gap: 8,
   },
   planLabel: {
     fontWeight: "700",
@@ -629,6 +710,33 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.2,
   },
+  planLegend: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  planLegendIcon: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 1,
+    marginTop: 2,
+  },
+  planLegendTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  planLegendSubtitle: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  avatarWrapper: {
+    position: "relative",
+  },
   avatar: {
     width: 64,
     height: 64,
@@ -640,6 +748,22 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 22,
     fontWeight: "800",
+  },
+  crownContainer: {
+    position: "absolute",
+    right: -6,
+    top: -6,
+    padding: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOpacity: 0.14,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  crownIcon: {
+    fontSize: 18,
   },
   infoRow: {
     flexDirection: "row",
