@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { View, Image, StyleSheet } from "react-native";
 
-// Coronitas (no crear los .png, solo usarlos)
+// Coronitas (los .png ya existen en el proyecto, no los crees aquí)
 const CROWN_FRAMES = [
   require("../../assets/profile/crowns/crown1.png"),
   require("../../assets/profile/crowns/crown2.png"),
@@ -11,35 +11,48 @@ const CROWN_FRAMES = [
   require("../../assets/profile/crowns/crown6.png"),
 ];
 
-export default function UserAvatar({ photoUri, size = 80, isPro = false }) {
-  const [crownIndex, setCrownIndex] = useState(0);
+// 🔹 Índice aleatorio de corona por sesión
+// Se calcula una sola vez cuando se carga este módulo
+const SESSION_CROWN_INDEX = Math.floor(
+  Math.random() * CROWN_FRAMES.length
+);
 
-  useEffect(() => {
-    if (isPro) {
-      const idx = Math.floor(Math.random() * CROWN_FRAMES.length);
-      setCrownIndex(idx);
-    }
-  }, [isPro]);
-
+export default function UserAvatar({
+  photoUri,
+  size = 80,
+  isPro = false,
+}) {
   const borderRadius = size / 2;
 
   return (
     <View
       style={[
         styles.container,
-        { width: size, height: size, borderRadius },
+        { width: size, height: size },
       ]}
     >
+      {/* FOTO DE PERFIL */}
       <Image
-        source={photoUri ? { uri: photoUri } : require("../../assets/icon.png")}
-        style={[styles.avatar, { borderRadius }]}
+        source={
+          photoUri
+            ? { uri: photoUri }
+            : require("../../assets/default-avatar.png")
+        }
+        style={[
+          styles.avatar,
+          { borderRadius: borderRadius * 0.9 },
+        ]}
         resizeMode="cover"
       />
 
+      {/* CORONA COMO MARCO, SOLO PRO */}
       {isPro && (
         <Image
-          source={CROWN_FRAMES[crownIndex]}
-          style={[styles.crown, { borderRadius }]}
+          source={CROWN_FRAMES[SESSION_CROWN_INDEX]}
+          style={[
+            styles.crown,
+            { borderRadius },
+          ]}
           resizeMode="contain"
         />
       )}
@@ -50,13 +63,12 @@ export default function UserAvatar({ photoUri, size = 80, isPro = false }) {
 const styles = StyleSheet.create({
   container: {
     position: "relative",
-    overflow: "visible",
     alignItems: "center",
     justifyContent: "center",
   },
   avatar: {
-    width: "80%",
-    height: "80%",
+    width: "78%", // la foto va un poco más pequeña
+    height: "78%", // para que la corona la rodee
   },
   crown: {
     position: "absolute",
@@ -64,7 +76,6 @@ const styles = StyleSheet.create({
     height: "100%",
     top: 0,
     left: 0,
-    // Para que no interfiera con toques
     pointerEvents: "none",
   },
 });
