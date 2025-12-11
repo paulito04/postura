@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
@@ -40,8 +39,7 @@ const tipList = [
   "Haz rotaciones de cuello suaves",
 ];
 
-export default function HomeScreen({ userName, isLoggedIn }) {
-  const navigation = useNavigation();
+export default function HomeScreen({ userName, isLoggedIn, navigation }) {
   const { colors } = useAppTheme();
   const { discomfortLevel, updateDiscomfort } = useAppState();
 
@@ -126,11 +124,13 @@ export default function HomeScreen({ userName, isLoggedIn }) {
   }, []);
 
   useEffect(() => {
+    setGreeting(getRandomGreeting());
+
+    if (!navigation?.addListener) return undefined;
+
     const unsubscribe = navigation.addListener("focus", () => {
       setGreeting(getRandomGreeting());
     });
-
-    setGreeting(getRandomGreeting());
 
     return unsubscribe;
   }, [navigation]);
