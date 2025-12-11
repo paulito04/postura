@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import ExercisesScreen from "../screens/ExercisesScreen";
 import HomeScreen from "../screens/HomeScreen";
@@ -131,12 +131,12 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
             <View style={styles.paywallGlow} />
             <View style={styles.paywallTopRow}>
               <View style={styles.paywallIconBadge}>
-                <Text style={styles.paywallIcon}>⬆️</Text>
+                <Image source={require("../../assets/logo.jpg")} style={styles.paywallLogo} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.paywallTitle}>Desbloquea</Text>
                 <Text style={styles.paywallTitle}>MOVEUP Pro</Text>
-                <Text style={styles.paywallPrice}>9.99/mes</Text>
+                <Text style={styles.paywallPrice}>$9,99/mes</Text>
               </View>
             </View>
 
@@ -276,8 +276,11 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
   },
-  paywallIcon: {
-    fontSize: 30,
+  paywallLogo: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    resizeMode: "cover",
   },
   paywallTitle: {
     fontSize: 22,
