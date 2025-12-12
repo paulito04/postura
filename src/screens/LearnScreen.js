@@ -16,7 +16,7 @@ import { learningData as initialLearningData } from "../data/learningData";
 import LearningDetailScreen from "./LearningDetailScreen";
 import { usePoints } from "../PointsManager";
 import { useUser } from "../UserContext";
-import { useAppTheme } from "../themeContext";
+import { useTheme } from "../theme/ThemeProvider";
 
 const STORAGE_KEYS = {
   favorites: "LEARNING_FAVORITES",
@@ -33,7 +33,8 @@ const sectionEmojis = {
 };
 
 export default function LearnScreen() {
-  const { colors } = useAppTheme();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const { addPoints } = usePoints();
   const { user } = useUser();
   const [learningItems, setLearningItems] = useState([]);

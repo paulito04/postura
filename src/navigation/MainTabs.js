@@ -8,7 +8,7 @@ import LearnScreen from "../screens/LearnScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import ProgressScreen from "../screens/ProgressScreen";
 import StreakDetailScreen from "../screens/StreakDetailScreen";
-import { useAppTheme } from "../themeContext";
+import { useTheme } from "../theme/ThemeProvider";
 
 const tabs = [
   { key: "Inicio", icon: "🏠", component: HomeScreen },
@@ -27,7 +27,8 @@ const proPalette = {
 };
 
 export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, setUser, onLogin, LoginCardComponent }) {
-  const { colors } = useAppTheme();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [activeTab, setActiveTab] = useState(tabs[0].key);
   const [isPremium, setIsPremium] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
@@ -97,10 +98,10 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
         />
       </View>
 
-      <View style={[styles.tabBar, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
+      <View style={[styles.tabBar, { borderTopColor: colors.border, backgroundColor: colors.tabBarBackground }]}>
         {tabs.map((tab) => {
           const isActive = tab.key === activeTab;
-          const color = isActive ? colors.primary : colors.textSecondary;
+          const color = isActive ? colors.tabBarActive : colors.tabBarInactive;
 
           return (
             <TouchableOpacity

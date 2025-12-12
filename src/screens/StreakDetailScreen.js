@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
-import { useAppTheme } from "../themeContext";
+import { useTheme } from "../theme/ThemeProvider";
 
 const palette = {
   primary: "#055F67",
@@ -23,7 +23,8 @@ const palette = {
 const dayInitials = ["D", "L", "M", "M", "J", "V", "S"];
 
 export default function StreakDetailScreen({ navigation }) {
-  const { colors } = useAppTheme();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [history, setHistory] = useState([]);
   const [stats, setStats] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());

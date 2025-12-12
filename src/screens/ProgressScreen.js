@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useAppTheme } from "../themeContext";
+import { useTheme } from "../theme/ThemeProvider";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 
 const achievements = [
@@ -112,6 +112,8 @@ function isAchievementUnlocked(achievement, stats, history) {
 }
 
 function AchievementBadge({ achievement }) {
+  const { theme } = useTheme();
+  const { colors } = theme;
   const scale = useRef(new Animated.Value(achievement.unlocked ? 1 : 0.96)).current;
 
   useEffect(() => {
@@ -137,34 +139,33 @@ function AchievementBadge({ achievement }) {
     <Animated.View
       style={[
         styles.achievementCard,
-        achievement.unlocked ? styles.achievementUnlocked : styles.achievementLocked,
-        { transform: [{ scale }] },
+        {
+          backgroundColor: achievement.unlocked ? colors.card : colors.surface,
+          borderColor: colors.border,
+          transform: [{ scale }],
+        },
       ]}
     >
       <View
         style={[
           styles.achievementIcon,
-          achievement.unlocked ? styles.achievementIconUnlocked : styles.achievementIconLocked,
+          achievement.unlocked
+            ? { backgroundColor: `${colors.primary}25` }
+            : { backgroundColor: colors.border },
         ]}
       >
         <Text style={styles.achievementEmoji}>{achievement.unlocked ? "🏅" : "🔒"}</Text>
       </View>
-      <Text
-        style={[
-          styles.achievementTitle,
-          { color: achievement.unlocked ? "#0F9BA8" : "#7A7A7A" },
-        ]}
-      >
-        {achievement.title}
-      </Text>
-      <Text style={[styles.achievementDescription, { color: "#666" }]}>{achievement.description}</Text>
-      {!achievement.unlocked && <Text style={styles.lockedLabel}>Bloqueado</Text>}
+      <Text style={[styles.achievementTitle, { color: colors.text }]}>{achievement.title}</Text>
+      <Text style={[styles.achievementDescription, { color: colors.textMuted }]}>{achievement.description}</Text>
+      {!achievement.unlocked && <Text style={[styles.lockedLabel, { color: colors.textMuted }]}>Bloqueado</Text>}
     </Animated.View>
   );
 }
 
 export default function ProgressScreen({ activeTabKey, isPremium, navigation }) {
-  const { colors } = useAppTheme();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [history, setHistory] = useState([]);
   const [stats, setStats] = useState(null);
   const flameScale = useRef(new Animated.Value(1)).current;
@@ -254,9 +255,9 @@ export default function ProgressScreen({ activeTabKey, isPremium, navigation }) 
   if (!shouldShowDashboard) {
     return (
       <View style={[styles.lockedContainer, { backgroundColor: colors.background }]}>
-        <View style={[styles.placeholderCard, { borderColor: colors.border }]}>
-          <Text style={[styles.placeholderTitle, { color: colors.textPrimary }]}>Seguimiento de progreso</Text>
-          <Text style={[styles.placeholderSubtitle, { color: colors.textSecondary }]}>
+        <View style={[styles.placeholderCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+          <Text style={[styles.placeholderTitle, { color: colors.text }]}>Seguimiento de progreso</Text>
+          <Text style={[styles.placeholderSubtitle, { color: colors.textMuted }]}>
             Desbloquea tu membresía para revisar tus rachas, estadísticas y logros.
           </Text>
         </View>
@@ -265,42 +266,49 @@ export default function ProgressScreen({ activeTabKey, isPremium, navigation }) 
   }
 
   return (
-    <ScrollView style={styles.progressContainer} contentContainerStyle={styles.progressContent}>
+    <ScrollView
+      style={[styles.progressContainer, { backgroundColor: colors.background }]}
+      contentContainerStyle={styles.progressContent}
+    >
       <View style={styles.header}>
-        <Text style={styles.pageTitle}>Tu progreso postural</Text>
-        <Text style={styles.pageSubtitle}>Revisa tu constancia y logros.</Text>
+        <Text style={[styles.pageTitle, { color: colors.text }]}>Tu progreso postural</Text>
+        <Text style={[styles.pageSubtitle, { color: colors.textMuted }]}>Revisa tu constancia y logros.</Text>
       </View>
 
-      <TouchableOpacity style={styles.newStreakCard} onPress={handleStreakPress} activeOpacity={0.9}>
-        <View style={styles.streakIconWrapper}>
+      <TouchableOpacity
+        style={[styles.newStreakCard, { backgroundColor: colors.primary }]}
+        onPress={handleStreakPress}
+        activeOpacity={0.9}
+      >
+        <View style={[styles.streakIconWrapper, { backgroundColor: colors.card, shadowColor: colors.primary }]}>
           <Animated.Text style={[styles.streakFlame, flameStyle, { transform: [{ scale: flameScale }] }]}>
             {currentStreak === 0 ? "❄️" : "🔥"}
           </Animated.Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.streakNumber}>{currentStreak}</Text>
-          <Text style={styles.streakSubtitle}>días de racha</Text>
-          <Text style={styles.streakMessage}>{streakMessage}</Text>
+          <Text style={[styles.streakNumber, { color: colors.text }]}>{currentStreak}</Text>
+          <Text style={[styles.streakSubtitle, { color: colors.text }]}>días de racha</Text>
+          <Text style={[styles.streakMessage, { color: colors.textMuted }]}>{streakMessage}</Text>
         </View>
       </TouchableOpacity>
 
       <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Tiempo total</Text>
-          <Text style={styles.statValue}>{formatMinutes(totalMinutes)}</Text>
+        <View style={[styles.statCard, { backgroundColor: colors.surface, shadowColor: colors.text }]}>
+          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Tiempo total</Text>
+          <Text style={[styles.statValue, { color: colors.text }]}>{formatMinutes(totalMinutes)}</Text>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Ejercicios</Text>
-          <Text style={styles.statValue}>{totalExercises}</Text>
+        <View style={[styles.statCard, { backgroundColor: colors.surface, shadowColor: colors.text }]}>
+          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Ejercicios</Text>
+          <Text style={[styles.statValue, { color: colors.text }]}>{totalExercises}</Text>
         </View>
       </View>
-      <View style={styles.statCardFull}>
-        <Text style={styles.statLabel}>Promedio diario</Text>
-        <Text style={styles.statValue}>{avgPerDay} min/día activo</Text>
+      <View style={[styles.statCardFull, { backgroundColor: colors.surface, shadowColor: colors.text }]}>
+        <Text style={[styles.statLabel, { color: colors.textMuted }]}>Promedio diario</Text>
+        <Text style={[styles.statValue, { color: colors.text }]}>{avgPerDay} min/día activo</Text>
       </View>
 
       <View style={styles.achievementsHeader}>
-        <Text style={styles.sectionTitle}>Logros e insignias</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Logros e insignias</Text>
       </View>
       <FlatList
         data={computedAchievements}
@@ -311,8 +319,11 @@ export default function ProgressScreen({ activeTabKey, isPremium, navigation }) 
         renderItem={({ item }) => <AchievementBadge achievement={item} />}
       />
 
-      <TouchableOpacity style={styles.exportButton} onPress={handleExport}>
-        <Text style={styles.exportButtonText}>Exportar datos</Text>
+      <TouchableOpacity
+        style={[styles.exportButton, { backgroundColor: colors.primary, shadowColor: colors.text }]}
+        onPress={handleExport}
+      >
+        <Text style={[styles.exportButtonText, { color: colors.text }]}>Exportar datos</Text>
       </TouchableOpacity>
     </ScrollView>
   );

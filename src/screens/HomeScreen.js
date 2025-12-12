@@ -4,7 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { useAppState } from "../context/AppStateContext";
-import { useAppTheme } from "../themeContext";
+import { useTheme } from "../theme/ThemeProvider";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 import SummaryCard from "../components/SummaryCard";
 import { useUser } from "../UserContext";
@@ -47,7 +47,8 @@ const tipList = [
 ];
 
 export default function HomeScreen({ navigation }) {
-  const { colors } = useAppTheme();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const { discomfortLevel } = useAppState();
   const { user } = useUser();
 
@@ -71,14 +72,17 @@ export default function HomeScreen({ navigation }) {
 
   const palette = useMemo(
     () => ({
-      primary: "#0F9BA8",
-      deepTeal: "#0A5A63",
-      accent: "#7AC9A6",
-      softAccent: "#BFE3D0",
-      sand: "#EEF2F5",
-      card: "#FFFFFF",
+      primary: colors.primary,
+      deepTeal: colors.text,
+      accent: colors.secondary,
+      softAccent: colors.textMuted,
+      sand: colors.background,
+      card: colors.surface,
+      midGreen: colors.secondary,
+      darkGreen: colors.text,
+      mutedBorder: colors.border,
     }),
-    []
+    [colors.background, colors.border, colors.primary, colors.secondary, colors.text, colors.textMuted]
   );
 
   const challengeOfDay = useMemo(
@@ -156,11 +160,14 @@ export default function HomeScreen({ navigation }) {
   }, [navigation]);
 
   const displayName = user?.name?.trim() || user?.username?.trim() || "Usuario";
+  const successColor = colors.secondary;
+  const warningColor = colors.tabBarInactive;
+  const dangerColor = colors.danger;
   const discomfortColor = useMemo(() => {
-    if (discomfortLevel <= 3) return colors.success;
-    if (discomfortLevel <= 6) return colors.warning;
-    return colors.error;
-  }, [colors.error, colors.success, colors.warning, discomfortLevel]);
+    if (discomfortLevel <= 3) return successColor;
+    if (discomfortLevel <= 6) return warningColor;
+    return dangerColor;
+  }, [dangerColor, discomfortLevel, successColor, warningColor]);
 
   const handleStartSession = () => {
     setSnackbarMessage(`✅ Pausa programada en ${selectedDuration} minutos`);
@@ -225,15 +232,15 @@ export default function HomeScreen({ navigation }) {
                 <View style={styles.greetingRow}>
                   <ProgressRing progress={progress} size={74} strokeWidth={6} strokeColor={palette.softAccent}>
                     <View style={[styles.avatar, { backgroundColor: palette.deepTeal }]}>
-                      <Text style={styles.avatarText}>{avatarInitials}</Text>
+                      <Text style={[styles.avatarText, { color: colors.text }]}>{avatarInitials}</Text>
                     </View>
                   </ProgressRing>
                   <View style={{ gap: 4 }}>
-                    <Text style={[styles.headerGreeting, { color: "#FFFFFF" }]}>
+                    <Text style={[styles.headerGreeting, { color: colors.text }]}>
                       {greeting} {displayName}!
                     </Text>
                     <Text style={[styles.headerSubtitle, { color: palette.softAccent }]}>Tu bienestar postural empieza aquí</Text>
-                    <Text style={[styles.headerStatus, { color: "#FFFFFF" }]}>Nivel: Principiante · Racha: {streakDays} días</Text>
+                    <Text style={[styles.headerStatus, { color: colors.text }]}>Nivel: Principiante · Racha: {streakDays} días</Text>
                   </View>
                 </View>
                 <TouchableOpacity
@@ -241,8 +248,8 @@ export default function HomeScreen({ navigation }) {
                   accessibilityLabel="Notificaciones"
                   onPress={handleOpenNotifications}
                 >
-                  <Text style={[styles.iconButtonText, { color: "#FFFFFF" }]}>🔔</Text>
-                  {showNotificationDot ? <View style={[styles.notificationDot, { backgroundColor: colors.accent }]} /> : null}
+                  <Text style={[styles.iconButtonText, { color: colors.text }]}>🔔</Text>
+                  {showNotificationDot ? <View style={[styles.notificationDot, { backgroundColor: colors.primary }]} /> : null}
                 </TouchableOpacity>
               </View>
             </View>
@@ -283,12 +290,12 @@ export default function HomeScreen({ navigation }) {
             </View>
           </View>
 
-          <Text style={[styles.miniMotivation, { color: colors.textSecondary }]}>Pequeños hábitos, grandes cambios en tu postura.</Text>
+          <Text style={[styles.miniMotivation, { color: colors.textMuted }]}>Pequeños hábitos, grandes cambios en tu postura.</Text>
 
           <View style={[styles.sessionCard, styles.shadow, { backgroundColor: palette.card }]}>
             <Text style={[styles.sessionTitle, { color: palette.deepTeal }]}>Tu siguiente pausa activa</Text>
-            <Text style={[styles.sessionSubtitle, { color: colors.textSecondary }]}>Te recomendamos una pausa cada 45 min</Text>
-            <Text style={[styles.helperText, { color: colors.textSecondary }]}>Elige la duración</Text>
+            <Text style={[styles.sessionSubtitle, { color: colors.textMuted }]}>Te recomendamos una pausa cada 45 min</Text>
+            <Text style={[styles.helperText, { color: colors.textMuted }]}>Elige la duración</Text>
 
             <View style={styles.durationRow}>
               {durationOptions.map((minutes) => {
@@ -313,7 +320,7 @@ export default function HomeScreen({ navigation }) {
                     ]}
                     onPress={() => setSelectedDuration(minutes)}
                   >
-                    <Text style={[styles.durationText, isActive ? { color: "#FFFFFF" } : { color: palette.deepTeal }]}>
+                    <Text style={[styles.durationText, { color: colors.text }]}>
                       {minutes}m
                     </Text>
                   </TouchableOpacity>
@@ -321,10 +328,10 @@ export default function HomeScreen({ navigation }) {
               })}
             </View>
 
-            <Text style={[styles.helperText, { color: colors.textSecondary }]}>Puedes cambiarlo cuando quieras en Configuración.</Text>
+            <Text style={[styles.helperText, { color: colors.textMuted }]}>Puedes cambiarlo cuando quieras en Configuración.</Text>
 
             <TouchableOpacity style={[styles.primaryButton, { backgroundColor: palette.primary }]} onPress={handleStartSession}>
-              <Text style={styles.primaryButtonText}>▶ Comenzar ahora</Text>
+              <Text style={[styles.primaryButtonText, { color: colors.text }]}>▶ Comenzar ahora</Text>
             </TouchableOpacity>
           </View>
 
@@ -333,8 +340,8 @@ export default function HomeScreen({ navigation }) {
               <Text style={[styles.sectionEyebrow, { color: palette.deepTeal }]}>Desafío del día</Text>
               <Text style={styles.challengeIcon}>💪</Text>
             </View>
-            <Text style={[styles.challengeTitle, { color: colors.textPrimary }]}>{challengeOfDay.title}</Text>
-            <Text style={[styles.challengeDescription, { color: colors.textSecondary }]}>{challengeOfDay.description}</Text>
+            <Text style={[styles.challengeTitle, { color: colors.text }]}>{challengeOfDay.title}</Text>
+            <Text style={[styles.challengeDescription, { color: colors.textMuted }]}>{challengeOfDay.description}</Text>
             <TouchableOpacity style={[styles.secondaryButton, { borderColor: palette.deepTeal }]} onPress={handleChallengeNavigation}>
               <Text style={[styles.secondaryButtonText, { color: palette.deepTeal }]}>Ir al ejercicio</Text>
             </TouchableOpacity>
@@ -355,8 +362,8 @@ export default function HomeScreen({ navigation }) {
             >
               {tipList.map((tip, index) => (
                 <View key={tip} style={[styles.tipCard, { width: carouselWidth || 280 }]}>
-                  <Text style={[styles.tipIndex, { color: colors.textSecondary }]}>{`Tip ergonómico ${index + 1} de ${tipList.length}`}</Text>
-                  <Text style={[styles.tipText, { color: colors.textPrimary }]}>{tip}</Text>
+                  <Text style={[styles.tipIndex, { color: colors.textMuted }]}>{`Tip ergonómico ${index + 1} de ${tipList.length}`}</Text>
+                  <Text style={[styles.tipText, { color: colors.text }]}>{tip}</Text>
                 </View>
               ))}
             </ScrollView>
@@ -383,7 +390,7 @@ export default function HomeScreen({ navigation }) {
 
       {snackbarMessage ? (
         <View style={[styles.snackbar, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.snackbarText, { color: colors.textPrimary }]}>{snackbarMessage}</Text>
+          <Text style={[styles.snackbarText, { color: colors.text }]}>{snackbarMessage}</Text>
         </View>
       ) : null}
 
@@ -398,14 +405,14 @@ export default function HomeScreen({ navigation }) {
             {notificationType === "welcome" && (
               <>
                 <Text style={[styles.modalTitle, { color: palette.deepTeal }]}>¡Bienvenido a MoveUp!</Text>
-                <Text style={[styles.modalBody, { color: colors.textSecondary }]}>
+                <Text style={[styles.modalBody, { color: colors.textMuted }]}>
                   Gracias por unirte a la comunidad. Desde hoy te ayudaremos a cuidar tu postura paso a paso.
                 </Text>
                 <TouchableOpacity
                   style={[styles.modalPrimaryButton, { backgroundColor: palette.primary }]}
                   onPress={() => setNotificationsVisible(false)}
                 >
-                  <Text style={styles.modalPrimaryText}>Empezar</Text>
+                  <Text style={[styles.modalPrimaryText, { color: colors.text }]}>Empezar</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -413,14 +420,14 @@ export default function HomeScreen({ navigation }) {
             {notificationType === "premium" && (
               <>
                 <Text style={[styles.modalTitle, { color: palette.deepTeal }]}>Pásate a MoveUp Premium</Text>
-                <Text style={[styles.modalBody, { color: colors.textSecondary }]}>
+                <Text style={[styles.modalBody, { color: colors.textMuted }]}>
                   Desbloquea estadísticas avanzadas, logros especiales y todo el contenido de "Aprender" por solo $9.99 al mes.
                 </Text>
                 <TouchableOpacity
                   style={[styles.modalPrimaryButton, { backgroundColor: palette.primary }]}
                   onPress={handleGoToPremium}
                 >
-                  <Text style={styles.modalPrimaryText}>Ver beneficios</Text>
+                  <Text style={[styles.modalPrimaryText, { color: colors.text }]}>Ver beneficios</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalSecondaryButton, { borderColor: palette.deepTeal }]}
@@ -434,14 +441,14 @@ export default function HomeScreen({ navigation }) {
             {notificationType === "daily" && (
               <>
                 <Text style={[styles.modalTitle, { color: palette.deepTeal }]}>Tu ejercicio del día</Text>
-                <Text style={[styles.modalBody, { color: colors.textSecondary }]}>
+                <Text style={[styles.modalBody, { color: colors.textMuted }]}>
                   Hoy te recomendamos: {dailyExerciseTitle ?? "Ejercicio recomendado de movilidad"}. Mantén tu racha activa.
                 </Text>
                 <TouchableOpacity
                   style={[styles.modalPrimaryButton, { backgroundColor: palette.primary }]}
                   onPress={handleGoToDailyExercise}
                 >
-                  <Text style={styles.modalPrimaryText}>Ir al ejercicio</Text>
+                  <Text style={[styles.modalPrimaryText, { color: colors.text }]}>Ir al ejercicio</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalSecondaryButton, { borderColor: palette.deepTeal }]}
@@ -534,7 +541,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   avatarText: {
-    color: "#FFFFFF",
     fontWeight: "900",
     fontSize: 18,
   },
@@ -638,7 +644,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   primaryButtonText: {
-    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "800",
   },
@@ -777,7 +782,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalPrimaryText: {
-    color: "#FFFFFF",
     fontWeight: "800",
     fontSize: 15,
   },
