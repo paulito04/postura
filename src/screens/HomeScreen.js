@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { useAppState } from "../context/AppStateContext";
 import { useAppTheme } from "../themeContext";
@@ -50,6 +51,10 @@ export default function HomeScreen({ navigation }) {
   const { discomfortLevel } = useAppState();
   const { user } = useUser();
 
+  const [isNotificationsVisible, setNotificationsVisible] = useState(false);
+  const [notificationType, setNotificationType] = useState(null);
+  const [hasSeenWelcome, setHasSeenWelcome] = useState(null);
+
   const [selectedDuration, setSelectedDuration] = useState(45);
   const [streakDays, setStreakDays] = useState(0);
   const [streakGoal] = useState(7);
@@ -83,6 +88,19 @@ export default function HomeScreen({ navigation }) {
     }),
     []
   );
+
+  useEffect(() => {
+    const loadWelcomeFlag = async () => {
+      try {
+        const value = await AsyncStorage.getItem("moveup_hasSeenWelcome");
+        setHasSeenWelcome(value === "true");
+      } catch (error) {
+        console.warn("Error reading welcome flag", error);
+        setHasSeenWelcome(false);
+      }
+    };
+    loadWelcomeFlag();
+  }, []);
 
   function getRandomGreeting() {
     const index = Math.floor(Math.random() * GREETINGS.length);
@@ -159,6 +177,34 @@ export default function HomeScreen({ navigation }) {
   const avatarInitials = (user?.name || user?.username || "Tú").slice(0, 2).toUpperCase();
   const progress = streakDays / streakGoal;
   const discomfortIcon = discomfortLevel <= 3 ? "🙂" : discomfortLevel <= 6 ? "😐" : "😣";
+  const dailyExerciseTitle = challengeOfDay.title;
+
+  const handleOpenNotifications = async () => {
+    let type;
+
+    if (hasSeenWelcome === false) {
+      type = "welcome";
+      await AsyncStorage.setItem("moveup_hasSeenWelcome", "true");
+      setHasSeenWelcome(true);
+    } else if (!user?.isPremium) {
+      type = "premium";
+    } else {
+      type = "daily";
+    }
+
+    setNotificationType(type);
+    setNotificationsVisible(true);
+  };
+
+  const handleGoToPremium = () => {
+    setNotificationsVisible(false);
+    navigation?.navigate?.("Perfil");
+  };
+
+  const handleGoToDailyExercise = () => {
+    setNotificationsVisible(false);
+    navigation?.navigate?.("Ejercicios", { challenge: challengeOfDay });
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.sand }]}>
@@ -190,7 +236,11 @@ export default function HomeScreen({ navigation }) {
                     <Text style={[styles.headerStatus, { color: "#FFFFFF" }]}>Nivel: Principiante · Racha: {streakDays} días</Text>
                   </View>
                 </View>
-                <TouchableOpacity style={[styles.iconButton, { borderColor: palette.softAccent }]} accessibilityLabel="Notificaciones">
+                <TouchableOpacity
+                  style={[styles.iconButton, { borderColor: palette.softAccent }]}
+                  accessibilityLabel="Notificaciones"
+                  onPress={handleOpenNotifications}
+                >
                   <Text style={[styles.iconButtonText, { color: "#FFFFFF" }]}>🔔</Text>
                   {showNotificationDot ? <View style={[styles.notificationDot, { backgroundColor: colors.accent }]} /> : null}
                 </TouchableOpacity>
@@ -336,6 +386,74 @@ export default function HomeScreen({ navigation }) {
           <Text style={[styles.snackbarText, { color: colors.textPrimary }]}>{snackbarMessage}</Text>
         </View>
       ) : null}
+
+      <Modal
+        visible={isNotificationsVisible && notificationType !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setNotificationsVisible(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={[styles.modalCard, { backgroundColor: palette.card }]}>
+            {notificationType === "welcome" && (
+              <>
+                <Text style={[styles.modalTitle, { color: palette.deepTeal }]}>¡Bienvenido a MoveUp!</Text>
+                <Text style={[styles.modalBody, { color: colors.textSecondary }]}>
+                  Gracias por unirte a la comunidad. Desde hoy te ayudaremos a cuidar tu postura paso a paso.
+                </Text>
+                <TouchableOpacity
+                  style={[styles.modalPrimaryButton, { backgroundColor: palette.primary }]}
+                  onPress={() => setNotificationsVisible(false)}
+                >
+                  <Text style={styles.modalPrimaryText}>Empezar</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {notificationType === "premium" && (
+              <>
+                <Text style={[styles.modalTitle, { color: palette.deepTeal }]}>Pásate a MoveUp Premium</Text>
+                <Text style={[styles.modalBody, { color: colors.textSecondary }]}>
+                  Desbloquea estadísticas avanzadas, logros especiales y todo el contenido de "Aprender" por solo $9.99 al mes.
+                </Text>
+                <TouchableOpacity
+                  style={[styles.modalPrimaryButton, { backgroundColor: palette.primary }]}
+                  onPress={handleGoToPremium}
+                >
+                  <Text style={styles.modalPrimaryText}>Ver beneficios</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalSecondaryButton, { borderColor: palette.deepTeal }]}
+                  onPress={() => setNotificationsVisible(false)}
+                >
+                  <Text style={[styles.modalSecondaryText, { color: palette.deepTeal }]}>Después</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {notificationType === "daily" && (
+              <>
+                <Text style={[styles.modalTitle, { color: palette.deepTeal }]}>Tu ejercicio del día</Text>
+                <Text style={[styles.modalBody, { color: colors.textSecondary }]}>
+                  Hoy te recomendamos: {dailyExerciseTitle ?? "Ejercicio recomendado de movilidad"}. Mantén tu racha activa.
+                </Text>
+                <TouchableOpacity
+                  style={[styles.modalPrimaryButton, { backgroundColor: palette.primary }]}
+                  onPress={handleGoToDailyExercise}
+                >
+                  <Text style={styles.modalPrimaryText}>Ir al ejercicio</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalSecondaryButton, { borderColor: palette.deepTeal }]}
+                  onPress={() => setNotificationsVisible(false)}
+                >
+                  <Text style={[styles.modalSecondaryText, { color: palette.deepTeal }]}>Cerrar</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -628,5 +746,49 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     textAlign: "center",
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  modalCard: {
+    width: "100%",
+    borderRadius: 20,
+    padding: 20,
+    gap: 12,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  modalBody: {
+    fontSize: 14,
+    color: "#4B5563",
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  modalPrimaryButton: {
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  modalPrimaryText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 15,
+  },
+  modalSecondaryButton: {
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  modalSecondaryText: {
+    fontWeight: "700",
+    fontSize: 14,
   },
 });
