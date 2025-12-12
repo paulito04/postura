@@ -7,6 +7,7 @@ import { ThemeProvider, useAppTheme } from "./src/themeContext";
 import LoginModal from "./src/components/LoginModal";
 import { NotificationProvider } from "./src/NotificationManager";
 import { PointsProvider } from "./src/PointsManager";
+import { UserProvider, useUser } from "./src/UserContext";
 
 function LoadingScreen() {
   const { colors } = useAppTheme();
@@ -121,29 +122,18 @@ function AuthScreen({ onContinue }) {
   );
 }
 
-function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin }) {
-  const { hydrated, userProfile, setUserProfile } = useAppState();
+function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin, userHydrated }) {
+  const { hydrated: appHydrated } = useAppState();
   const [showIntro, setShowIntro] = useState(true);
 
   const handleFinishIntro = useCallback(() => setShowIntro(false), []);
 
   const displayName = useMemo(
-    () => userProfile?.name || user?.username || user?.name || "",
-    [user?.name, user?.username, userProfile?.name]
+    () => user?.username || user?.name || "Usuario",
+    [user?.name, user?.username]
   );
 
-  useEffect(() => {
-    if (!hydrated) return;
-
-    const hasStoredProfile = Boolean(userProfile?.name || userProfile?.email);
-    const hasUserData = Boolean(user?.username || user?.name || user?.email);
-
-    if (!hasStoredProfile && hasUserData) {
-      setUserProfile({ name: user?.username || user?.name || "", email: user?.email || "" });
-    }
-  }, [hydrated, setUserProfile, user?.email, user?.name, user?.username, userProfile?.email, userProfile?.name]);
-
-  if (!hydrated) {
+  if (!appHydrated || !userHydrated) {
     return <LoadingScreen />;
   }
 
@@ -162,29 +152,52 @@ function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin }) {
   );
 }
 
-export default function App() {
-  const [user, setUser] = useState({ username: "Jean", name: "Jean", email: "jean@posturau.app" });
+function RootAppContainer() {
+  const { user, setUser, hydrated: userHydrated } = useUser();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const handleLogin = ({ username, name, email }) => {
-    const safeUsername = username || name || "";
-    setUser({ username: safeUsername, name: safeUsername || name, email });
-    setIsLoggedIn(true);
-  };
+  useEffect(() => {
+    setIsLoggedIn(Boolean(user));
+  }, [user]);
 
+  const handleLogin = useCallback(
+    ({ username, name, email }) => {
+      const trimmedName = name?.trim() || username?.trim() || "Usuario";
+      const generatedEmail = email?.trim() || `${trimmedName}@posturau.app`;
+
+      setUser({
+        ...(user || {}),
+        username: username?.trim() || undefined,
+        name: trimmedName,
+        email: generatedEmail,
+      });
+      setIsLoggedIn(true);
+    },
+    [setUser, user]
+  );
+
+  return (
+    <RootApp
+      user={user}
+      setUser={setUser}
+      isLoggedIn={isLoggedIn}
+      setIsLoggedIn={setIsLoggedIn}
+      handleLogin={handleLogin}
+      userHydrated={userHydrated}
+    />
+  );
+}
+
+export default function App() {
   return (
     <NotificationProvider>
       <PointsProvider>
         <ThemeProvider>
-          <AppStateProvider>
-            <RootApp
-              user={user}
-              setUser={setUser}
-              isLoggedIn={isLoggedIn}
-              setIsLoggedIn={setIsLoggedIn}
-              handleLogin={handleLogin}
-            />
-          </AppStateProvider>
+          <UserProvider>
+            <AppStateProvider>
+              <RootAppContainer />
+            </AppStateProvider>
+          </UserProvider>
         </ThemeProvider>
       </PointsProvider>
     </NotificationProvider>

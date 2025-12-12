@@ -1,19 +1,57 @@
-import React, { createContext, useContext, useMemo } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
+const STORAGE_KEY = "moveup_user";
 const UserContext = createContext(null);
 
-export function UserProvider({ children, user, isPro = false, setUser, setIsPro }) {
+export function UserProvider({ children }) {
+  const [user, setUserState] = useState(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setUserState(parsed);
+        }
+      } catch (error) {
+        console.error("Error al cargar el usuario", error);
+      } finally {
+        setHydrated(true);
+      }
+    };
+
+    loadUser();
+  }, []);
+
+  const setUser = useCallback(async (nextUser) => {
+    setUserState(nextUser);
+    try {
+      if (nextUser) {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
+      } else {
+        await AsyncStorage.removeItem(STORAGE_KEY);
+      }
+    } catch (error) {
+      console.error("Error al guardar el usuario", error);
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
-      user: {
-        ...(user || {}),
-        plan: isPro ? "MoveUp Pro" : user?.plan || "Gratis",
-        isPro: !!isPro,
-      },
-      setUser: setUser || (() => {}),
-      setIsPro: setIsPro || (() => {}),
+      user: user
+        ? {
+            ...user,
+            plan: user.plan || (user.isPro ? "MoveUp Pro" : "Gratis"),
+            isPro: !!user.isPro,
+          }
+        : null,
+      setUser,
+      hydrated,
     }),
-    [isPro, setIsPro, setUser, user]
+    [hydrated, setUser, user]
   );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

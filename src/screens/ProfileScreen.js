@@ -17,7 +17,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 import UserAvatar from "../components/UserAvatar";
 import EditProfileModal from "../components/EditProfileModal";
-import { useAppState } from "../context/AppStateContext";
 import { useNotificationManager } from "../NotificationManager";
 import { usePoints } from "../PointsManager";
 import { useAppTheme } from "../themeContext";
@@ -139,14 +138,13 @@ function PremiumBadge({ isPremium }) {
 
 export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeTabKey, isPremium }) {
   const { colors } = useAppTheme();
-  const { userProfile, setUserProfile } = useAppState();
   const { currentPoints, lifetimePoints, level, nextRewardAt } = usePoints();
   const {
     prefs: notificationPrefs,
     updatePreferences: updateNotificationPrefs,
     toggleFocusMode,
   } = useNotificationManager();
-  const { user: contextUser } = useUser();
+  const { user: contextUser, setUser } = useUser();
 
   const resolvedUser = contextUser || user;
   const isProUser = isPremium || resolvedUser?.plan === "MoveUp Pro" || resolvedUser?.isPro;
@@ -159,8 +157,8 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   const [showTerms, setShowTerms] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: resolvedUser?.username || resolvedUser?.name || userProfile.name || "Jean Postura",
-    email: resolvedUser?.email || userProfile.email || "usuario@posturau.app",
+    name: resolvedUser?.username || resolvedUser?.name || "",
+    email: resolvedUser?.email || "",
     goal: "Mejorar mi higiene postural en jornada de oficina",
     notificationsEnabled: notificationPrefs?.enabled ?? true,
     photoUri: resolvedUser?.photoUrl || null,
@@ -168,8 +166,18 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   });
 
   const isProfileTab = activeTabKey === "perfil" || activeTabKey === "profile";
-  const currentName = isLoggedIn ? profileData.name || "Jean Postura" : "Sin iniciar sesión";
-  const currentEmail = profileData.email || "usuario@posturau.app";
+  useEffect(() => {
+    setProfileData((prev) => ({
+      ...prev,
+      name: resolvedUser?.name || resolvedUser?.username || prev.name || "",
+      email: resolvedUser?.email || prev.email || "",
+    }));
+  }, [resolvedUser?.email, resolvedUser?.name, resolvedUser?.username]);
+
+  const currentName = isLoggedIn
+    ? resolvedUser?.name?.trim() || resolvedUser?.username?.trim() || profileData.name?.trim() || "Usuario"
+    : "Sin iniciar sesión";
+  const currentEmail = resolvedUser?.email || profileData.email || "usuario@posturau.app";
   const currentPhotoUri = profileData.photoUri;
 
   useEffect(() => {
@@ -256,8 +264,15 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   };
 
   const handleSaveProfile = (data) => {
-    setProfileData(data);
-    setUserProfile({ name: data.name?.trim() || "Jean Postura", email: data.email });
+    const updatedUser = {
+      ...(resolvedUser || {}),
+      name: data.name?.trim() || resolvedUser?.name || resolvedUser?.username || "Usuario",
+      username: resolvedUser?.username,
+      email: data.email || resolvedUser?.email || "",
+    };
+
+    setProfileData((prev) => ({ ...prev, ...data }));
+    setUser(updatedUser);
     updateNotificationPrefs({ enabled: data.notificationsEnabled });
   };
 
@@ -277,7 +292,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
               isPremium={isProUser}
             />
             <View style={{ flex: 1 }}>
-              <Text style={[styles.title, { color: colors.textPrimary }]}>{currentName || "Jean Postura"}</Text>
+              <Text style={[styles.title, { color: colors.textPrimary }]}>{currentName || "Usuario"}</Text>
               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{currentEmail}</Text>
               <View style={styles.planRow}>
                 <Text style={[styles.planLabel, { color: colors.textSecondary }]}>{planLabel}</Text>
@@ -548,7 +563,11 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
 
       <EditProfileModal
         visible={editModalVisible}
-        initialData={profileData}
+        initialData={{
+          ...profileData,
+          name: resolvedUser?.name || resolvedUser?.username || profileData.name,
+          email: resolvedUser?.email || profileData.email,
+        }}
         onClose={() => setEditModalVisible(false)}
         onSave={handleSaveProfile}
       />
