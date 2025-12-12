@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native";
 import HomeScreen from "../screens/HomeScreen";
-import ExercisesScreen from "../screens/ExercisesScreen";
+import ExercisesHomeScreen from "../screens/ExercisesHomeScreen";
 import ProgressScreen from "../screens/ProgressScreen";
 import LearnScreen from "../screens/LearnScreen";
 import ProfileScreen from "../screens/ProfileScreen";
@@ -10,7 +10,7 @@ import { useAppTheme } from "../themeContext";
 
 const tabs = [
   { name: "Inicio", icon: "🏠", component: HomeScreen },
-  { name: "Ejercicios", icon: "🏋️", component: ExercisesScreen },
+  { name: "Ejercicios", icon: "🏋️", component: ExercisesHomeScreen },
   { name: "Progreso", icon: "📈", component: ProgressScreen },
   { name: "Aprender", icon: "📚", component: LearnScreen },
   { name: "Perfil", icon: "👤", component: ProfileScreen },

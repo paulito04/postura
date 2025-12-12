@@ -16,6 +16,30 @@ import { usePoints } from "../PointsManager";
 import { useUser } from "../UserContext";
 import { useAppTheme } from "../themeContext";
 
+export type ExerciseCategory = "correction" | "stretch";
+
+export type ExercisesListParams = {
+  mode?: "all" | "correction" | "favorites";
+  challenge?: any;
+};
+
+type Exercise = {
+  id: string;
+  name: string;
+  image: any;
+  duration: number;
+  area: "cuello" | "espalda" | "hombros";
+  level: "principiante" | "intermedio" | "avanzado";
+  isFavorite: boolean;
+  category: ExerciseCategory;
+  steps: string[];
+};
+
+type ExercisesListScreenProps = {
+  navigation?: { navigate?: (screen: string, params?: any) => void; goBack?: () => void };
+  tabParams?: ExercisesListParams;
+};
+
 const ExerciseCard = ({ exercise, onPress, onToggleFavorite, isFavorite, colors }) => {
   return (
     <TouchableOpacity
@@ -157,33 +181,46 @@ const RoutinePlayer = ({
   );
 };
 
-export default function ExercisesScreen({ tabParams }) {
+export default function ExercisesListScreen({ navigation, tabParams }: ExercisesListScreenProps) {
   const { colors } = useAppTheme();
   const { addPoints } = usePoints();
   const { user } = useUser();
+  const challenge = tabParams?.challenge;
+  const mode: ExercisesListParams["mode"] = tabParams?.mode ?? "all";
   const [exerciseAreaFilter, setExerciseAreaFilter] = useState("todos");
   const [exerciseLevelFilter, setExerciseLevelFilter] = useState("todos");
-  const [favoriteExerciseIds, setFavoriteExerciseIds] = useState([]);
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [favoriteExerciseIds, setFavoriteExerciseIds] = useState(() =>
+    exercises.filter((exercise: Exercise) => exercise.isFavorite).map((exercise) => exercise.id)
+  );
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(mode === "favorites");
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [isPlayingRoutine, setIsPlayingRoutine] = useState(false);
   const [routineTimeLeft, setRoutineTimeLeft] = useState(0);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-
-  const challenge = tabParams?.challenge;
 
   const toggleFavorite = useCallback((id) => {
     setFavoriteExerciseIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }, []);
 
   const filteredExercises = useMemo(() => {
-    return exercises.filter((exercise) => {
+    let baseList: Exercise[] = exercises;
+
+    if (mode === "correction") {
+      baseList = exercises.filter((exercise: Exercise) => exercise.category === "correction");
+    } else if (mode === "favorites") {
+      baseList = exercises.filter((exercise: Exercise) => favoriteExerciseIds.includes(exercise.id));
+    } else {
+      baseList = exercises.filter((exercise: Exercise) => exercise.category === "stretch");
+    }
+
+    return baseList.filter((exercise: Exercise) => {
       const matchesArea = exerciseAreaFilter === "todos" || exercise.area === exerciseAreaFilter;
       const matchesLevel = exerciseLevelFilter === "todos" || exercise.level === exerciseLevelFilter;
-      const matchesFavorite = !showFavoritesOnly || favoriteExerciseIds.includes(exercise.id);
+      const favoritesFiltered = mode === "favorites" || showFavoritesOnly;
+      const matchesFavorite = !favoritesFiltered || favoriteExerciseIds.includes(exercise.id);
       return matchesArea && matchesLevel && matchesFavorite;
     });
-  }, [exerciseAreaFilter, exerciseLevelFilter, favoriteExerciseIds, showFavoritesOnly]);
+  }, [exerciseAreaFilter, exerciseLevelFilter, favoriteExerciseIds, mode, showFavoritesOnly]);
 
   const handleSelectExercise = useCallback((exercise) => {
     setSelectedExercise(exercise);

@@ -1,7 +1,8 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import ExercisesScreen from "../screens/ExercisesScreen";
+import ExercisesHomeScreen from "../screens/ExercisesHomeScreen";
+import ExercisesListScreen from "../screens/ExercisesListScreen";
 import HomeScreen from "../screens/HomeScreen";
 import LearnScreen from "../screens/LearnScreen";
 import ProfileScreen from "../screens/ProfileScreen";
@@ -11,7 +12,7 @@ import { useAppTheme } from "../themeContext";
 
 const tabs = [
   { key: "Inicio", icon: "🏠", component: HomeScreen },
-  { key: "Ejercicios", icon: "🏋️", component: ExercisesScreen },
+  { key: "Ejercicios", icon: "🏋️", component: ExercisesHomeScreen },
   { key: "Progreso", icon: "📈", component: ProgressScreen },
   { key: "Aprender", icon: "📚", component: LearnScreen },
   { key: "Perfil", icon: "👤", component: ProfileScreen },
@@ -36,6 +37,7 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
   const stackRegistry = useMemo(
     () => ({
       StreakDetail: StreakDetailScreen,
+      ExercisesList: ExercisesListScreen,
     }),
     []
   );
