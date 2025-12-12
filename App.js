@@ -122,12 +122,15 @@ function AuthScreen({ onContinue }) {
 }
 
 function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin }) {
-  const { hydrated, setUserProfile } = useAppState();
+  const { hydrated, userProfile, setUserProfile } = useAppState();
   const [showIntro, setShowIntro] = useState(true);
 
   const handleFinishIntro = useCallback(() => setShowIntro(false), []);
 
-  const displayName = useMemo(() => user?.username || user?.name || "", [user?.name, user?.username]);
+  const displayName = useMemo(
+    () => userProfile?.name || user?.username || user?.name || "",
+    [user?.name, user?.username, userProfile?.name]
+  );
 
   useEffect(() => {
     if (!hydrated) return;
