@@ -6,6 +6,7 @@ import { useAppState } from "../context/AppStateContext";
 import { useAppTheme } from "../themeContext";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 import SummaryCard from "../components/SummaryCard";
+import { useUser } from "../UserContext";
 
 const durationOptions = [30, 45, 60];
 const GREETINGS = [
@@ -44,9 +45,10 @@ const tipList = [
   "Haz rotaciones de cuello suaves",
 ];
 
-export default function HomeScreen({ userName, isLoggedIn, navigation }) {
+export default function HomeScreen({ navigation }) {
   const { colors } = useAppTheme();
   const { discomfortLevel } = useAppState();
+  const { user } = useUser();
 
   const [selectedDuration, setSelectedDuration] = useState(45);
   const [streakDays, setStreakDays] = useState(0);
@@ -135,7 +137,7 @@ export default function HomeScreen({ userName, isLoggedIn, navigation }) {
     return unsubscribe;
   }, [navigation]);
 
-  const displayName = isLoggedIn && userName ? userName : "Tú";
+  const displayName = user?.name?.trim() || user?.username?.trim() || "Usuario";
   const discomfortColor = useMemo(() => {
     if (discomfortLevel <= 3) return colors.success;
     if (discomfortLevel <= 6) return colors.warning;
@@ -154,7 +156,7 @@ export default function HomeScreen({ userName, isLoggedIn, navigation }) {
     navigation?.navigate?.("Ejercicios", { challenge: challengeOfDay });
   };
 
-  const avatarInitials = userName ? userName.slice(0, 2).toUpperCase() : "Tú";
+  const avatarInitials = (user?.name || user?.username || "Tú").slice(0, 2).toUpperCase();
   const progress = streakDays / streakGoal;
   const discomfortIcon = discomfortLevel <= 3 ? "🙂" : discomfortLevel <= 6 ? "😐" : "😣";
 
