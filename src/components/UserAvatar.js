@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { View, Image, StyleSheet } from "react-native";
+import { View, Image, StyleSheet, Text } from "react-native";
 
 // Usamos crown1 como imagen por defecto si no hay foto de usuario.
 // Así evitamos requerir archivos que no existen.
@@ -19,6 +19,9 @@ const crowns = [
  * @typedef {Object} Props
  * @property {string | null} [photoUri] - foto real del usuario (opcional)
  * @property {boolean} [isPremium] - si es usuario premium o no
+ * @property {string | null} [avatarColor] - color sólido para usar como avatar
+ * @property {string} [name] - nombre para mostrar la inicial
+ * @property {number} [size] - tamaño del avatar en px
  */
 
 /**
@@ -27,7 +30,7 @@ const crowns = [
  *
  * @param {Props} props
  */
-export default function UserAvatar({ photoUri, isPremium }) {
+export default function UserAvatar({ photoUri, isPremium, avatarColor, name = "Usuario", size = AVATAR_SIZE }) {
   // Elegimos UNA corona aleatoria por sesión (no cambia en cada render)
   const crownIndexRef = useRef(null);
 
@@ -36,16 +39,55 @@ export default function UserAvatar({ photoUri, isPremium }) {
   }
 
   const crownSource = isPremium ? crowns[crownIndexRef.current] : null;
+  const avatarSize = size || AVATAR_SIZE;
+  const containerStyle = [
+    styles.container,
+    { width: avatarSize, height: avatarSize + 16 },
+  ];
+  const avatarStyle = [
+    styles.avatar,
+    {
+      width: avatarSize,
+      height: avatarSize,
+      borderRadius: avatarSize / 2,
+    },
+  ];
 
-  const avatarSource = photoUri ? { uri: photoUri } : fallbackAvatar;
+  const initialLetter = name?.trim()?.charAt(0)?.toUpperCase() || "U";
+  const showInitialAvatar = !photoUri && avatarColor;
 
   return (
-    <View style={styles.container}>
-      {/* Foto de perfil circular */}
-      <Image source={avatarSource} style={styles.avatar} />
+    <View style={containerStyle}>
+      {photoUri ? (
+        <Image source={{ uri: photoUri }} style={avatarStyle} />
+      ) : showInitialAvatar ? (
+        <View
+          style={[
+            avatarStyle,
+            {
+              backgroundColor: avatarColor,
+              alignItems: "center",
+              justifyContent: "center",
+            },
+          ]}
+        >
+          <Text style={[styles.avatarInitial, { fontSize: avatarSize * 0.38 }]}>
+            {initialLetter}
+          </Text>
+        </View>
+      ) : (
+        <Image source={fallbackAvatar} style={avatarStyle} />
+      )}
 
-      {/* Corona pegada al borde superior de la foto */}
-      {crownSource && <Image source={crownSource} style={styles.crown} />}
+      {crownSource && (
+        <Image
+          source={crownSource}
+          style={[
+            styles.crown,
+            { width: avatarSize * 0.5, height: avatarSize * 0.5 },
+          ]}
+        />
+      )}
     </View>
   );
 }
@@ -54,24 +96,22 @@ const AVATAR_SIZE = 80;
 
 const styles = StyleSheet.create({
   container: {
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE + 16, // un poquito más alto para que quepa la corona
     alignItems: "center",
     justifyContent: "flex-end",
   },
   avatar: {
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE,
-    borderRadius: AVATAR_SIZE / 2,
     borderWidth: 2,
     borderColor: "#055F67", // color del marco, cámbialo si quieres
     backgroundColor: "#fff",
   },
+  avatarInitial: {
+    color: "#fff",
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
   crown: {
     position: "absolute",
     top: -8, // se ve justo sobre el perímetro
-    width: 40,
-    height: 40,
     resizeMode: "contain",
   },
 });

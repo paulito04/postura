@@ -16,6 +16,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 import UserAvatar from "../components/UserAvatar";
+import EditProfileModal from "../components/EditProfileModal";
 import { useAppState } from "../context/AppStateContext";
 import { useNotificationManager } from "../NotificationManager";
 import { usePoints } from "../PointsManager";
@@ -156,23 +157,27 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   const [history, setHistory] = useState([]);
   const [stats, setStats] = useState(null);
   const [showTerms, setShowTerms] = useState(false);
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [editableName, setEditableName] = useState(
-    resolvedUser?.username || resolvedUser?.name || userProfile.name || "Jean Postura"
-  );
-  const [editableEmail, setEditableEmail] = useState(
-    resolvedUser?.email || userProfile.email || "usuario@posturau.app"
-  );
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: resolvedUser?.username || resolvedUser?.name || userProfile.name || "Jean Postura",
+    email: resolvedUser?.email || userProfile.email || "usuario@posturau.app",
+    goal: "Mejorar mi higiene postural en jornada de oficina",
+    notificationsEnabled: notificationPrefs?.enabled ?? true,
+    photoUri: resolvedUser?.photoUrl || null,
+    avatarColor: null,
+  });
 
   const isProfileTab = activeTabKey === "perfil" || activeTabKey === "profile";
+  const currentName = isLoggedIn ? profileData.name || "Jean Postura" : "Sin iniciar sesión";
+  const currentEmail = profileData.email || "usuario@posturau.app";
+  const currentPhotoUri = profileData.photoUri;
 
-  const currentName = isLoggedIn && (resolvedUser?.username || resolvedUser?.name || userProfile.name)
-    ? resolvedUser?.username || resolvedUser?.name || userProfile.name
-    : "Sin iniciar sesión";
-  const currentEmail = isLoggedIn && (resolvedUser?.email || userProfile.email)
-    ? resolvedUser?.email || userProfile.email
-    : editableEmail;
-  const currentPhotoUri = resolvedUser?.photoUrl;
+  useEffect(() => {
+    setProfileData((prev) => ({
+      ...prev,
+      notificationsEnabled: notificationPrefs?.enabled ?? prev.notificationsEnabled,
+    }));
+  }, [notificationPrefs?.enabled]);
 
   useEffect(() => {
     AsyncStorage.getItem(GOALS_KEY)
@@ -250,15 +255,10 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
     return date.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
   };
 
-  const handleEditProfile = () => {
-    if (!editingProfile) {
-      setEditingProfile(true);
-      return;
-    }
-
-    setUserProfile({ name: editableName.trim() || "Jean Postura", email: editableEmail.trim() });
-    Alert.alert("Perfil actualizado", "Tus datos se han guardado.");
-    setEditingProfile(false);
+  const handleSaveProfile = (data) => {
+    setProfileData(data);
+    setUserProfile({ name: data.name?.trim() || "Jean Postura", email: data.email });
+    updateNotificationPrefs({ enabled: data.notificationsEnabled });
   };
 
   const planLabel = isProUser ? "Plan: MoveUp Pro" : "Plan: Gratis";
@@ -269,7 +269,13 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.headerRow}>
-            <UserAvatar photoUri={currentPhotoUri} size={96} isPro={isProUser} />
+            <UserAvatar
+              photoUri={currentPhotoUri || undefined}
+              avatarColor={profileData.avatarColor}
+              name={currentName}
+              size={96}
+              isPremium={isProUser}
+            />
             <View style={{ flex: 1 }}>
               <Text style={[styles.title, { color: colors.textPrimary }]}>{currentName || "Jean Postura"}</Text>
               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{currentEmail}</Text>
@@ -279,36 +285,16 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
               </View>
             </View>
             <TouchableOpacity
-              onPress={handleEditProfile}
+              onPress={() => setEditModalVisible(true)}
               style={[styles.editButton, { borderColor: colors.primary, backgroundColor: `${colors.primary}10` }]}
             >
-              <Text style={[styles.editText, { color: colors.primary }]}>{editingProfile ? "Guardar" : "Editar datos"}</Text>
+              <Text style={[styles.editText, { color: colors.primary }]}>Editar perfil</Text>
             </TouchableOpacity>
           </View>
 
-          {editingProfile && (
-            <View style={styles.editForm}>
-              <TextInput
-                value={editableName}
-                onChangeText={setEditableName}
-                placeholder="Tu nombre"
-                placeholderTextColor={colors.textSecondary}
-                style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
-              />
-              <TextInput
-                value={editableEmail}
-                onChangeText={setEditableEmail}
-                placeholder="Correo electrónico"
-                placeholderTextColor={colors.textSecondary}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
-              />
-            </View>
-          )}
-
           <InfoRow label="Nombre" value={currentName} colors={colors} />
           <InfoRow label="Correo" value={currentEmail} colors={colors} />
+          <InfoRow label="Objetivo" value={profileData.goal} colors={colors} />
           <InfoRow label="Plan" value={planLabel.replace("Plan: ", "")} colors={colors} />
         </View>
 
@@ -560,6 +546,13 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
         </TouchableOpacity>
       </ScrollView>
 
+      <EditProfileModal
+        visible={editModalVisible}
+        initialData={profileData}
+        onClose={() => setEditModalVisible(false)}
+        onSave={handleSaveProfile}
+      />
+
       <TermsModal visible={showTerms} onClose={() => setShowTerms(false)} colors={colors} />
     </SafeAreaView>
   );
@@ -675,9 +668,6 @@ const styles = StyleSheet.create({
   editText: {
     fontSize: 12,
     fontWeight: "800",
-  },
-  editForm: {
-    gap: 8,
   },
   sectionTitle: {
     fontSize: 18,
