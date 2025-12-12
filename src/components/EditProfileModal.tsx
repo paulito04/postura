@@ -9,7 +9,7 @@ import {
   Switch,
   ScrollView,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { getImagePicker } from '../utils/getImagePicker';
 
 export type EditProfileData = {
   name: string;
@@ -35,6 +35,7 @@ export const EditProfileModal: React.FC<Props> = ({
   onClose,
   onSave,
 }) => {
+  const ImagePicker = getImagePicker();
   const [name, setName] = useState(initialData.name);
   const [goal, setGoal] = useState(initialData.goal);
   const [notificationsEnabled, setNotificationsEnabled] = useState(
