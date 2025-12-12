@@ -8,6 +8,9 @@ const defaultResolve = config.resolver.resolveRequest;
 const hasExpoNotifications = fs.existsSync(
   path.join(__dirname, "node_modules", "expo-notifications")
 );
+const hasExpoImagePicker = fs.existsSync(
+  path.join(__dirname, "node_modules", "expo-image-picker")
+);
 
 // Si expo-notifications no está instalado (por ejemplo en entornos offline),
 // mapeamos el paquete directamente a nuestro shim local para evitar errores
@@ -22,6 +25,16 @@ if (!hasExpoNotifications) {
   };
 }
 
+if (!hasExpoImagePicker) {
+  config.resolver.extraNodeModules = {
+    ...(config.resolver.extraNodeModules || {}),
+    "expo-image-picker": path.resolve(
+      __dirname,
+      "src/shims/expo-image-picker.js"
+    ),
+  };
+}
+
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName === "expo-notifications") {
     try {
@@ -30,6 +43,17 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
       return {
         type: "sourceFile",
         filePath: path.resolve(__dirname, "src/shims/expo-notifications.js"),
+      };
+    }
+  }
+
+  if (moduleName === "expo-image-picker") {
+    try {
+      return (defaultResolve || resolve)(context, moduleName, platform);
+    } catch (error) {
+      return {
+        type: "sourceFile",
+        filePath: path.resolve(__dirname, "src/shims/expo-image-picker.js"),
       };
     }
   }
