@@ -96,45 +96,6 @@ function InfoRow({ label, value, colors }) {
   );
 }
 
-function PlanLegend({ isPremium, colors }) {
-  const palette = {
-    stroke: "#BB3B0E",
-    fill: "#DD7631",
-    highlight: "#D8C593",
-  };
-
-  const label = isPremium ? "Usuario premium" : "Plan gratis";
-  const description = isPremium ? "MoveUp Pro activo" : "Sin plan premium";
-
-  return (
-    <View
-      style={[
-        styles.planLegend,
-        {
-          borderColor: isPremium ? palette.stroke : colors.border,
-          backgroundColor: isPremium ? `${palette.highlight}33` : `${colors.surface}90`,
-        },
-      ]}
-    >
-      <View
-        style={[
-          styles.planLegendIcon,
-          {
-            backgroundColor: isPremium ? palette.fill : colors.primary,
-            borderColor: isPremium ? palette.stroke : colors.primary,
-          },
-        ]}
-      />
-      <View style={{ flex: 1 }}>
-        <Text style={[styles.planLegendTitle, { color: isPremium ? palette.stroke : colors.textPrimary }]}>{label}</Text>
-        <Text style={[styles.planLegendSubtitle, { color: isPremium ? palette.stroke : colors.textSecondary }]}>
-          {description}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
 function PremiumBadge({ isPremium }) {
   const pulse = useRef(new Animated.Value(1)).current;
   const colors = ["#BB3B0E", "#DD7631", "#D8C593"];
@@ -313,7 +274,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
               <Text style={[styles.title, { color: colors.textPrimary }]}>{currentName || "Jean Postura"}</Text>
               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{currentEmail}</Text>
               <View style={styles.planRow}>
-                <PlanLegend isPremium={isProUser} colors={colors} />
+                <Text style={[styles.planLabel, { color: colors.textSecondary }]}>{planLabel}</Text>
                 {isProUser ? <PremiumBadge isPremium={isProUser} /> : null}
               </View>
             </View>
@@ -657,30 +618,6 @@ const styles = StyleSheet.create({
     color: "#FDF3E7",
     fontWeight: "800",
     letterSpacing: 0.2,
-  },
-  planLegend: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  planLegendIcon: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 1,
-    marginTop: 2,
-  },
-  planLegendTitle: {
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  planLegendSubtitle: {
-    fontSize: 12,
-    fontWeight: "600",
   },
   infoRow: {
     flexDirection: "row",
