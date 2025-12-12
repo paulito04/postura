@@ -1,10 +1,6 @@
 import React, { useRef } from "react";
 import { View, Image, StyleSheet, Text } from "react-native";
 
-// Usamos crown1 como imagen por defecto si no hay foto de usuario.
-// Así evitamos requerir archivos que no existen.
-const fallbackAvatar = require("../../assets/profile/crowns/crown1.png");
-
 // Coronas que ya tienes en assets/profile/crowns
 const crowns = [
   require("../../assets/profile/crowns/crown1.png"),
@@ -54,7 +50,8 @@ export default function UserAvatar({ photoUri, isPremium, avatarColor, name = "U
   ];
 
   const initialLetter = name?.trim()?.charAt(0)?.toUpperCase() || "U";
-  const showInitialAvatar = !photoUri && avatarColor;
+  const showInitialAvatar = !photoUri;
+  const initialBackgroundColor = avatarColor || DEFAULT_AVATAR_COLOR;
 
   return (
     <View style={containerStyle}>
@@ -65,7 +62,7 @@ export default function UserAvatar({ photoUri, isPremium, avatarColor, name = "U
           style={[
             avatarStyle,
             {
-              backgroundColor: avatarColor,
+              backgroundColor: initialBackgroundColor,
               alignItems: "center",
               justifyContent: "center",
             },
@@ -75,9 +72,7 @@ export default function UserAvatar({ photoUri, isPremium, avatarColor, name = "U
             {initialLetter}
           </Text>
         </View>
-      ) : (
-        <Image source={fallbackAvatar} style={avatarStyle} />
-      )}
+      ) : null}
 
       {crownSource && (
         <Image
@@ -93,6 +88,7 @@ export default function UserAvatar({ photoUri, isPremium, avatarColor, name = "U
 }
 
 const AVATAR_SIZE = 80;
+const DEFAULT_AVATAR_COLOR = "#055F67";
 
 const styles = StyleSheet.create({
   container: {
