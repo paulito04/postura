@@ -134,8 +134,14 @@ function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    setUserProfile(user);
-  }, [hydrated, setUserProfile, user]);
+
+    const hasStoredProfile = Boolean(userProfile?.name || userProfile?.email);
+    const hasUserData = Boolean(user?.username || user?.name || user?.email);
+
+    if (!hasStoredProfile && hasUserData) {
+      setUserProfile({ name: user?.username || user?.name || "", email: user?.email || "" });
+    }
+  }, [hydrated, setUserProfile, user?.email, user?.name, user?.username, userProfile?.email, userProfile?.name]);
 
   if (!hydrated) {
     return <LoadingScreen />;
