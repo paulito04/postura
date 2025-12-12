@@ -11,11 +11,15 @@ const durationOptions = [30, 45, 60];
 const GREETINGS = [
   "Hola",
   "Buenos días",
-  "¿Qué tal",
-  "¿Cómo andas",
-  "¿Listo para empezar",
-  "¡A darle",
+  "¿Qué tal?",
+  "¿Cómo andas?",
+  "¿Listo para empezar?",
+  "¡A darle!",
   "Dios te bendiga",
+  "¡Qué gusto verte!",
+  "Hola de nuevo",
+  "Hola, ¿cómo te sientes hoy?",
+  "¡Vamos a por ello!",
 ];
 const tipList = [
   "Pantalla a la altura de los ojos",
