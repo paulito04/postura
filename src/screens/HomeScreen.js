@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
 import { useAppState } from "../context/AppStateContext";
 import { useAppTheme } from "../themeContext";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
+import SummaryCard from "../components/SummaryCard";
 
 const durationOptions = [30, 45, 60];
 const GREETINGS = [
@@ -41,14 +42,13 @@ const tipList = [
 
 export default function HomeScreen({ userName, isLoggedIn, navigation }) {
   const { colors } = useAppTheme();
-  const { discomfortLevel, updateDiscomfort } = useAppState();
+  const { discomfortLevel } = useAppState();
 
   const [selectedDuration, setSelectedDuration] = useState(45);
   const [streakDays, setStreakDays] = useState(0);
   const [streakGoal] = useState(7);
   const [activitiesCompleted, setActivitiesCompleted] = useState(0);
   const [activityGoal] = useState(3);
-  const [discomfortInput, setDiscomfortInput] = useState("0");
   const [showNotificationDot] = useState(true);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
@@ -82,10 +82,6 @@ export default function HomeScreen({ userName, isLoggedIn, navigation }) {
     const index = Math.floor(Math.random() * GREETINGS.length);
     return GREETINGS[index];
   }
-
-  useEffect(() => {
-    setDiscomfortInput(String(discomfortLevel ?? 0));
-  }, [discomfortLevel]);
 
   useEffect(() => {
     async function loadActivity() {
@@ -141,20 +137,6 @@ export default function HomeScreen({ userName, isLoggedIn, navigation }) {
     if (discomfortLevel <= 6) return colors.warning;
     return colors.error;
   }, [colors.error, colors.success, colors.warning, discomfortLevel]);
-
-  const handleDiscomfortChange = (value) => {
-    const numericValue = value.replace(/[^0-9]/g, "");
-    setDiscomfortInput(numericValue);
-
-    if (numericValue === "") {
-      updateDiscomfort(0);
-      return;
-    }
-
-    const parsed = Math.min(10, Math.max(0, Number(numericValue)));
-    setDiscomfortInput(String(parsed));
-    updateDiscomfort(parsed);
-  };
 
   const handleStartSession = () => {
     setSnackbarMessage(`✅ Pausa programada en ${selectedDuration} minutos`);
@@ -212,47 +194,36 @@ export default function HomeScreen({ userName, isLoggedIn, navigation }) {
         </View>
 
         <View style={styles.contentArea}>
-          <View style={[styles.metricsCard, styles.shadow, { backgroundColor: palette.card, marginTop: -36 }]}>
-            <Text style={[styles.sectionEyebrow, { color: palette.deepTeal }]}>Resumen</Text>
-            <View style={styles.metricsRow}>
-              <MetricItem
-                label="Racha activa"
+          <View style={styles.summarySection}>
+            <Text style={styles.summaryTitle}>Resumen</Text>
+            <View style={styles.summaryRow}>
+              <SummaryCard
+                title="Racha activa"
                 value={`${streakDays} días`}
-                palette={palette}
-                icon="🔥"
-                progress={Math.min(1, progress)}
-                progressLabel={`Objetivo ${streakGoal} días`}
+                subtitle={`Objetivo ${streakGoal} días`}
+                icon={<Text style={styles.summaryIcon}>🔥</Text>}
+                accentColor="#F97316"
+                progress={streakDays / streakGoal}
+                onPress={() => navigation.navigate("StreakScreen")}
               />
-              <MetricItem
-                label="Actividades de hoy"
+              <SummaryCard
+                title="Actividades de hoy"
                 value={`${activitiesCompleted} / ${activityGoal}`}
-                palette={palette}
-                icon="✅"
-                progress={Math.min(1, activitiesCompleted / activityGoal)}
-                progressLabel="Pausas completadas"
+                subtitle="Pausas completadas"
+                icon={<Text style={styles.summaryIcon}>✅</Text>}
+                accentColor="#22C55E"
+                progress={activitiesCompleted / activityGoal}
+                onPress={() => navigation.navigate("ExercisesToday")}
               />
-              <MetricItem
-                label="Nivel de molestia"
-                value={`${discomfortLevel}/10`}
-                palette={palette}
-                icon={discomfortIcon}
-                progress={discomfortLevel / 10}
-                progressColor={discomfortColor}
-                progressLabel="Actualiza tu nivel"
-                  accessory={
-                    <View style={styles.inputRow}>
-                      <TextInput
-                        value={discomfortInput}
-                        onChangeText={handleDiscomfortChange}
-                        keyboardType="numeric"
-                        maxLength={2}
-                        placeholder="0-10"
-                        placeholderTextColor={colors.textSecondary}
-                        style={[styles.discomfortInput, { borderColor: colors.border, color: colors.textPrimary }]}
-                      />
-                    </View>
-                  }
-                />
+              <SummaryCard
+                title="Nivel de molestia"
+                value={`${discomfortLevel} / 10`}
+                subtitle="Actualiza tu nivel"
+                icon={<Text style={styles.summaryIcon}>{discomfortIcon}</Text>}
+                accentColor="#EAB308"
+                progress={1 - discomfortLevel / 10}
+                onPress={() => navigation.navigate("PainLevel")}
+              />
             </View>
           </View>
 
@@ -397,35 +368,6 @@ function ProgressRing({ progress, size, strokeWidth, strokeColor, children }) {
   );
 }
 
-function MetricItem({ label, value, icon, palette, progress, progressLabel, progressColor, accessory }) {
-  return (
-    <View style={styles.metricItem}>
-      <View style={styles.metricHeader}>
-        <Text style={styles.metricIcon}>{icon}</Text>
-        <Text style={[styles.metricLabel, { color: palette.deepTeal }]}>{label}</Text>
-      </View>
-      <Text style={[styles.metricValue, { color: palette.accent }]}>{value}</Text>
-      {progress !== undefined ? (
-        <View style={styles.progressContainer}>
-          <View style={styles.progressTrack}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  width: `${progress * 100}%`,
-                  backgroundColor: progressColor || palette.accent,
-                },
-              ]}
-            />
-          </View>
-          <Text style={styles.progressLabel}>{progressLabel}</Text>
-        </View>
-      ) : null}
-      {accessory ? accessory : null}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -511,6 +453,23 @@ const styles = StyleSheet.create({
     marginTop: 14,
     gap: 14,
   },
+  summarySection: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#0F172A",
+    marginBottom: 8,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  summaryIcon: {
+    fontSize: 18,
+  },
   sectionEyebrow: {
     fontSize: 13,
     fontWeight: "800",
@@ -569,70 +528,6 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     fontWeight: "800",
-    fontSize: 14,
-  },
-  metricsCard: {
-    borderRadius: 20,
-    padding: 18,
-    gap: 12,
-  },
-  metricsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  metricItem: {
-    flex: 1,
-    backgroundColor: "#F8F8F5",
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#D6D6D1",
-    gap: 6,
-  },
-  metricHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  metricIcon: {
-    fontSize: 16,
-  },
-  metricLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  metricValue: {
-    fontSize: 18,
-    fontWeight: "900",
-  },
-  progressContainer: {
-    gap: 4,
-  },
-  progressTrack: {
-    height: 8,
-    borderRadius: 6,
-    backgroundColor: "#E5E5E0",
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 6,
-  },
-  progressLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  inputRow: {
-    marginTop: 6,
-  },
-  discomfortInput: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
     fontSize: 14,
   },
   challengeCard: {
