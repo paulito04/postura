@@ -3,24 +3,26 @@ import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } fro
 import MainTabs from "./src/navigation/MainTabs";
 import IntroScreen from "./src/screens/IntroScreen";
 import { AppStateProvider, useAppState } from "./src/context/AppStateContext";
-import { ThemeProvider, useAppTheme } from "./src/themeContext";
+import { ThemeProvider, useTheme } from "./src/theme/ThemeProvider";
 import LoginModal from "./src/components/LoginModal";
 import { NotificationProvider } from "./src/NotificationManager";
 import { PointsProvider } from "./src/PointsManager";
 import { UserProvider, useUser } from "./src/UserContext";
 
 function LoadingScreen() {
-  const { colors } = useAppTheme();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   return (
     <SafeAreaView style={[styles.centeredContainer, { backgroundColor: colors.background }]}>
-      <Text style={[styles.loadingText, { color: colors.textPrimary }]}>Cargando…</Text>
+      <Text style={[styles.loadingText, { color: colors.text }]}>Cargando…</Text>
     </SafeAreaView>
   );
 }
 
 function AuthScreen({ onContinue }) {
-  const { colors } = useAppTheme();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -56,66 +58,69 @@ function AuthScreen({ onContinue }) {
     <SafeAreaView style={[styles.registrationContainer, { backgroundColor: colors.background }]}>
       <View style={styles.registrationContent}>
         <View style={styles.authHeader}>
-          <Text style={[styles.eyebrow, { color: colors.textSecondary }]}>Bienvenido</Text>
-          <Text style={[styles.registrationTitle, { color: colors.primaryDark }]}>Crea tu cuenta o inicia sesión</Text>
-          <Text style={[styles.registrationSubtitle, { color: colors.textSecondary }]}>Guarda tu racha y personaliza tu saludo.</Text>
+          <Text style={[styles.eyebrow, { color: colors.textMuted }]}>Bienvenido</Text>
+          <Text style={[styles.registrationTitle, { color: colors.primary }]}>Crea tu cuenta o inicia sesión</Text>
+          <Text style={[styles.registrationSubtitle, { color: colors.textMuted }]}>Guarda tu racha y personaliza tu saludo.</Text>
         </View>
 
-        <TouchableOpacity style={[styles.googleButton, { borderColor: colors.border }]} onPress={handleGoogleLogin}>
+        <TouchableOpacity
+          style={[styles.googleButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+          onPress={handleGoogleLogin}
+        >
           <Text style={styles.googleIcon}>ⓖ</Text>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.googleTitle, { color: colors.textPrimary }]}>Continuar con Google</Text>
-            <Text style={[styles.googleSubtitle, { color: colors.textSecondary }]}>Usaremos tu nombre o puedes editarlo</Text>
+            <Text style={[styles.googleTitle, { color: colors.text }]}>Continuar con Google</Text>
+            <Text style={[styles.googleSubtitle, { color: colors.textMuted }]}>Usaremos tu nombre o puedes editarlo</Text>
           </View>
         </TouchableOpacity>
 
         <View style={styles.dividerRow}>
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <Text style={[styles.dividerLabel, { color: colors.textSecondary }]}>o con correo y contraseña</Text>
+          <Text style={[styles.dividerLabel, { color: colors.textMuted }]}>o con correo y contraseña</Text>
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Nombre de usuario</Text>
+          <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Nombre de usuario</Text>
           <TextInput
             value={name}
             onChangeText={setName}
             placeholder="Cómo quieres que te saludemos"
-            placeholderTextColor={colors.textSecondary}
-            style={[styles.textInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surface }]}
+            placeholderTextColor={colors.textMuted}
+            style={[styles.textInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
           />
         </View>
 
         <View style={styles.inputRow}>
           <View style={[styles.inputGroup, { flex: 1 }]}>
-            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Correo</Text>
+            <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Correo</Text>
             <TextInput
               value={email}
               onChangeText={setEmail}
               placeholder="tu@email.com"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
-              style={[styles.textInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surface }]}
+              style={[styles.textInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
             />
           </View>
           <View style={[styles.inputGroup, { flex: 1 }]}>
-            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Contraseña</Text>
+            <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Contraseña</Text>
             <TextInput
               value={password}
               onChangeText={setPassword}
               placeholder="Mínimo 6 caracteres"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={colors.textMuted}
               secureTextEntry
-              style={[styles.textInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surface }]}
+              style={[styles.textInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
             />
           </View>
         </View>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        {error ? <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text> : null}
 
-        <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.accent }]} onPress={handleContinue}>
-          <Text style={styles.primaryButtonText}>Empezar</Text>
+        <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={handleContinue}>
+          <Text style={[styles.primaryButtonText, { color: colors.text }]}>Empezar</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -260,7 +265,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   errorText: {
-    color: "#d9534f",
     fontWeight: "700",
   },
   primaryButton: {
@@ -273,7 +277,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   primaryButtonText: {
-    color: "#0B1D26",
     fontWeight: "800",
     fontSize: 16,
   },
@@ -284,7 +287,6 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderRadius: 14,
-    backgroundColor: "#FFFFFF",
   },
   googleIcon: {
     fontSize: 20,

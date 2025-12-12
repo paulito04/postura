@@ -6,7 +6,7 @@ import ExercisesHomeScreen from "../screens/ExercisesHomeScreen";
 import ProgressScreen from "../screens/ProgressScreen";
 import LearnScreen from "../screens/LearnScreen";
 import ProfileScreen from "../screens/ProfileScreen";
-import { useAppTheme } from "../themeContext";
+import { useTheme } from "../theme/ThemeProvider";
 
 const tabs = [
   { name: "Inicio", icon: "🏠", component: HomeScreen },
@@ -17,7 +17,8 @@ const tabs = [
 ];
 
 export function BottomTabs() {
-  const { colors } = useAppTheme();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const [currentTab, setCurrentTab] = useState(tabs[0].name);
 
   const ActiveComponent = useMemo(() => {
@@ -29,10 +30,10 @@ export function BottomTabs() {
       <View style={styles.content}>
         <ActiveComponent />
       </View>
-      <View style={[styles.tabBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+      <View style={[styles.tabBar, { backgroundColor: colors.tabBarBackground, borderTopColor: colors.border }]}>
         {tabs.map((tab) => {
           const isActive = tab.name === currentTab;
-          const color = isActive ? colors.primary : colors.textSecondary;
+          const color = isActive ? colors.tabBarActive : colors.tabBarInactive;
 
           return (
             <TouchableOpacity

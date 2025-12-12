@@ -1,6 +1,6 @@
 import React from "react";
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useAppTheme } from "../themeContext";
+import { useTheme } from "../theme/ThemeProvider";
 import { ExercisesListParams } from "./ExercisesListScreen";
 
 const cardImages = {
@@ -14,7 +14,8 @@ type ExercisesHomeScreenProps = {
 };
 
 export default function ExercisesHomeScreen({ navigation }: ExercisesHomeScreenProps) {
-  const { colors } = useAppTheme();
+  const { theme } = useTheme();
+  const { colors } = theme;
 
   const cards: { key: ExercisesListParams["mode"]; title: string; subtitle: string; image: any }[] = [
     {
@@ -47,7 +48,7 @@ export default function ExercisesHomeScreen({ navigation }: ExercisesHomeScreenP
       contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[styles.title, { color: colors.textPrimary }]}>Elige tu tipo de sesión</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Elige tu tipo de sesión</Text>
 
       {cards.map((card) => (
         <TouchableOpacity
@@ -57,8 +58,8 @@ export default function ExercisesHomeScreen({ navigation }: ExercisesHomeScreenP
           onPress={() => handlePress(card.key)}
         >
           <View style={styles.cardTextContainer}>
-            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{card.title}</Text>
-            <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>{card.subtitle}</Text>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>{card.title}</Text>
+            <Text style={[styles.cardSubtitle, { color: colors.textMuted }]}>{card.subtitle}</Text>
           </View>
           <View style={styles.cardImageWrapper}>
             <Image source={card.image} style={styles.cardImage} />

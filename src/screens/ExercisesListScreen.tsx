@@ -14,7 +14,7 @@ import { areas, exercises, levels } from "../data/exercises";
 import { getActivityHistory, recordSession } from "../activityTracker";
 import { usePoints } from "../PointsManager";
 import { useUser } from "../UserContext";
-import { useAppTheme } from "../themeContext";
+import { useTheme } from "../theme/ThemeProvider";
 
 export type ExerciseCategory = "correction" | "stretch";
 
@@ -49,14 +49,14 @@ const ExerciseCard = ({ exercise, onPress, onToggleFavorite, isFavorite, colors 
       <Image source={exercise.image} style={styles.cardImage} resizeMode="cover" />
       <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
-          <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
             {exercise.name}
           </Text>
           <TouchableOpacity style={styles.favoriteButton} onPress={() => onToggleFavorite(exercise.id)}>
             <Text style={{ fontSize: 18 }}>{isFavorite ? "❤️" : "🤍"}</Text>
           </TouchableOpacity>
         </View>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
           {Math.round(exercise.duration / 60)} min · {exercise.area} · {exercise.level}
         </Text>
       </View>
@@ -124,28 +124,28 @@ const RoutinePlayer = ({
 
   return (
     <ScrollView contentContainerStyle={styles.playerContainer}>
-      <Text style={[styles.playerTitle, { color: colors.textPrimary }]}>{exercise.name}</Text>
+      <Text style={[styles.playerTitle, { color: colors.text }]}>{exercise.name}</Text>
       <View style={styles.imageContainer}>
         <Image source={frames[frameIndex]} style={styles.exerciseImage} resizeMode="contain" />
       </View>
 
       <View style={[styles.timerBox, { backgroundColor: `${colors.primary}10`, borderColor: colors.border }]}>
-        <Text style={[styles.timerLabel, { color: colors.textSecondary }]}>Tiempo restante</Text>
+        <Text style={[styles.timerLabel, { color: colors.textMuted }]}>Tiempo restante</Text>
         <Text style={[styles.timerValue, { color: colors.primary }]}>{formattedTime}</Text>
         {routineTimeLeft === 0 ? (
-          <Text style={[styles.completedText, { color: colors.textSecondary }]}>Rutina completada</Text>
+          <Text style={[styles.completedText, { color: colors.textMuted }]}>Rutina completada</Text>
         ) : null}
       </View>
 
       <View style={styles.stepsSection}>
         <View style={styles.stepsHeader}>
-          <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Instrucción</Text>
-          <Text style={[styles.stepProgressText, { color: colors.textSecondary }]}>
+          <Text style={[styles.stepTitle, { color: colors.text }]}>Instrucción</Text>
+          <Text style={[styles.stepProgressText, { color: colors.textMuted }]}>
             Paso {currentStepIndex + 1} de {exercise.steps.length}
           </Text>
         </View>
         <View style={[styles.stepCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.stepText, { color: colors.textPrimary }]}>{exercise.steps[currentStepIndex]}</Text>
+          <Text style={[styles.stepText, { color: colors.text }]}>{exercise.steps[currentStepIndex]}</Text>
           <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
             <View style={[styles.progressFill, { width: `${progress}%`, backgroundColor: colors.primary }]} />
           </View>
@@ -155,7 +155,7 @@ const RoutinePlayer = ({
               onPress={handlePrev}
               disabled={currentStepIndex === 0}
             >
-              <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Anterior</Text>
+              <Text style={[styles.secondaryButtonText, { color: colors.text }]}>Anterior</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
@@ -168,7 +168,7 @@ const RoutinePlayer = ({
               onPress={handleNext}
               disabled={currentStepIndex === exercise.steps.length - 1}
             >
-              <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Siguiente</Text>
+              <Text style={[styles.secondaryButtonText, { color: colors.text }]}>Siguiente</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -182,7 +182,8 @@ const RoutinePlayer = ({
 };
 
 export default function ExercisesListScreen({ navigation, tabParams }: ExercisesListScreenProps) {
-  const { colors } = useAppTheme();
+  const { theme } = useTheme();
+  const { colors } = theme;
   const { addPoints } = usePoints();
   const { user } = useUser();
   const challenge = tabParams?.challenge;
@@ -267,7 +268,7 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
             ]}
             onPress={() => onChange(option.key)}
           >
-            <Text style={[styles.chipLabel, { color: isActive ? colors.primary : colors.textSecondary }]}>
+            <Text style={[styles.chipLabel, { color: isActive ? colors.primary : colors.textMuted }]}>
               {option.label}
             </Text>
           </TouchableOpacity>
@@ -303,14 +304,14 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
           <View style={styles.headerStack}>
             {challenge ? (
               <View style={[styles.challengeBanner, { backgroundColor: colors.surface, borderColor: colors.border }]}> 
-                <Text style={[styles.bannerEyebrow, { color: colors.primaryDark }]}>Desafío del día</Text>
-                <Text style={[styles.bannerTitle, { color: colors.textPrimary }]}>{challenge.title}</Text>
-                <Text style={[styles.bannerDescription, { color: colors.textSecondary }]}>{challenge.description}</Text>
+                <Text style={[styles.bannerEyebrow, { color: colors.primary }]}>Desafío del día</Text>
+                <Text style={[styles.bannerTitle, { color: colors.text }]}>{challenge.title}</Text>
+                <Text style={[styles.bannerDescription, { color: colors.textMuted }]}>{challenge.description}</Text>
               </View>
             ) : null}
 
               <View style={styles.filtersBlock}>
-                <Text style={[styles.filtersTitle, { color: colors.textPrimary }]}>Zona corporal</Text>
+                <Text style={[styles.filtersTitle, { color: colors.text }]}>Zona corporal</Text>
                 <View style={styles.filterRow}>
                   <TouchableOpacity
                     style={[styles.filterChip, exerciseAreaFilter === "cuello" && styles.filterChipActive]}
@@ -360,10 +361,10 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
                     </Text>
                   </TouchableOpacity>
                 </View>
-              <Text style={[styles.filtersTitle, { color: colors.textPrimary }]}>Nivel</Text>
+              <Text style={[styles.filtersTitle, { color: colors.text }]}>Nivel</Text>
               {renderFilterRow(levels, exerciseLevelFilter, setExerciseLevelFilter)}
               <View style={styles.favoritesRow}>
-                <Text style={[styles.filtersTitle, { color: colors.textPrimary }]}>Solo favoritos</Text>
+                <Text style={[styles.filtersTitle, { color: colors.text }]}>Solo favoritos</Text>
                 <TouchableOpacity
                   style={[
                     styles.chip,
@@ -374,7 +375,7 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
                   ]}
                   onPress={() => setShowFavoritesOnly((prev) => !prev)}
                 >
-                  <Text style={[styles.chipLabel, { color: showFavoritesOnly ? colors.primary : colors.textSecondary }]}>
+                  <Text style={[styles.chipLabel, { color: showFavoritesOnly ? colors.primary : colors.textMuted }]}>
                     {showFavoritesOnly ? "Activado" : "Desactivado"}
                   </Text>
                 </TouchableOpacity>
@@ -393,8 +394,8 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
         )}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No hay ejercicios</Text>
-            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>Ajusta los filtros o desactiva favoritos</Text>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No hay ejercicios</Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>Ajusta los filtros o desactiva favoritos</Text>
           </View>
         }
       />

@@ -19,7 +19,7 @@ import UserAvatar from "../components/UserAvatar";
 import EditProfileModal from "../components/EditProfileModal";
 import { useNotificationManager } from "../NotificationManager";
 import { usePoints } from "../PointsManager";
-import { useAppTheme } from "../themeContext";
+import { useTheme } from "../theme/ThemeProvider";
 import { useUser } from "../UserContext";
 
 const GOALS_KEY = "@posturaU_goals";
@@ -46,34 +46,34 @@ function TermsModal({ visible, onClose, colors }) {
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.modalOverlay}>
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}> 
-          <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Términos y condiciones</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>Términos y condiciones</Text>
           <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
-            <Text style={[styles.modalParagraph, { color: colors.textPrimary }]}>Términos y condiciones de uso</Text>
-            <Text style={[styles.modalParagraph, { color: colors.textSecondary }]}>
+            <Text style={[styles.modalParagraph, { color: colors.text }]}>Términos y condiciones de uso</Text>
+            <Text style={[styles.modalParagraph, { color: colors.textMuted }]}>
               1. Naturaleza del proyecto
               {"\n"}Esta aplicación fue desarrollada por estudiantes universitarios como parte de un proyecto académico. No somos profesionales de la salud, médicos, fisioterapeutas ni especialistas certificados en ergonomía.
             </Text>
-            <Text style={[styles.modalParagraph, { color: colors.textSecondary }]}>
+            <Text style={[styles.modalParagraph, { color: colors.textMuted }]}>
               2. Propósito de la aplicación
               {"\n"}El contenido de la app tiene fines educativos e informativos generales sobre hábitos posturales y ergonomía básica. No constituye, en ningún caso, asesoramiento médico, diagnóstico, tratamiento ni sustituto de una consulta con un profesional de la salud.
             </Text>
-            <Text style={[styles.modalParagraph, { color: colors.textSecondary }]}>
+            <Text style={[styles.modalParagraph, { color: colors.textMuted }]}>
               3. Limitaciones de responsabilidad
               {"\n"}Aunque se ha puesto cuidado en la elaboración del contenido, pueden existir errores, imprecisiones u omisiones. El uso de la aplicación es responsabilidad exclusiva del usuario. Los desarrolladores y la institución educativa no asumen responsabilidad por lesiones, molestias, daños directos o indirectos que pudieran derivarse del uso de la app o de la realización de los ejercicios sugeridos.
             </Text>
-            <Text style={[styles.modalParagraph, { color: colors.textSecondary }]}>
+            <Text style={[styles.modalParagraph, { color: colors.textMuted }]}>
               4. Recomendación profesional
               {"\n"}Antes de iniciar cualquier rutina de ejercicios o cambios importantes en tu postura de trabajo, se recomienda consultar con un médico, fisioterapeuta u otro profesional de la salud calificado, especialmente si tienes antecedentes de dolor, lesiones o condiciones médicas previas.
             </Text>
-            <Text style={[styles.modalParagraph, { color: colors.textSecondary }]}>
+            <Text style={[styles.modalParagraph, { color: colors.textMuted }]}>
               5. Datos y privacidad
               {"\n"}La aplicación almacena únicamente la información necesaria para su funcionamiento (por ejemplo, nombre de usuario, historial de actividad y objetivos), principalmente en el propio dispositivo. No se recopilan datos sensibles de salud ni se comparten datos personales con terceros sin tu consentimiento.
             </Text>
-            <Text style={[styles.modalParagraph, { color: colors.textSecondary }]}>
+            <Text style={[styles.modalParagraph, { color: colors.textMuted }]}>
               6. Cambios en la aplicación
               {"\n"}Al tratarse de un proyecto universitario en evolución, las funciones, contenidos y diseño de la app pueden cambiar, actualizarse o dejar de estar disponibles sin previo aviso.
             </Text>
-            <Text style={[styles.modalParagraph, { color: colors.textSecondary }]}>
+            <Text style={[styles.modalParagraph, { color: colors.textMuted }]}>
               7. Aceptación de términos
               {"\n"}Al utilizar esta aplicación, aceptas estos términos y condiciones y reconoces que se trata de una herramienta educativa creada por estudiantes y no por expertos certificados en ergonomía o salud.
             </Text>
@@ -90,15 +90,20 @@ function TermsModal({ visible, onClose, colors }) {
 function InfoRow({ label, value, colors }) {
   return (
     <View style={styles.infoRow}>
-      <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>{label}</Text>
-      <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{value}</Text>
+      <Text style={[styles.infoLabel, { color: colors.textMuted }]}>{label}</Text>
+      <Text style={[styles.infoValue, { color: colors.text }]}>{value}</Text>
     </View>
   );
 }
 
 function PremiumBadge({ isPremium }) {
+  const { theme } = useTheme();
+  const { colors } = theme;
   const pulse = useRef(new Animated.Value(1)).current;
-  const colors = ["#BB3B0E", "#DD7631", "#D8C593"];
+  const palette = useMemo(
+    () => [colors.primary, colors.secondary, colors.text],
+    [colors.primary, colors.secondary, colors.text]
+  );
 
   useEffect(() => {
     if (!isPremium) return undefined;
@@ -129,15 +134,16 @@ function PremiumBadge({ isPremium }) {
 
   return (
     <Animated.View style={{ transform: [{ scale: pulse }] }}>
-      <View style={[styles.premiumBadge, { backgroundColor: colors[1] }]}>
-        <Text style={styles.premiumBadgeText}>Plan: MoveUp Pro</Text>
+      <View style={[styles.premiumBadge, { backgroundColor: palette[1], borderColor: colors.secondary }]}>
+        <Text style={[styles.premiumBadgeText, { color: colors.text }]}>Plan: MoveUp Pro</Text>
       </View>
     </Animated.View>
   );
 }
 
 export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeTabKey, isPremium }) {
-  const { colors } = useAppTheme();
+  const { theme, mode, setMode } = useTheme();
+  const { colors } = theme;
   const { currentPoints, lifetimePoints, level, nextRewardAt } = usePoints();
   const {
     prefs: notificationPrefs,
@@ -292,10 +298,10 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
               isPremium={isProUser}
             />
             <View style={{ flex: 1 }}>
-              <Text style={[styles.title, { color: colors.textPrimary }]}>{currentName || "Usuario"}</Text>
-              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{currentEmail}</Text>
+              <Text style={[styles.title, { color: colors.text }]}>{currentName || "Usuario"}</Text>
+              <Text style={[styles.subtitle, { color: colors.textMuted }]}>{currentEmail}</Text>
               <View style={styles.planRow}>
-                <Text style={[styles.planLabel, { color: colors.textSecondary }]}>{planLabel}</Text>
+                <Text style={[styles.planLabel, { color: colors.textMuted }]}>{planLabel}</Text>
                 {isProUser ? <PremiumBadge isPremium={isProUser} /> : null}
               </View>
             </View>
@@ -313,60 +319,60 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
           <InfoRow label="Plan" value={planLabel.replace("Plan: ", "")} colors={colors} />
         </View>
 
-        <View style={[styles.pointsCard, { backgroundColor: "#F5F8FB", borderColor: colors.border }]}>
-          <Text style={[styles.pointsTitle, { color: colors.textPrimary }]}>Sistema de puntos</Text>
+        <View style={[styles.pointsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.pointsTitle, { color: colors.text }]}>Sistema de puntos</Text>
           {isProUser ? (
             <>
-              <Text style={[styles.pointsSubtitle, { color: colors.textSecondary }]}>Nivel {level}</Text>
-              <Text style={[styles.pointsValue, { color: colors.textPrimary }]}>Puntos actuales: {currentPoints}</Text>
-              <Text style={[styles.pointsHelper, { color: colors.textSecondary }]}>Total acumulado: {lifetimePoints}</Text>
+              <Text style={[styles.pointsSubtitle, { color: colors.textMuted }]}>Nivel {level}</Text>
+              <Text style={[styles.pointsValue, { color: colors.text }]}>Puntos actuales: {currentPoints}</Text>
+              <Text style={[styles.pointsHelper, { color: colors.textMuted }]}>Total acumulado: {lifetimePoints}</Text>
 
-              <View style={styles.progressBarBg}>
-                <View style={[styles.progressBarFill, { flex: pointsProgress }]} />
+              <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
+                <View style={[styles.progressBarFill, { flex: pointsProgress, backgroundColor: colors.primary }]} />
                 <View style={{ flex: Math.max(0, 1 - pointsProgress) }} />
               </View>
-              <Text style={[styles.pointsHelper, { color: colors.textSecondary }]}>
+              <Text style={[styles.pointsHelper, { color: colors.textMuted }]}>
                 Próxima recompensa a los {nextRewardAt} pts
               </Text>
             </>
           ) : (
             <>
-              <Text style={[styles.pointsSubtitle, { color: colors.textSecondary }]}>Disponible solo en MoveUp Pro.</Text>
-              <Text style={[styles.pointsHelper, { color: colors.textSecondary }]}>Actualiza tu plan para acumular puntos y canjear recompensas.</Text>
+              <Text style={[styles.pointsSubtitle, { color: colors.textMuted }]}>Disponible solo en MoveUp Pro.</Text>
+              <Text style={[styles.pointsHelper, { color: colors.textMuted }]}>Actualiza tu plan para acumular puntos y canjear recompensas.</Text>
             </>
           )}
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Tus objetivos</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Tus objetivos</Text>
           <View style={styles.formRow}>
             <View style={[styles.formField, { borderColor: colors.border }]}> 
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Sesiones por semana</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>Sesiones por semana</Text>
               <TextInput
                 value={goals.sessionsPerWeek}
                 keyboardType="numeric"
                 onChangeText={(text) => setGoals((prev) => ({ ...prev, sessionsPerWeek: text }))}
-                style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
               />
             </View>
             <View style={[styles.formField, { borderColor: colors.border }]}> 
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Minutos por sesión</Text>
+              <Text style={[styles.label, { color: colors.textMuted }]}>Minutos por sesión</Text>
               <TextInput
                 value={goals.minutesPerSession}
                 keyboardType="numeric"
                 onChangeText={(text) => setGoals((prev) => ({ ...prev, minutesPerSession: text }))}
-                style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
               />
             </View>
           </View>
           <View style={[styles.formField, { borderColor: colors.border }]}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Hora recomendada de recordatorio</Text>
+            <Text style={[styles.label, { color: colors.textMuted }]}>Hora recomendada de recordatorio</Text>
             <TextInput
               value={goals.reminderTime}
               onChangeText={(text) => setGoals((prev) => ({ ...prev, reminderTime: text }))}
               placeholder="18:00"
-              placeholderTextColor={colors.textSecondary}
-              style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+              placeholderTextColor={colors.textMuted}
+              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
             />
           </View>
           <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={handleSaveGoals}>
@@ -375,32 +381,32 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Historial de actividad</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Historial de actividad</Text>
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Tiempo total</Text>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats?.totalMinutes || 0} min</Text>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>Tiempo total</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{stats?.totalMinutes || 0} min</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Ejercicios</Text>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats?.totalExercises || 0}</Text>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>Ejercicios</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{stats?.totalExercises || 0}</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Racha actual</Text>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats?.currentStreak || 0} días</Text>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>Racha actual</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{stats?.currentStreak || 0} días</Text>
             </View>
           </View>
 
           {history.length === 0 ? (
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
               Aún no tienes actividad registrada. Empieza desde la pestaña Ejercicios.
             </Text>
           ) : (
             lastSessions.map((session) => (
               <View key={session.date} style={[styles.sessionRow, { borderColor: colors.border }]}> 
                 <View>
-                  <Text style={[styles.sessionDate, { color: colors.textPrimary }]}>{formatDate(session.date)}</Text>
-                  <Text style={[styles.sessionLabel, { color: colors.textSecondary }]}>Ejercicios: {session.exercises}</Text>
+                  <Text style={[styles.sessionDate, { color: colors.text }]}>{formatDate(session.date)}</Text>
+                  <Text style={[styles.sessionLabel, { color: colors.textMuted }]}>Ejercicios: {session.exercises}</Text>
                 </View>
                 <Text style={[styles.sessionMinutes, { color: colors.primary }]}>{session.minutes} min</Text>
               </View>
@@ -409,18 +415,31 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Configuración</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Configuración</Text>
 
-          <View style={[styles.subCard, { borderColor: colors.border }]}>
-            <Text style={[styles.subTitle, { color: colors.textPrimary }]}>Recordatorios de postura</Text>
-            <Text style={[styles.helperText, { color: colors.textSecondary }]}> 
+          <View style={[styles.subCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+            <Text style={[styles.subTitle, { color: colors.text }]}>Apariencia</Text>
+            <View style={styles.toggleRow}>
+              <Text style={[styles.toggleLabel, { color: colors.text }]}>Modo oscuro</Text>
+              <Switch
+                value={mode === "dark"}
+                onValueChange={(value) => setMode(value ? "dark" : "light")}
+                thumbColor={mode === "dark" ? colors.secondary : colors.surface}
+                trackColor={{ false: colors.tabBarInactive, true: colors.primary }}
+              />
+            </View>
+          </View>
+
+          <View style={[styles.subCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+            <Text style={[styles.subTitle, { color: colors.text }]}>Recordatorios de postura</Text>
+            <Text style={[styles.helperText, { color: colors.textMuted }]}> 
               Activo entre {notificationPrefs.activeFrom} y {notificationPrefs.activeTo}. Recibirás avisos cada
               {` ${notificationPrefs.minIntervalMinutes}-${notificationPrefs.maxIntervalMinutes} min`} cuando la app
               detecte que estás dentro de tu horario de trabajo.
             </Text>
 
             <View style={styles.toggleRow}>
-              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Notificaciones activas</Text>
+              <Text style={[styles.toggleLabel, { color: colors.text }]}>Notificaciones activas</Text>
               <Switch
                 value={notificationPrefs.enabled}
                 onValueChange={(value) => updateNotificationPrefs({ enabled: value })}
@@ -428,7 +447,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
               />
             </View>
             <View style={styles.toggleRow}>
-              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Modo concentración</Text>
+              <Text style={[styles.toggleLabel, { color: colors.text }]}>Modo concentración</Text>
               <Switch
                 value={notificationPrefs.focusMode}
                 onValueChange={toggleFocusMode}
@@ -437,7 +456,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
             </View>
 
             <View style={styles.toggleRow}>
-              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Sonido</Text>
+              <Text style={[styles.toggleLabel, { color: colors.text }]}>Sonido</Text>
               <Switch
                 value={notificationPrefs.reminderType.sound}
                 onValueChange={(value) =>
@@ -449,7 +468,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
               />
             </View>
             <View style={styles.toggleRow}>
-              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Vibración</Text>
+              <Text style={[styles.toggleLabel, { color: colors.text }]}>Vibración</Text>
               <Switch
                 value={notificationPrefs.reminderType.vibration}
                 onValueChange={(value) =>
@@ -461,7 +480,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
               />
             </View>
             <View style={styles.toggleRow}>
-              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Visual</Text>
+              <Text style={[styles.toggleLabel, { color: colors.text }]}>Visual</Text>
               <Switch
                 value={notificationPrefs.reminderType.visual}
                 onValueChange={(value) =>
@@ -503,10 +522,10 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
             </View>
           </View>
 
-          <View style={[styles.subCard, { borderColor: colors.border }]}>
-            <Text style={[styles.subTitle, { color: colors.textPrimary }]}>Resumen semanal de progreso</Text>
+          <View style={[styles.subCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+            <Text style={[styles.subTitle, { color: colors.text }]}>Resumen semanal de progreso</Text>
             <View style={styles.toggleRow}>
-              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Recibir los domingos</Text>
+              <Text style={[styles.toggleLabel, { color: colors.text }]}>Recibir los domingos</Text>
               <Switch
                 value={notifications.weeklySummary}
                 onValueChange={(value) => handleNotificationsChange("weeklySummary", value)}
@@ -515,10 +534,10 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
             </View>
           </View>
 
-          <View style={[styles.subCard, { borderColor: colors.border }]}> 
-            <Text style={[styles.subTitle, { color: colors.textPrimary }]}>Configuración de privacidad</Text>
+          <View style={[styles.subCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+            <Text style={[styles.subTitle, { color: colors.text }]}>Configuración de privacidad</Text>
             <View style={styles.toggleRow}>
-              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Guardar historial de actividad en este dispositivo</Text>
+              <Text style={[styles.toggleLabel, { color: colors.text }]}>Guardar historial de actividad en este dispositivo</Text>
               <Switch
                 value={privacy.storeHistory}
                 onValueChange={(value) => handlePrivacyChange("storeHistory", value)}
@@ -526,21 +545,21 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
               />
             </View>
             <View style={styles.toggleRow}>
-              <Text style={[styles.toggleLabel, { color: colors.textPrimary }]}>Enviar datos anónimos para mejorar la app</Text>
+              <Text style={[styles.toggleLabel, { color: colors.text }]}>Enviar datos anónimos para mejorar la app</Text>
               <Switch
                 value={privacy.sendAnonymousData}
                 onValueChange={(value) => handlePrivacyChange("sendAnonymousData", value)}
                 trackColor={{ true: colors.primary }}
               />
             </View>
-            <Text style={[styles.helperText, { color: colors.textSecondary }]}>
+            <Text style={[styles.helperText, { color: colors.textMuted }]}>
               Esta app fue desarrollada como proyecto universitario. No envía datos personales sensibles ni comparte información con terceros.
             </Text>
           </View>
 
-          <View style={[styles.subCard, { borderColor: colors.border }]}> 
-            <Text style={[styles.subTitle, { color: colors.textPrimary }]}>Suscripción</Text>
-            <Text style={[styles.helperText, { color: colors.textSecondary }]}>Plan actual: {isProUser ? "MoveUp Pro" : "Gratis"}</Text>
+          <View style={[styles.subCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+            <Text style={[styles.subTitle, { color: colors.text }]}>Suscripción</Text>
+            <Text style={[styles.helperText, { color: colors.textMuted }]}>Plan actual: {isProUser ? "MoveUp Pro" : "Gratis"}</Text>
             <TouchableOpacity
               style={[styles.primaryButton, { backgroundColor: colors.primary }]}
               onPress={() => {
