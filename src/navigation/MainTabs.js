@@ -35,6 +35,8 @@ export default function MainTabs({
   onLogin,
   LoginCardComponent,
   lockNavigation,
+  shouldShowLogin,
+  setShouldShowLogin,
 }) {
   const { theme } = useTheme();
   const { colors } = theme;
@@ -91,7 +93,8 @@ export default function MainTabs({
     }
   };
 
-  const isAuthBlocked = lockNavigation || !isLoggedIn;
+  const isAuthBlocked = lockNavigation || !isLoggedIn || shouldShowLogin;
+  const loginVisible = shouldShowLogin || lockNavigation || !isLoggedIn;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -143,7 +146,19 @@ export default function MainTabs({
       {isAuthBlocked ? <View style={styles.authScrim} pointerEvents="auto" accessible accessibilityLabel="Pantalla bloqueada hasta iniciar sesión" /> : null}
 
       {LoginCardComponent ? (
-        <LoginCardComponent visible={isAuthBlocked} user={user} onLogin={onLogin} />
+        <LoginCardComponent
+          visible={loginVisible}
+          user={user}
+          onLogin={(payload) => {
+            onLogin?.(payload);
+            setShouldShowLogin(false);
+          }}
+          onClose={() => {
+            if (isLoggedIn) {
+              setShouldShowLogin(false);
+            }
+          }}
+        />
       ) : null}
 
       {showPaywall && (

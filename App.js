@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import MainTabs from "./src/navigation/MainTabs";
 import IntroScreen from "./src/screens/IntroScreen";
@@ -29,21 +29,13 @@ function RootApp({ user, handleLogin, userHydrated }) {
 
   const handleFinishIntro = useCallback(() => {
     setShowIntro(false);
-    setShouldShowLogin(!isLoggedIn);
-  }, [isLoggedIn]);
+    setShouldShowLogin(true);
+  }, []);
 
   const displayName = useMemo(
     () => user?.username || user?.name || "Usuario",
     [user?.name, user?.username]
   );
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      setShouldShowLogin(false);
-    } else if (!showIntro) {
-      setShouldShowLogin(true);
-    }
-  }, [isLoggedIn, showIntro]);
 
   if (!appHydrated || !userHydrated) {
     return <LoadingScreen />;
@@ -66,6 +58,8 @@ function RootApp({ user, handleLogin, userHydrated }) {
       }}
       LoginCardComponent={LoginModal}
       lockNavigation={!isLoggedIn || shouldShowLogin}
+      shouldShowLogin={shouldShowLogin}
+      setShouldShowLogin={setShouldShowLogin}
     />
   );
 }
