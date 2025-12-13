@@ -8,8 +8,11 @@ import {
   StyleSheet,
   Switch,
   ScrollView,
+  Image,
 } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 import { getImagePicker } from '../utils/getImagePicker';
+import { useProfile } from '../context/ProfileContext';
 
 export type EditProfileData = {
   name: string;
@@ -36,6 +39,7 @@ export const EditProfileModal: React.FC<Props> = ({
   onSave,
 }) => {
   const ImagePicker = getImagePicker();
+  const { setProfileImageUri } = useProfile();
   const [name, setName] = useState(initialData.name);
   const [goal, setGoal] = useState(initialData.goal);
   const [notificationsEnabled, setNotificationsEnabled] = useState(
@@ -74,14 +78,28 @@ export const EditProfileModal: React.FC<Props> = ({
     });
 
     if (!result.canceled) {
-      setPhotoUri(result.assets[0].uri);
-      setSelectedAvatarColor(null);
+      const pickedUri = result.assets?.[0]?.uri;
+
+      if (!pickedUri) return;
+
+      const dest = `${FileSystem.documentDirectory}profile_${Date.now()}.jpg`;
+
+      try {
+        await FileSystem.copyAsync({ from: pickedUri, to: dest });
+        await setProfileImageUri(dest);
+        setPhotoUri(dest);
+        setSelectedAvatarColor(null);
+      } catch (error) {
+        console.warn('No se pudo guardar la imagen seleccionada', error);
+        alert('No se pudo guardar la foto. Intenta nuevamente.');
+      }
     }
   };
 
   const handleSelectAvatar = (color: string) => {
     setSelectedAvatarColor(color);
     setPhotoUri(null);
+    setProfileImageUri(null);
   };
 
   const handleSave = () => {
@@ -114,7 +132,7 @@ export const EditProfileModal: React.FC<Props> = ({
                     { overflow: 'hidden', backgroundColor: '#fff' },
                   ]}
                 >
-                  <Text style={styles.avatarPhotoText}>Foto seleccionada</Text>
+                  <Image source={{ uri: photoUri }} style={styles.avatarImage} />
                 </View>
               ) : (
                 <View
@@ -264,6 +282,11 @@ const styles = StyleSheet.create({
   avatarPhotoText: {
     fontSize: 12,
     color: '#055F67',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   label: {
     fontSize: 14,

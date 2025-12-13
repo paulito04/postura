@@ -21,6 +21,7 @@ import { useNotificationManager } from "../NotificationManager";
 import { usePoints } from "../PointsManager";
 import { useTheme } from "../theme/ThemeProvider";
 import { useUser } from "../UserContext";
+import { useProfile } from "../context/ProfileContext";
 
 const GOALS_KEY = "@posturaU_goals";
 const NOTIFICATIONS_KEY = "@posturaU_notifications";
@@ -164,6 +165,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
     toggleFocusMode,
   } = useNotificationManager();
   const { user: contextUser, setUser } = useUser();
+  const { profileImageUri, setProfileImageUri } = useProfile();
 
   const resolvedUser = contextUser || user;
   const isProUser = isPremium || resolvedUser?.plan === "MoveUp Pro" || resolvedUser?.isPro;
@@ -180,7 +182,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
     email: resolvedUser?.email || "",
     goal: "Mejorar postura",
     notificationsEnabled: notificationPrefs?.enabled ?? true,
-    photoUri: resolvedUser?.photoUrl || null,
+    photoUri: profileImageUri || resolvedUser?.photoUrl || null,
     avatarColor: null,
   });
 
@@ -193,11 +195,18 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
     }));
   }, [resolvedUser?.email, resolvedUser?.name, resolvedUser?.username]);
 
+  useEffect(() => {
+    setProfileData((prev) => ({
+      ...prev,
+      photoUri: profileImageUri || prev.photoUri || null,
+    }));
+  }, [profileImageUri]);
+
   const currentName = isLoggedIn
     ? resolvedUser?.name?.trim() || resolvedUser?.username?.trim() || profileData.name?.trim() || "Usuario"
     : "Sin iniciar sesión";
   const currentEmail = resolvedUser?.email || profileData.email || "usuario@posturau.app";
-  const currentPhotoUri = profileData.photoUri;
+  const currentPhotoUri = profileImageUri || profileData.photoUri;
 
   useEffect(() => {
     setProfileData((prev) => ({
@@ -293,6 +302,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
     setProfileData((prev) => ({ ...prev, ...data }));
     setUser(updatedUser);
     updateNotificationPrefs({ enabled: data.notificationsEnabled });
+    setProfileImageUri(data.photoUri ?? null);
   };
 
   const planLabel = isProUser ? "Plan: MoveUp Pro" : "Plan: Gratis";
@@ -656,6 +666,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
         visible={editModalVisible}
         initialData={{
           ...profileData,
+          photoUri: profileImageUri || profileData.photoUri,
           name: resolvedUser?.name || resolvedUser?.username || profileData.name,
           email: resolvedUser?.email || profileData.email,
         }}
