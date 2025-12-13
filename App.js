@@ -142,9 +142,15 @@ function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin, userHy
     return <LoadingScreen />;
   }
 
-  return showIntro ? (
-    <IntroScreen onFinish={handleFinishIntro} />
-  ) : (
+  if (showIntro) {
+    return <IntroScreen onFinish={handleFinishIntro} />;
+  }
+
+  if (!isLoggedIn) {
+    return <AuthScreen onContinue={handleLogin} />;
+  }
+
+  return (
     <MainTabs
       user={user}
       userName={displayName}
