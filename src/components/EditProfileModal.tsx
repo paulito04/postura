@@ -68,16 +68,26 @@ async function pickAndSaveProfilePhoto(
 
     await FileSystem.deleteAsync(dest, { idempotent: true }).catch(() => {});
 
-    try {
-      await FileSystem.copyAsync({ from: uri, to: dest });
-    } catch (copyErr) {
-      const base64 = result.assets?.[0]?.base64;
-      if (!base64) throw new Error("No vino base64 para fallback");
+    let base64 = result.assets?.[0]?.base64 || null;
 
-      await FileSystem.writeAsStringAsync(dest, base64, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+    if (!base64) {
+      try {
+        const cleanUri = uri.split('?')[0];
+        base64 = await FileSystem.readAsStringAsync(cleanUri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+      } catch (readErr) {
+        console.warn('No se pudo leer la imagen seleccionada', readErr);
+      }
     }
+
+    if (!base64) {
+      throw new Error('No se pudo obtener la imagen en base64');
+    }
+
+    await FileSystem.writeAsStringAsync(dest, base64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
 
     await AsyncStorage.setItem(PROFILE_IMAGE_URI_KEY, dest);
     await setProfileImageUri(dest);
