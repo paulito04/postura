@@ -95,7 +95,10 @@ export default function MainTabs({
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.screenContainer, isAuthBlocked && styles.blockedContainer]} pointerEvents={isAuthBlocked ? "none" : "auto"}>
+      <View
+        style={[styles.screenContainer, isAuthBlocked && styles.blockedContainer]}
+        pointerEvents={isAuthBlocked ? "none" : "auto"}
+      >
         <ActiveComponent
           navigation={navigation}
           user={user}
@@ -109,7 +112,10 @@ export default function MainTabs({
         />
       </View>
 
-      <View style={[styles.tabBar, { borderTopColor: colors.border, backgroundColor: colors.tabBarBackground }]}>
+      <View
+        pointerEvents={isAuthBlocked ? "none" : "auto"}
+        style={[styles.tabBar, { borderTopColor: colors.border, backgroundColor: colors.tabBarBackground }]}
+      >
         {tabs.map((tab) => {
           const isActive = tab.key === activeTab;
           const color = isActive ? colors.tabBarActive : colors.tabBarInactive;
@@ -134,7 +140,7 @@ export default function MainTabs({
         })}
       </View>
 
-      {isAuthBlocked ? <View style={styles.authScrim} pointerEvents="auto" /> : null}
+      {isAuthBlocked ? <View style={styles.authScrim} pointerEvents="auto" accessible accessibilityLabel="Pantalla bloqueada hasta iniciar sesión" /> : null}
 
       {LoginCardComponent ? (
         <LoginCardComponent visible={isAuthBlocked} user={user} onLogin={onLogin} />
