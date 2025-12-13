@@ -104,6 +104,12 @@ function PremiumBadge({ isPremium }) {
     () => [colors.primary, colors.secondary, colors.text],
     [colors.primary, colors.secondary, colors.text]
   );
+  const premiumStyle = isPremium
+    ? [styles.premiumBadge, styles.planCardPro]
+    : [styles.premiumBadge, { backgroundColor: palette[1], borderColor: colors.secondary }];
+  const premiumTextStyle = isPremium
+    ? [styles.planTitle]
+    : [styles.premiumBadgeText, { color: colors.text }];
 
   useEffect(() => {
     if (!isPremium) return undefined;
@@ -133,17 +139,18 @@ function PremiumBadge({ isPremium }) {
   if (!isPremium) return null;
 
   return (
-    <Animated.View style={{ transform: [{ scale: pulse }] }}>
-      <View style={[styles.premiumBadge, { backgroundColor: palette[1], borderColor: colors.secondary }]}>
-        <Text style={[styles.premiumBadgeText, { color: colors.text }]}>Plan: MoveUp Pro</Text>
-      </View>
-    </Animated.View>
+      <Animated.View style={{ transform: [{ scale: pulse }] }}>
+        <View style={premiumStyle}>
+          <Text style={premiumTextStyle}>Plan: MoveUp Pro</Text>
+        </View>
+      </Animated.View>
   );
 }
 
 export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeTabKey, isPremium }) {
   const { theme, mode, setMode } = useTheme();
   const { colors } = theme;
+  const isDarkMode = mode === "dark";
   const { currentPoints, lifetimePoints, level, nextRewardAt } = usePoints();
   const {
     prefs: notificationPrefs,
@@ -288,7 +295,16 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.borderSoft,
+              borderRadius: isDarkMode ? 24 : 16,
+            },
+          ]}
+        >
           <View style={styles.headerRow}>
             <UserAvatar
               photoUri={currentPhotoUri || undefined}
@@ -319,7 +335,12 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
           <InfoRow label="Plan" value={planLabel.replace("Plan: ", "")} colors={colors} />
         </View>
 
-        <View style={[styles.pointsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.pointsCard,
+            { backgroundColor: colors.card, borderColor: colors.borderSoft, borderRadius: isDarkMode ? 20 : 16 },
+          ]}
+        >
           <Text style={[styles.pointsTitle, { color: colors.text }]}>Sistema de puntos</Text>
           {isProUser ? (
             <>
@@ -327,8 +348,23 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
               <Text style={[styles.pointsValue, { color: colors.text }]}>Puntos actuales: {currentPoints}</Text>
               <Text style={[styles.pointsHelper, { color: colors.textMuted }]}>Total acumulado: {lifetimePoints}</Text>
 
-              <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
-                <View style={[styles.progressBarFill, { flex: pointsProgress, backgroundColor: colors.primary }]} />
+              <View
+                style={[
+                  styles.progressBarBg,
+                  {
+                    backgroundColor: isDarkMode ? colors.accentSoft : colors.borderSoft,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.progressBarFill,
+                    {
+                      flex: pointsProgress,
+                      backgroundColor: isDarkMode ? colors.accent : colors.primary,
+                    },
+                  ]}
+                />
                 <View style={{ flex: Math.max(0, 1 - pointsProgress) }} />
               </View>
               <Text style={[styles.pointsHelper, { color: colors.textMuted }]}>
@@ -343,36 +379,41 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
           )}
         </View>
 
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.surface, borderColor: colors.borderSoft, borderRadius: isDarkMode ? 20 : 16 },
+          ]}
+        >
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Tus objetivos</Text>
           <View style={styles.formRow}>
-            <View style={[styles.formField, { borderColor: colors.border }]}> 
+            <View style={[styles.formField, { borderColor: colors.borderSoft }]}>
               <Text style={[styles.label, { color: colors.textMuted }]}>Sesiones por semana</Text>
               <TextInput
                 value={goals.sessionsPerWeek}
                 keyboardType="numeric"
                 onChangeText={(text) => setGoals((prev) => ({ ...prev, sessionsPerWeek: text }))}
-                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+                style={[styles.input, { borderColor: colors.borderSoft, color: colors.text }]}
               />
             </View>
-            <View style={[styles.formField, { borderColor: colors.border }]}> 
+            <View style={[styles.formField, { borderColor: colors.borderSoft }]}>
               <Text style={[styles.label, { color: colors.textMuted }]}>Minutos por sesión</Text>
               <TextInput
                 value={goals.minutesPerSession}
                 keyboardType="numeric"
                 onChangeText={(text) => setGoals((prev) => ({ ...prev, minutesPerSession: text }))}
-                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+                style={[styles.input, { borderColor: colors.borderSoft, color: colors.text }]}
               />
             </View>
           </View>
-          <View style={[styles.formField, { borderColor: colors.border }]}>
+          <View style={[styles.formField, { borderColor: colors.borderSoft }]}>
             <Text style={[styles.label, { color: colors.textMuted }]}>Hora recomendada de recordatorio</Text>
             <TextInput
               value={goals.reminderTime}
               onChangeText={(text) => setGoals((prev) => ({ ...prev, reminderTime: text }))}
               placeholder="18:00"
               placeholderTextColor={colors.textMuted}
-              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+              style={[styles.input, { borderColor: colors.borderSoft, color: colors.text }]}
             />
           </View>
           <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={handleSaveGoals}>
@@ -380,18 +421,38 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
           </TouchableOpacity>
         </View>
 
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.surface, borderColor: colors.borderSoft, borderRadius: isDarkMode ? 20 : 16 },
+          ]}
+        >
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Historial de actividad</Text>
           <View style={styles.statsRow}>
-            <View style={styles.statBox}>
+            <View
+              style={[
+                styles.statBox,
+                { backgroundColor: isDarkMode ? colors.cardAlt : "#F6F7FB", borderColor: colors.borderSoft },
+              ]}
+            >
               <Text style={[styles.statLabel, { color: colors.textMuted }]}>Tiempo total</Text>
               <Text style={[styles.statValue, { color: colors.text }]}>{stats?.totalMinutes || 0} min</Text>
             </View>
-            <View style={styles.statBox}>
+            <View
+              style={[
+                styles.statBox,
+                { backgroundColor: isDarkMode ? colors.cardAlt : "#F6F7FB", borderColor: colors.borderSoft },
+              ]}
+            >
               <Text style={[styles.statLabel, { color: colors.textMuted }]}>Ejercicios</Text>
               <Text style={[styles.statValue, { color: colors.text }]}>{stats?.totalExercises || 0}</Text>
             </View>
-            <View style={styles.statBox}>
+            <View
+              style={[
+                styles.statBox,
+                { backgroundColor: isDarkMode ? colors.cardAlt : "#F6F7FB", borderColor: colors.borderSoft },
+              ]}
+            >
               <Text style={[styles.statLabel, { color: colors.textMuted }]}>Racha actual</Text>
               <Text style={[styles.statValue, { color: colors.text }]}>{stats?.currentStreak || 0} días</Text>
             </View>
@@ -403,7 +464,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
             </Text>
           ) : (
             lastSessions.map((session) => (
-              <View key={session.date} style={[styles.sessionRow, { borderColor: colors.border }]}> 
+              <View key={session.date} style={[styles.sessionRow, { borderColor: colors.borderSoft }]}>
                 <View>
                   <Text style={[styles.sessionDate, { color: colors.text }]}>{formatDate(session.date)}</Text>
                   <Text style={[styles.sessionLabel, { color: colors.textMuted }]}>Ejercicios: {session.exercises}</Text>
@@ -414,10 +475,15 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
           )}
         </View>
 
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.surface, borderColor: colors.borderSoft, borderRadius: isDarkMode ? 20 : 16 },
+          ]}
+        >
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Configuración</Text>
 
-          <View style={[styles.subCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <View style={[styles.subCard, { borderColor: colors.borderSoft, backgroundColor: colors.card }]}>
             <Text style={[styles.subTitle, { color: colors.text }]}>Apariencia</Text>
             <View style={styles.toggleRow}>
               <Text style={[styles.toggleLabel, { color: colors.text }]}>Modo oscuro</Text>
@@ -430,7 +496,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
             </View>
           </View>
 
-          <View style={[styles.subCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <View style={[styles.subCard, { borderColor: colors.borderSoft, backgroundColor: colors.card }]}>
             <Text style={[styles.subTitle, { color: colors.text }]}>Recordatorios de postura</Text>
             <Text style={[styles.helperText, { color: colors.textMuted }]}> 
               Activo entre {notificationPrefs.activeFrom} y {notificationPrefs.activeTo}. Recibirás avisos cada
@@ -522,7 +588,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
             </View>
           </View>
 
-          <View style={[styles.subCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <View style={[styles.subCard, { borderColor: colors.borderSoft, backgroundColor: colors.card }]}>
             <Text style={[styles.subTitle, { color: colors.text }]}>Resumen semanal de progreso</Text>
             <View style={styles.toggleRow}>
               <Text style={[styles.toggleLabel, { color: colors.text }]}>Recibir los domingos</Text>
@@ -534,7 +600,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
             </View>
           </View>
 
-          <View style={[styles.subCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <View style={[styles.subCard, { borderColor: colors.borderSoft, backgroundColor: colors.card }]}>
             <Text style={[styles.subTitle, { color: colors.text }]}>Configuración de privacidad</Text>
             <View style={styles.toggleRow}>
               <Text style={[styles.toggleLabel, { color: colors.text }]}>Guardar historial de actividad en este dispositivo</Text>
@@ -557,7 +623,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
             </Text>
           </View>
 
-          <View style={[styles.subCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <View style={[styles.subCard, { borderColor: colors.borderSoft, backgroundColor: colors.card }]}>
             <Text style={[styles.subTitle, { color: colors.text }]}>Suscripción</Text>
             <Text style={[styles.helperText, { color: colors.textMuted }]}>Plan actual: {isProUser ? "MoveUp Pro" : "Gratis"}</Text>
             <TouchableOpacity
@@ -622,7 +688,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: "#6B6B6B",
   },
   planRow: {
     marginTop: 6,
@@ -649,6 +714,21 @@ const styles = StyleSheet.create({
     color: "#FDF3E7",
     fontWeight: "800",
     letterSpacing: 0.2,
+  },
+  planCardPro: {
+    backgroundColor: "#3B1F1A",
+    borderColor: "#DD7631",
+    borderWidth: 1,
+  },
+  planBadgeIcon: {
+    backgroundColor: "#DD7631",
+  },
+  planTitle: {
+    color: "#FCD3AA",
+    fontWeight: "800",
+  },
+  planSubtitle: {
+    color: "#E5E7EB",
   },
   infoRow: {
     flexDirection: "row",
@@ -691,11 +771,9 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     overflow: "hidden",
-    backgroundColor: "#E1E6EC",
     marginVertical: 8,
   },
   progressBarFill: {
-    backgroundColor: "#00A9A5",
   },
   editButton: {
     paddingHorizontal: 12,
@@ -751,7 +829,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
     borderRadius: 12,
-    backgroundColor: "#F6F7FB",
+    borderWidth: 1,
   },
   statLabel: {
     fontSize: 12,
