@@ -20,113 +20,6 @@ function LoadingScreen() {
   );
 }
 
-function AuthScreen({ onContinue }) {
-  const { theme } = useTheme();
-  const { colors } = theme;
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  const hasEmailFlow = email.trim().length > 0 || password.trim().length > 0;
-
-  const handleContinue = useCallback(() => {
-    const trimmedName = name.trim();
-    if (!trimmedName) {
-      setError("Elige un nombre de usuario para personalizar tu app");
-      return;
-    }
-
-    if (hasEmailFlow && (!email.trim() || !password.trim())) {
-      setError("Ingresa correo y contraseña para continuar");
-      return;
-    }
-
-    setError("");
-    onContinue({ name: trimmedName, email: email.trim() });
-  }, [email, hasEmailFlow, name, onContinue, password]);
-
-  const handleGoogleLogin = useCallback(() => {
-    const fallbackName = name || "Usuario Google";
-    setName(fallbackName);
-    setEmail(email || "usuario@gmail.com");
-    setError("");
-    onContinue({ name: fallbackName, email: email || "usuario@gmail.com" });
-  }, [email, name, onContinue]);
-
-  return (
-    <SafeAreaView style={[styles.registrationContainer, { backgroundColor: colors.background }]}>
-      <View style={styles.registrationContent}>
-        <View style={styles.authHeader}>
-          <Text style={[styles.eyebrow, { color: colors.textMuted }]}>Bienvenido</Text>
-          <Text style={[styles.registrationTitle, { color: colors.primary }]}>Crea tu cuenta o inicia sesión</Text>
-          <Text style={[styles.registrationSubtitle, { color: colors.textMuted }]}>Guarda tu racha y personaliza tu saludo.</Text>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.googleButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
-          onPress={handleGoogleLogin}
-        >
-          <Text style={styles.googleIcon}>ⓖ</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.googleTitle, { color: colors.text }]}>Continuar con Google</Text>
-            <Text style={[styles.googleSubtitle, { color: colors.textMuted }]}>Usaremos tu nombre o puedes editarlo</Text>
-          </View>
-        </TouchableOpacity>
-
-        <View style={styles.dividerRow}>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <Text style={[styles.dividerLabel, { color: colors.textMuted }]}>o con correo y contraseña</Text>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Nombre de usuario</Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Cómo quieres que te saludemos"
-            placeholderTextColor={colors.textMuted}
-            style={[styles.textInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
-          />
-        </View>
-
-        <View style={styles.inputRow}>
-          <View style={[styles.inputGroup, { flex: 1 }]}>
-            <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Correo</Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="tu@email.com"
-              placeholderTextColor={colors.textMuted}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              style={[styles.textInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
-            />
-          </View>
-          <View style={[styles.inputGroup, { flex: 1 }]}>
-            <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Contraseña</Text>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Mínimo 6 caracteres"
-              placeholderTextColor={colors.textMuted}
-              secureTextEntry
-              style={[styles.textInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface }]}
-            />
-          </View>
-        </View>
-
-        {error ? <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text> : null}
-
-        <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={handleContinue}>
-          <Text style={[styles.primaryButtonText, { color: colors.text }]}>Empezar</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
-}
-
 function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin, userHydrated }) {
   const { hydrated: appHydrated } = useAppState();
   const [showIntro, setShowIntro] = useState(true);
@@ -144,10 +37,6 @@ function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin, userHy
 
   if (showIntro) {
     return <IntroScreen onFinish={handleFinishIntro} />;
-  }
-
-  if (!isLoggedIn) {
-    return <AuthScreen onContinue={handleLogin} />;
   }
 
   return (

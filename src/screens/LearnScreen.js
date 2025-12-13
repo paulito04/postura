@@ -33,8 +33,9 @@ const sectionEmojis = {
 };
 
 export default function LearnScreen() {
-  const { theme } = useTheme();
+  const { theme, mode } = useTheme();
   const { colors } = theme;
+  const isDarkMode = mode === "dark";
   const { addPoints } = usePoints();
   const { user } = useUser();
   const [learningItems, setLearningItems] = useState([]);
@@ -163,40 +164,48 @@ export default function LearnScreen() {
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <Text style={styles.eyebrow}>Aprender</Text>
-      <Text style={styles.title}>Aprende sobre Ergonomía</Text>
-      <Text style={styles.subtitle}>Conocimientos para mejorar tu postura diaria</Text>
+      <Text style={[styles.eyebrow, { color: isDarkMode ? "#E5F0FF" : "#3B82F6" }]}>Aprender</Text>
+      <Text style={[styles.title, { color: isDarkMode ? "#E5F0FF" : "#0F172A" }]}>Aprende sobre Ergonomía</Text>
+      <Text style={[styles.subtitle, { color: isDarkMode ? "#B8C4D9" : "#4B5563" }]}>Conocimientos para mejorar tu postura diaria</Text>
 
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
-      <View style={styles.progressCard}>
+      <View
+        style={[
+          styles.progressCard,
+          {
+            backgroundColor: isDarkMode ? colors.cardAlt : "#EFF6FF",
+            borderColor: isDarkMode ? colors.border : "#DBEAFE",
+          },
+        ]}
+      >
         <View style={styles.progressHeader}>
-          <Text style={styles.progressTitle}>Progreso de aprendizaje</Text>
-          <Text style={styles.progressValue}>{progress}%</Text>
+          <Text style={[styles.progressTitle, { color: isDarkMode ? "#E5F0FF" : "#1D4ED8" }]}>Progreso de aprendizaje</Text>
+          <Text style={[styles.progressValue, { color: isDarkMode ? "#E5F0FF" : "#1D4ED8" }]}>{progress}%</Text>
         </View>
-        <View style={styles.progressBarBackground}>
-          <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
+        <View style={[styles.progressBarBackground, { backgroundColor: isDarkMode ? colors.border : "#DBEAFE" }]}>
+          <View style={[styles.progressBarFill, { width: `${progress}%`, backgroundColor: isDarkMode ? colors.primary : "#3B82F6" }]} />
         </View>
-        <Text style={styles.progressHelper}>{`Has leído ${history.length} de ${totalItems} artículos`}</Text>
+        <Text style={[styles.progressHelper, { color: isDarkMode ? colors.secondaryText : "#374151" }]}>{`Has leído ${history.length} de ${totalItems} artículos`}</Text>
       </View>
 
       <View style={styles.quickRow}>
-        <View style={styles.pill}>
-          <Text style={styles.pillText}>Sistema de favoritos</Text>
+        <View style={[styles.pill, { backgroundColor: isDarkMode ? colors.cardAlt : "#DFF6FF" }]}>
+          <Text style={[styles.pillText, { color: isDarkMode ? colors.primary : "#0EA5E9" }]}>Sistema de favoritos</Text>
         </View>
-        <View style={styles.pillMuted}>
-          <Text style={styles.pillTextMuted}>Modo offline activo</Text>
+        <View style={[styles.pillMuted, { backgroundColor: isDarkMode ? colors.card : "#F3F4F6" }]}>
+          <Text style={[styles.pillTextMuted, { color: isDarkMode ? colors.secondaryText : "#4B5563" }]}>Modo offline activo</Text>
         </View>
       </View>
 
       {favoriteItems.length > 0 && (
-        <View style={styles.favoritesBlock}>
-          <Text style={styles.blockTitle}>Tus favoritos</Text>
+        <View style={[styles.favoritesBlock, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.blockTitle, { color: colors.primaryText }]}>Tus favoritos</Text>
           <View style={styles.favoritesRow}>
             {favoriteItems.slice(0, 3).map((fav) => (
               <TouchableOpacity key={fav.id} onPress={() => handleSelect(fav)} style={styles.favoriteTag}>
-                <Text style={styles.favoriteIcon}>★</Text>
-                <Text style={styles.favoriteLabel} numberOfLines={1}>
+                <Text style={[styles.favoriteIcon, { color: isDarkMode ? "#FBBF24" : "#F59E0B" }]}>★</Text>
+                <Text style={[styles.favoriteLabel, { color: colors.primaryText }]} numberOfLines={1}>
                   {fav.title}
                 </Text>
               </TouchableOpacity>
@@ -206,10 +215,10 @@ export default function LearnScreen() {
       )}
 
       {historyItems.length > 0 && (
-        <View style={styles.historyBlock}>
-          <Text style={styles.blockTitle}>Historial de leídas</Text>
+        <View style={[styles.historyBlock, { backgroundColor: colors.cardAlt, borderColor: colors.border }]}>
+          <Text style={[styles.blockTitle, { color: colors.primaryText }]}>Historial de leídas</Text>
           {historyItems.slice(-3).map((item) => (
-            <Text key={item.id} style={styles.historyItem}>
+            <Text key={item.id} style={[styles.historyItem, { color: colors.secondaryText }]}>
               • {item.title}
             </Text>
           ))}
@@ -284,6 +293,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     gap: 8,
+    borderWidth: 1,
   },
   progressHeader: {
     flexDirection: "row",
