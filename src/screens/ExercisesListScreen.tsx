@@ -302,8 +302,19 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <View style={styles.headerStack}>
+            <View style={styles.backRow}>
+              <TouchableOpacity
+                onPress={() => navigation?.goBack?.()}
+                style={[styles.backButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                accessibilityLabel="Volver"
+              >
+                <Text style={[styles.backIcon, { color: colors.text }]}>←</Text>
+                <Text style={[styles.backLabel, { color: colors.text }]}>Volver</Text>
+              </TouchableOpacity>
+            </View>
+
             {challenge ? (
-              <View style={[styles.challengeBanner, { backgroundColor: colors.surface, borderColor: colors.border }]}> 
+              <View style={[styles.challengeBanner, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <Text style={[styles.bannerEyebrow, { color: colors.primary }]}>Desafío del día</Text>
                 <Text style={[styles.bannerTitle, { color: colors.text }]}>{challenge.title}</Text>
                 <Text style={[styles.bannerDescription, { color: colors.textMuted }]}>{challenge.description}</Text>
@@ -413,6 +424,26 @@ const styles = StyleSheet.create({
   },
   headerStack: {
     gap: 14,
+  },
+  backRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  backIcon: {
+    fontSize: 18,
+    marginRight: 6,
+  },
+  backLabel: {
+    fontSize: 14,
+    fontWeight: "700",
   },
   card: {
     borderRadius: 14,
