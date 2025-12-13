@@ -1,12 +1,22 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
 
+import { useAuth } from "../AuthContext";
+
 const PRIMARY_COLOR = "#055F67";
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginModal({ visible, onLogin, user }) {
-  const initialUsername = user?.username || user?.name || "";
-  const initialEmail = user?.email || (initialUsername ? `${initialUsername}@posturau.app` : "");
+  const auth = useAuth();
+  const contextUser = auth?.user;
+  const loginHandler = onLogin || auth?.login;
+  const resolvedUser = user || contextUser;
+  const isVisible = visible ?? !resolvedUser;
+
+  const initialUsername = resolvedUser?.username || resolvedUser?.name || "";
+  const initialEmail =
+    resolvedUser?.email ||
+    (initialUsername ? `${initialUsername.toLowerCase()}@posturau.app` : "");
   const [username, setUsername] = useState(initialUsername);
   const [email, setEmail] = useState(initialEmail);
   const [emailError, setEmailError] = useState("");
@@ -14,15 +24,17 @@ export default function LoginModal({ visible, onLogin, user }) {
   const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
-    const nextUsername = user?.username || user?.name || "";
-    const nextEmail = user?.email || (nextUsername ? `${nextUsername}@posturau.app` : "");
+    const nextUsername = resolvedUser?.username || resolvedUser?.name || "";
+    const nextEmail =
+      resolvedUser?.email ||
+      (nextUsername ? `${nextUsername.toLowerCase()}@posturau.app` : "");
     setUsername(nextUsername);
     setPassword("");
     setEmail(nextEmail);
-  }, [user?.email, user?.name, user?.username]);
+  }, [resolvedUser?.email, resolvedUser?.name, resolvedUser?.username]);
 
   useEffect(() => {
-    setEmail(username ? `${username.trim()}@posturau.app` : "");
+    setEmail(username ? `${username.trim().toLowerCase()}@posturau.app` : "");
   }, [username]);
 
   const derivedEmail = useMemo(() => email.trim(), [email]);
@@ -51,7 +63,7 @@ export default function LoginModal({ visible, onLogin, user }) {
     return true;
   };
 
-  if (!visible) return null;
+  if (!isVisible) return null;
 
   const handleLogin = () => {
     const isEmailValid = validateEmail(email);
@@ -67,7 +79,7 @@ export default function LoginModal({ visible, onLogin, user }) {
       return;
     }
 
-    onLogin({
+    loginHandler?.({
       username: trimmedIdentifier,
       name: derivedName || trimmedIdentifier,
       email: derivedEmail || `${trimmedIdentifier}@posturau.app`,
