@@ -8,6 +8,7 @@ import LearnScreen from "../screens/LearnScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import ProgressScreen from "../screens/ProgressScreen";
 import StreakDetailScreen from "../screens/StreakDetailScreen";
+import DeveloperModeScreen from "../screens/DeveloperModeScreen";
 import { useTheme } from "../theme/ThemeProvider";
 
 const tabs = [
@@ -50,6 +51,7 @@ export default function MainTabs({
     () => ({
       StreakDetail: StreakDetailScreen,
       ExercisesList: ExercisesListScreen,
+      DeveloperMode: DeveloperModeScreen,
     }),
     []
   );

@@ -17,11 +17,12 @@ import LearningDetailScreen from "./LearningDetailScreen";
 import { usePoints } from "../PointsManager";
 import { useUser } from "../UserContext";
 import { useTheme } from "../theme/ThemeProvider";
+import { PROGRESS_STORAGE_KEYS } from "../utils/progressStorage";
 
 const STORAGE_KEYS = {
-  favorites: "LEARNING_FAVORITES",
-  history: "LEARNING_HISTORY",
-  content: "LEARNING_CONTENT",
+  favorites: PROGRESS_STORAGE_KEYS.learningFavorites,
+  history: PROGRESS_STORAGE_KEYS.learningHistory,
+  content: PROGRESS_STORAGE_KEYS.learningContent,
 };
 
 const sectionEmojis = {

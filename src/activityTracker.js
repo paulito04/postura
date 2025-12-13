@@ -1,14 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const STORAGE_KEY = "@posturaU_activityHistory";
-const dayLabels = ["D", "L", "M", "M", "J", "V", "S"];
+import { PROGRESS_STORAGE_KEYS } from "./utils/progressStorage";
+import { computeStatsFromHistory, formatDate, normalizeHistoryEntry } from "./utils/progressUtils";
 
-function formatDate(dateInput) {
-  if (dateInput instanceof Date) {
-    return dateInput.toISOString().split("T")[0];
-  }
-  return dateInput;
-}
+const STORAGE_KEY = PROGRESS_STORAGE_KEYS.activityHistory;
 
 export async function getActivityHistory() {
   try {
@@ -17,11 +12,7 @@ export async function getActivityHistory() {
 
     const parsed = JSON.parse(stored);
     if (!Array.isArray(parsed)) return [];
-    return parsed.map((entry) => ({
-      date: entry.date,
-      minutes: Number(entry.minutes) || 0,
-      exercises: Number(entry.exercises) || 0,
-    }));
+    return parsed.map((entry) => normalizeHistoryEntry(entry));
   } catch (error) {
     console.warn("[ActivityTracker] Error reading history", error);
     return [];
@@ -51,43 +42,4 @@ export async function recordSession({ date, minutes = 0, exercises = 0 }) {
   return history;
 }
 
-function buildDayMap(history) {
-  return history.reduce((acc, entry) => {
-    acc[entry.date] = entry;
-    return acc;
-  }, {});
-}
-
-export function computeStatsFromHistory(history = []) {
-  const totalMinutes = history.reduce((sum, entry) => sum + (entry.minutes || 0), 0);
-  const totalExercises = history.reduce((sum, entry) => sum + (entry.exercises || 0), 0);
-  const dayMap = buildDayMap(history);
-  const today = new Date();
-
-  const last14Days = [];
-  let currentStreak = 0;
-
-  for (let i = 0; i < 14; i += 1) {
-    const date = new Date(today);
-    date.setDate(today.getDate() - i);
-    const key = formatDate(date);
-    const minutes = dayMap[key]?.minutes || 0;
-
-    if (i === currentStreak && minutes > 0) {
-      currentStreak += 1;
-    }
-
-    last14Days.push({
-      date: key,
-      minutes,
-      label: dayLabels[date.getDay()],
-    });
-  }
-
-  return {
-    totalMinutes,
-    totalExercises,
-    currentStreak,
-    last14Days,
-  };
-}
+export { computeStatsFromHistory };
