@@ -91,7 +91,13 @@ function InfoRow({ label, value, colors }) {
   return (
     <View style={styles.infoRow}>
       <Text style={[styles.infoLabel, { color: colors.textMuted }]}>{label}</Text>
-      <Text style={[styles.infoValue, { color: colors.text }]}>{value}</Text>
+      <Text
+        style={[styles.infoValue, { color: colors.text }]}
+        numberOfLines={3}
+        ellipsizeMode="tail"
+      >
+        {value}
+      </Text>
     </View>
   );
 }
@@ -172,7 +178,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   const [profileData, setProfileData] = useState({
     name: resolvedUser?.username || resolvedUser?.name || "",
     email: resolvedUser?.email || "",
-    goal: "Mejorar mi higiene postural en jornada de oficina",
+    goal: "Mejorar postura",
     notificationsEnabled: notificationPrefs?.enabled ?? true,
     photoUri: resolvedUser?.photoUrl || null,
     avatarColor: null,
@@ -734,6 +740,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 12,
   },
   infoLabel: {
     fontSize: 14,
@@ -741,6 +748,9 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 16,
     fontWeight: "600",
+    flex: 1,
+    textAlign: "right",
+    flexWrap: "wrap",
   },
   pointsCard: {
     padding: 16,

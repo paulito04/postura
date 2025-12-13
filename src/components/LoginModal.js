@@ -180,10 +180,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#E5F1F6",
+    backgroundColor: "rgba(0, 59, 70, 0.82)",
+    paddingHorizontal: 18,
+    zIndex: 1000,
   },
   loginCardWrapper: {
-    width: "85%",
+    width: "100%",
+    maxWidth: 420,
     alignItems: "center",
   },
   loginAvatar: {

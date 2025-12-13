@@ -20,11 +20,22 @@ function LoadingScreen() {
   );
 }
 
-function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin, userHydrated }) {
+function RootApp({
+  user,
+  setUser,
+  isLoggedIn,
+  setIsLoggedIn,
+  handleLogin,
+  userHydrated,
+}) {
   const { hydrated: appHydrated } = useAppState();
   const [showIntro, setShowIntro] = useState(true);
+  const [shouldShowLogin, setShouldShowLogin] = useState(false);
 
-  const handleFinishIntro = useCallback(() => setShowIntro(false), []);
+  const handleFinishIntro = useCallback(() => {
+    setShowIntro(false);
+    setShouldShowLogin(!isLoggedIn);
+  }, [isLoggedIn]);
 
   const displayName = useMemo(
     () => user?.username || user?.name || "Usuario",
@@ -46,8 +57,12 @@ function RootApp({ user, setUser, isLoggedIn, setIsLoggedIn, handleLogin, userHy
       isLoggedIn={isLoggedIn}
       setIsLoggedIn={setIsLoggedIn}
       setUser={setUser}
-      onLogin={handleLogin}
+      onLogin={(payload) => {
+        handleLogin(payload);
+        setShouldShowLogin(false);
+      }}
       LoginCardComponent={LoginModal}
+      lockNavigation={!isLoggedIn || shouldShowLogin}
     />
   );
 }

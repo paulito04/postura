@@ -284,7 +284,7 @@ export default function HomeScreen({ navigation }) {
     return unsubscribe;
   }, [navigation]);
 
-  const displayName = user?.name?.trim() || user?.username?.trim() || "Usuario";
+  const displayName = user?.username?.trim() || user?.name?.trim() || "Usuario";
   const successColor = colors.secondary;
   const warningColor = colors.tabBarInactive;
   const dangerColor = colors.danger;
@@ -324,7 +324,7 @@ export default function HomeScreen({ navigation }) {
     updateDiscomfort(clamped);
   };
 
-  const avatarInitials = (user?.name || user?.username || "Tú").slice(0, 2).toUpperCase();
+  const avatarInitials = (user?.username || user?.name || "Tú").slice(0, 2).toUpperCase();
   const progress = streakDays / streakGoal;
   const discomfortIcon = discomfortLevel <= 3 ? "🙂" : discomfortLevel <= 6 ? "😐" : "😣";
   const dailyExerciseTitle = challengeOfDay.title;
