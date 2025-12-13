@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from "expo-file-system";
 import { PROFILE_IMAGE_URI_KEY, useProfile } from '../context/ProfileContext';
 
 export type EditProfileData = {
@@ -51,6 +51,7 @@ async function pickAndSaveProfilePhoto(
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 0.9,
+      base64: true,
     });
 
     if (result.canceled) return null;
@@ -70,9 +71,9 @@ async function pickAndSaveProfilePhoto(
     try {
       await FileSystem.copyAsync({ from: uri, to: dest });
     } catch (copyErr) {
-      const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      const base64 = result.assets?.[0]?.base64;
+      if (!base64) throw new Error("No vino base64 para fallback");
+
       await FileSystem.writeAsStringAsync(dest, base64, {
         encoding: FileSystem.EncodingType.Base64,
       });
@@ -128,10 +129,11 @@ export const EditProfileModal: React.FC<Props> = ({
     }
   };
 
-  const handleSelectAvatar = (color: string) => {
+  const handleSelectAvatar = async (color: string) => {
     setSelectedAvatarColor(color);
     setPhotoUri(null);
-    setProfileImageUri(null);
+    await AsyncStorage.removeItem(PROFILE_IMAGE_URI_KEY);
+    await setProfileImageUri(null);
   };
 
   const handleSave = () => {
