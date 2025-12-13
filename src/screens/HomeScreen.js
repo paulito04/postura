@@ -47,8 +47,9 @@ const tipList = [
 ];
 
 export default function HomeScreen({ navigation }) {
-  const { theme } = useTheme();
+  const { theme, mode } = useTheme();
   const { colors } = theme;
+  const isDarkMode = mode === "dark";
   const { discomfortLevel } = useAppState();
   const { user } = useUser();
 
@@ -73,16 +74,16 @@ export default function HomeScreen({ navigation }) {
   const palette = useMemo(
     () => ({
       primary: colors.primary,
-      deepTeal: colors.text,
+      deepTeal: colors.primaryText,
       accent: colors.secondary,
-      softAccent: colors.textMuted,
+      softAccent: colors.secondaryText,
       sand: colors.background,
-      card: colors.surface,
+      card: colors.card,
       midGreen: colors.secondary,
-      darkGreen: colors.text,
-      mutedBorder: colors.border,
+      darkGreen: colors.primaryText,
+      mutedBorder: colors.borderSoft || colors.border,
     }),
-    [colors.background, colors.border, colors.primary, colors.secondary, colors.text, colors.textMuted]
+    [colors.background, colors.border, colors.borderSoft, colors.card, colors.primary, colors.primaryText, colors.secondary, colors.secondaryText]
   );
 
   const challengeOfDay = useMemo(
@@ -224,23 +225,23 @@ export default function HomeScreen({ navigation }) {
               style={[
                 StyleSheet.absoluteFill,
                 styles.headerBackground,
-                { backgroundColor: palette.primary },
+                { backgroundColor: isDarkMode ? colors.surface : palette.primary },
               ]}
             />
             <View style={styles.headerContent}>
               <View style={styles.headerTopRow}>
                 <View style={styles.greetingRow}>
                   <ProgressRing progress={progress} size={74} strokeWidth={6} strokeColor={palette.softAccent}>
-                    <View style={[styles.avatar, { backgroundColor: palette.deepTeal }]}>
-                      <Text style={[styles.avatarText, { color: colors.text }]}>{avatarInitials}</Text>
+                    <View style={[styles.avatar, { backgroundColor: palette.darkGreen }]}>
+                      <Text style={[styles.avatarText, { color: isDarkMode ? colors.primaryText : "#FFFFFF" }]}>{avatarInitials}</Text>
                     </View>
                   </ProgressRing>
                   <View style={{ gap: 4 }}>
-                    <Text style={[styles.headerGreeting, { color: colors.text }]}>
+                    <Text style={[styles.headerGreeting, { color: isDarkMode ? colors.primaryText : "#FFFFFF" }]}>
                       {greeting} {displayName}!
                     </Text>
-                    <Text style={[styles.headerSubtitle, { color: palette.softAccent }]}>Tu bienestar postural empieza aquí</Text>
-                    <Text style={[styles.headerStatus, { color: colors.text }]}>Nivel: Principiante · Racha: {streakDays} días</Text>
+                    <Text style={[styles.headerSubtitle, { color: isDarkMode ? colors.secondaryText : "#E5E7EB" }]}>Tu bienestar postural empieza aquí</Text>
+                    <Text style={[styles.headerStatus, { color: isDarkMode ? colors.primaryText : "#FFFFFF" }]}>Nivel: Principiante · Racha: {streakDays} días</Text>
                   </View>
                 </View>
                 <TouchableOpacity
@@ -248,7 +249,7 @@ export default function HomeScreen({ navigation }) {
                   accessibilityLabel="Notificaciones"
                   onPress={handleOpenNotifications}
                 >
-                  <Text style={[styles.iconButtonText, { color: colors.text }]}>🔔</Text>
+                  <Text style={[styles.iconButtonText, { color: isDarkMode ? colors.primaryText : "#FFFFFF" }]}>🔔</Text>
                   {showNotificationDot ? <View style={[styles.notificationDot, { backgroundColor: colors.primary }]} /> : null}
                 </TouchableOpacity>
               </View>
@@ -258,7 +259,7 @@ export default function HomeScreen({ navigation }) {
 
         <View style={styles.contentArea}>
           <View style={styles.summarySection}>
-            <Text style={styles.summaryTitle}>Resumen</Text>
+            <Text style={[styles.summaryTitle, { color: colors.primaryText }]}>Resumen</Text>
             <View style={styles.summaryRow}>
               <SummaryCard
                 title="Racha activa"
@@ -361,7 +362,17 @@ export default function HomeScreen({ navigation }) {
               onLayout={(event) => setCarouselWidth(event.nativeEvent.layout.width)}
             >
               {tipList.map((tip, index) => (
-                <View key={tip} style={[styles.tipCard, { width: carouselWidth || 280 }]}>
+                <View
+                  key={tip}
+                  style={[
+                    styles.tipCard,
+                    {
+                      width: carouselWidth || 280,
+                      backgroundColor: isDarkMode ? colors.cardAlt : colors.surface,
+                      borderColor: palette.mutedBorder,
+                    },
+                  ]}
+                >
                   <Text style={[styles.tipIndex, { color: colors.textMuted }]}>{`Tip ergonómico ${index + 1} de ${tipList.length}`}</Text>
                   <Text style={[styles.tipText, { color: colors.text }]}>{tip}</Text>
                 </View>
@@ -389,8 +400,13 @@ export default function HomeScreen({ navigation }) {
       </ScrollView>
 
       {snackbarMessage ? (
-        <View style={[styles.snackbar, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.snackbarText, { color: colors.text }]}>{snackbarMessage}</Text>
+        <View
+          style={[
+            styles.snackbar,
+            { backgroundColor: isDarkMode ? colors.cardAlt : colors.surface },
+          ]}
+        >
+          <Text style={[styles.snackbarText, { color: colors.primaryText }]}>{snackbarMessage}</Text>
         </View>
       ) : null}
 
@@ -590,7 +606,6 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#0F172A",
     marginBottom: 8,
   },
   summaryRow: {
@@ -697,9 +712,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 14,
     marginRight: 12,
-    backgroundColor: "#F8F8F5",
     borderWidth: 1,
-    borderColor: "#E5E5E0",
     gap: 6,
   },
   tipIndex: {
@@ -772,7 +785,6 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     fontSize: 14,
-    color: "#4B5563",
     marginBottom: 8,
     lineHeight: 20,
   },
