@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-const STORAGE_KEY = "moveup_user";
+export const STORAGE_KEY = "moveup_user";
 const UserContext = createContext(null);
 
 export function UserProvider({ children }) {
