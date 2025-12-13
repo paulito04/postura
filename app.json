@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "posturaU-app",
-    "slug": "posturaU-app",
+    "name": "MoveUp",
+    "slug": "moveup",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
