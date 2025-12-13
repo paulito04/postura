@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Image, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -6,11 +6,11 @@ import * as Notifications from "expo-notifications";
 
 import { useAppState } from "../context/AppStateContext";
 import { useTheme } from "../theme/ThemeProvider";
-import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 import SummaryCard from "../components/SummaryCard";
 import { useUser } from "../UserContext";
 import { exercises } from "../data/exercises";
 import { useProfile } from "../context/ProfileContext";
+import { PROGRESS_STORAGE_KEYS, getTodayActivity, getProgressSnapshot, subscribeProgress } from "../utils/progressStorage";
 
 const durationOptions = [30, 45, 60];
 const tipList = [
@@ -69,7 +69,7 @@ export default function HomeScreen({ navigation }) {
   const [timeLeft, setTimeLeft] = useState(selectedDuration * 60);
   const timerRef = useRef(null);
 
-  const DAILY_EXERCISE_KEY = "moveup_daily_exercise";
+  const DAILY_EXERCISE_KEY = PROGRESS_STORAGE_KEYS.dailyExercise;
 
   const scrollRef = useRef(null);
   const snackbarTimeout = useRef(null);
@@ -120,19 +120,25 @@ export default function HomeScreen({ navigation }) {
     loadWelcomeFlag();
   }, []);
 
-  useEffect(() => {
-    async function loadActivity() {
-      const history = await getActivityHistory();
-      const stats = computeStatsFromHistory(history);
-      const todayKey = new Date().toISOString().split("T")[0];
-      const todayEntry = history.find((entry) => entry.date === todayKey);
-
-      setStreakDays(stats.currentStreak);
-      setActivitiesCompleted(todayEntry?.exercises ?? 0);
-    }
-
-    loadActivity();
+  const handleProgressUpdate = useCallback((snapshot) => {
+    const todayEntry = getTodayActivity(snapshot?.history || []);
+    setStreakDays(snapshot?.stats?.currentStreak ?? 0);
+    setActivitiesCompleted(todayEntry?.exercises ?? 0);
   }, []);
+
+  useEffect(() => {
+    let unsubscribe;
+
+    (async () => {
+      const snapshot = await getProgressSnapshot();
+      handleProgressUpdate(snapshot);
+      unsubscribe = subscribeProgress(handleProgressUpdate);
+    })();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [handleProgressUpdate]);
 
   useEffect(() => {
     (async () => {

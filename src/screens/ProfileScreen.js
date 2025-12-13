@@ -14,7 +14,6 @@ import {
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 import UserAvatar from "../components/UserAvatar";
 import EditProfileModal from "../components/EditProfileModal";
 import { useNotificationManager } from "../NotificationManager";
@@ -22,6 +21,7 @@ import { usePoints } from "../PointsManager";
 import { useTheme } from "../theme/ThemeProvider";
 import { useUser } from "../UserContext";
 import { useProfile } from "../context/ProfileContext";
+import { getProgressSnapshot, subscribeProgress } from "../utils/progressStorage";
 
 const GOALS_KEY = "@posturaU_goals";
 const NOTIFICATIONS_KEY = "@posturaU_notifications";
@@ -154,7 +154,7 @@ function PremiumBadge({ isPremium }) {
   );
 }
 
-export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeTabKey, isPremium }) {
+export default function ProfileScreen({ navigation, user, isLoggedIn, setIsLoggedIn, activeTabKey, isPremium }) {
   const { theme, mode, setMode } = useTheme();
   const { colors } = theme;
   const isDarkMode = mode === "dark";
@@ -247,13 +247,23 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   useEffect(() => {
     if (!isProfileTab) return;
 
+    let unsubscribe;
+
     const loadHistory = async () => {
-      const savedHistory = await getActivityHistory();
-      setHistory(savedHistory);
-      setStats(computeStatsFromHistory(savedHistory));
+      const snapshot = await getProgressSnapshot();
+      setHistory(snapshot.history);
+      setStats(snapshot.stats);
+      unsubscribe = subscribeProgress(({ history: nextHistory, stats: nextStats }) => {
+        setHistory(nextHistory || []);
+        setStats(nextStats || null);
+      });
     };
 
     loadHistory();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [isProfileTab]);
 
   const handleSaveGoals = async () => {
@@ -662,6 +672,13 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
 
         <TouchableOpacity onPress={() => setShowTerms(true)} style={styles.termsButton}>
           <Text style={[styles.termsText, { color: colors.primary }]}>Términos y condiciones</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+          onPress={() => navigation?.navigate?.("DeveloperMode")}
+        >
+          <Text style={styles.primaryButtonText}>Modo desarrollador</Text>
         </TouchableOpacity>
       </ScrollView>
 

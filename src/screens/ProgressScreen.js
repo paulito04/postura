@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import { useTheme } from "../theme/ThemeProvider";
-import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
+import { getProgressSnapshot, subscribeProgress } from "../utils/progressStorage";
 
 const achievements = [
   {
@@ -170,17 +170,26 @@ export default function ProgressScreen({ activeTabKey, isPremium, navigation }) 
   const [stats, setStats] = useState(null);
   const flameScale = useRef(new Animated.Value(1)).current;
 
-  const loadStats = useCallback(async () => {
-    const storedHistory = await getActivityHistory();
-    setHistory(storedHistory);
-    setStats(computeStatsFromHistory(storedHistory));
+  const handleProgressUpdate = useCallback((snapshot) => {
+    setHistory(snapshot?.history || []);
+    setStats(snapshot?.stats || null);
   }, []);
 
   useEffect(() => {
+    let unsubscribe;
+
     if (activeTabKey === "progress") {
-      loadStats();
+      (async () => {
+        const snapshot = await getProgressSnapshot();
+        handleProgressUpdate(snapshot);
+        unsubscribe = subscribeProgress(handleProgressUpdate);
+      })();
     }
-  }, [activeTabKey, loadStats]);
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [activeTabKey, handleProgressUpdate]);
 
   const shouldShowDashboard = activeTabKey === "progress" && isPremium;
 
