@@ -26,7 +26,16 @@ const proPalette = {
   sage: "#708160",
 };
 
-export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, setUser, onLogin, LoginCardComponent }) {
+export default function MainTabs({
+  user,
+  userName,
+  isLoggedIn,
+  setIsLoggedIn,
+  setUser,
+  onLogin,
+  LoginCardComponent,
+  lockNavigation,
+}) {
   const { theme } = useTheme();
   const { colors } = theme;
   const [activeTab, setActiveTab] = useState(tabs[0].key);
@@ -82,9 +91,11 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
     }
   };
 
+  const isAuthBlocked = lockNavigation || !isLoggedIn;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.screenContainer}>
+      <View style={[styles.screenContainer, isAuthBlocked && styles.blockedContainer]} pointerEvents={isAuthBlocked ? "none" : "auto"}>
         <ActiveComponent
           navigation={navigation}
           user={user}
@@ -109,9 +120,11 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
               accessibilityRole="button"
               accessibilityState={isActive ? { selected: true } : undefined}
               onPress={() => handleTabPress(tab.key)}
+              disabled={isAuthBlocked}
               style={[
                 styles.tabButton,
                 isActive && { backgroundColor: `${colors.primary}15`, borderColor: colors.primary },
+                isAuthBlocked && styles.tabButtonLocked,
               ]}
             >
               <Text style={[styles.tabIcon, { color }]}>{tab.icon}</Text>
@@ -121,8 +134,10 @@ export default function MainTabs({ user, userName, isLoggedIn, setIsLoggedIn, se
         })}
       </View>
 
+      {isAuthBlocked ? <View style={styles.authScrim} pointerEvents="auto" /> : null}
+
       {LoginCardComponent ? (
-        <LoginCardComponent visible={!isLoggedIn} user={user} onLogin={onLogin} />
+        <LoginCardComponent visible={isAuthBlocked} user={user} onLogin={onLogin} />
       ) : null}
 
       {showPaywall && (
@@ -199,6 +214,9 @@ const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
   },
+  blockedContainer: {
+    opacity: 0.5,
+  },
   tabBar: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -215,6 +233,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 14,
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  tabButtonLocked: {
+    opacity: 0.7,
   },
   tabIcon: {
     fontSize: 18,
@@ -234,6 +255,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 24,
     zIndex: 999,
+  },
+  authScrim: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.15)",
   },
   paywallCard: {
     width: "100%",
