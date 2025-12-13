@@ -137,8 +137,9 @@ export const EditProfileModal: React.FC<Props> = ({
   };
 
   const handleSave = () => {
+    const trimmedName = name?.trim() || "";
     onSave({
-      name,
+      name: trimmedName,
       email: initialData.email,
       goal,
       notificationsEnabled,
