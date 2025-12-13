@@ -9,10 +9,12 @@ import {
   Switch,
   ScrollView,
   Image,
+  Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-import { getImagePicker } from '../utils/getImagePicker';
-import { useProfile } from '../context/ProfileContext';
+import { PROFILE_IMAGE_URI_KEY, useProfile } from '../context/ProfileContext';
 
 export type EditProfileData = {
   name: string;
@@ -32,13 +34,66 @@ type Props = {
 
 const AVATAR_COLORS = ['#FCD3AA', '#DD7631', '#708160', '#D8C593', '#BB3B0E', '#4E6E5D'];
 
+async function pickAndSaveProfilePhoto(
+  setProfileImageUri: (uri: string | null) => Promise<void>
+): Promise<string | null> {
+  try {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert(
+        'Permiso requerido',
+        'Activa el acceso a tus fotos para elegir una imagen.'
+      );
+      return null;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.9,
+    });
+
+    if (result.canceled) return null;
+
+    const uri = result.assets?.[0]?.uri;
+    if (!uri) throw new Error('No se recibió URI de la imagen');
+
+    const profileDir = `${FileSystem.documentDirectory}profile/`;
+    await FileSystem.makeDirectoryAsync(profileDir, { intermediates: true }).catch(() => {});
+
+    const extGuess = uri.split('.').pop()?.split('?')[0];
+    const ext = extGuess && extGuess.length <= 5 ? extGuess : 'jpg';
+    const dest = `${profileDir}avatar.${ext}`;
+
+    await FileSystem.deleteAsync(dest, { idempotent: true }).catch(() => {});
+
+    try {
+      await FileSystem.copyAsync({ from: uri, to: dest });
+    } catch (copyErr) {
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      await FileSystem.writeAsStringAsync(dest, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+    }
+
+    await AsyncStorage.setItem(PROFILE_IMAGE_URI_KEY, dest);
+    await setProfileImageUri(dest);
+    return dest;
+  } catch (e: any) {
+    console.error('Error guardando foto:', e);
+    Alert.alert('Alert', 'No se pudo guardar la foto. Intenta nuevamente.');
+    return null;
+  }
+}
+
 export const EditProfileModal: React.FC<Props> = ({
   visible,
   initialData,
   onClose,
   onSave,
 }) => {
-  const ImagePicker = getImagePicker();
   const { setProfileImageUri } = useProfile();
   const [name, setName] = useState(initialData.name);
   const [goal, setGoal] = useState(initialData.goal);
@@ -65,34 +120,11 @@ export const EditProfileModal: React.FC<Props> = ({
   }, [visible, initialData]);
 
   const handlePickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Necesitas dar permiso para acceder a tus fotos.');
-      return;
-    }
+    const savedUri = await pickAndSaveProfilePhoto(setProfileImageUri);
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      const pickedUri = result.assets?.[0]?.uri;
-
-      if (!pickedUri) return;
-
-      const dest = `${FileSystem.documentDirectory}profile_${Date.now()}.jpg`;
-
-      try {
-        await FileSystem.copyAsync({ from: pickedUri, to: dest });
-        await setProfileImageUri(dest);
-        setPhotoUri(dest);
-        setSelectedAvatarColor(null);
-      } catch (error) {
-        console.warn('No se pudo guardar la imagen seleccionada', error);
-        alert('No se pudo guardar la foto. Intenta nuevamente.');
-      }
+    if (savedUri) {
+      setPhotoUri(savedUri);
+      setSelectedAvatarColor(null);
     }
   };
 
