@@ -46,6 +46,11 @@ const tipList = [
   "Gira los hombros hacia atrás",
   "Estira los dedos y muñecas",
   "Haz rotaciones de cuello suaves",
+  "Alterna entre estar sentado y de pie a lo largo del día",
+  "Coloca el portátil sobre un soporte para elevar la pantalla",
+  "Configura recordatorios cortos para pararte y moverte",
+  "Bebe agua con frecuencia para mantenerte alerta",
+  "Apoya la zona lumbar con un cojín firme si lo necesitas",
 ];
 
 export default function HomeScreen({ navigation }) {
@@ -72,6 +77,9 @@ export default function HomeScreen({ navigation }) {
   const [hasNotificationPermission, setHasNotificationPermission] = useState(false);
   const [dailyExercise, setDailyExercise] = useState(null);
   const [localDiscomfort, setLocalDiscomfort] = useState(discomfortLevel);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(selectedDuration * 60);
+  const timerRef = useRef(null);
 
   const DAILY_EXERCISE_KEY = "moveup_daily_exercise";
 
@@ -197,6 +205,60 @@ export default function HomeScreen({ navigation }) {
   }, [discomfortLevel]);
 
   useEffect(() => {
+    setTimeLeft(selectedDuration * 60);
+  }, [selectedDuration]);
+
+  useEffect(() => {
+    if (!isTimerRunning) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      return undefined;
+    }
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          triggerBreakAlarm();
+          setIsTimerRunning(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isTimerRunning]);
+
+  const triggerBreakAlarm = async () => {
+    try {
+      const hasPermission = hasNotificationPermission || (await Notifications.requestPermissionsAsync()).status === "granted";
+      if (hasPermission) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "¡Hora de tu pausa activa!",
+            body: "Levántate, respira y estira tus músculos.",
+            sound: "default",
+          },
+          trigger: null,
+        });
+      }
+      setSnackbarMessage("⏰ Es momento de tu pausa activa");
+      if (snackbarTimeout.current) {
+        clearTimeout(snackbarTimeout.current);
+      }
+      snackbarTimeout.current = setTimeout(() => setSnackbarMessage(""), 3000);
+    } catch (error) {
+      console.warn("No se pudo reproducir la alarma", error);
+    }
+  };
+
+  useEffect(() => {
     if (scrollRef.current && carouselWidth) {
       scrollRef.current.scrollTo({ x: currentTipIndex * carouselWidth, animated: true });
     }
@@ -232,7 +294,19 @@ export default function HomeScreen({ navigation }) {
     return dangerColor;
   }, [dangerColor, discomfortLevel, successColor, warningColor]);
 
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const secs = Math.floor(seconds % 60)
+      .toString()
+      .padStart(2, "0");
+    return `${mins}:${secs}`;
+  };
+
   const handleStartSession = () => {
+    setTimeLeft(selectedDuration * 60);
+    setIsTimerRunning(true);
     setSnackbarMessage(`✅ Pausa programada en ${selectedDuration} minutos`);
     if (snackbarTimeout.current) {
       clearTimeout(snackbarTimeout.current);
@@ -378,10 +452,22 @@ export default function HomeScreen({ navigation }) {
             <View style={styles.discomfortScale}>
               {Array.from({ length: 11 }).map((_, index) => {
                 const isActive = index === localDiscomfort;
+                const darkAwareStyles = {
+                  backgroundColor: isActive
+                    ? discomfortColor
+                    : isDarkMode
+                    ? colors.cardAlt
+                    : "#F8FAFC",
+                  borderColor: isDarkMode ? colors.border : "#e5e7eb",
+                };
                 return (
                   <Pressable
                     key={index}
-                    style={[styles.discomfortDot, isActive && { backgroundColor: discomfortColor, transform: [{ scale: 1.15 }] }]}
+                    style={[
+                      styles.discomfortDot,
+                      darkAwareStyles,
+                      isActive && { transform: [{ scale: 1.15 }] },
+                    ]}
                     onPress={() => handleDiscomfortChange(index)}
                   >
                     <Text style={[styles.discomfortLabel, { color: isActive ? "#fff" : colors.text }]}>{index}</Text>
@@ -441,10 +527,21 @@ export default function HomeScreen({ navigation }) {
             </View>
 
             <Text style={[styles.helperText, { color: colors.textMuted }]}>Puedes cambiarlo cuando quieras en Configuración.</Text>
+            <View style={styles.timerRow}>
+              <View style={styles.timerBadge}>
+                <Text style={[styles.timerLabel, { color: colors.textMuted }]}>Tiempo restante</Text>
+                <Text style={[styles.timerValue, { color: colors.primaryText }]}>{formatTime(timeLeft)}</Text>
+              </View>
 
-            <TouchableOpacity style={[styles.primaryButton, { backgroundColor: palette.primary }]} onPress={handleStartSession}>
-              <Text style={[styles.primaryButtonText, { color: "#FFFFFF" }]}>▶ Comenzar ahora</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.primaryButton, { backgroundColor: palette.primary, flex: 1 }]}
+                onPress={handleStartSession}
+              >
+                <Text style={[styles.primaryButtonText, { color: "#FFFFFF" }]}>
+                  {isTimerRunning ? "⏱️ Reiniciar" : "▶ Comenzar ahora"}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={[styles.challengeCard, styles.shadow, { backgroundColor: palette.card }]}>
@@ -798,6 +895,29 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     fontSize: 16,
     fontWeight: "800",
+  },
+  timerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  timerBadge: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#D0D7DE",
+    minWidth: 120,
+  },
+  timerLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  timerValue: {
+    fontSize: 22,
+    fontWeight: "900",
   },
   secondaryButton: {
     paddingVertical: 10,
