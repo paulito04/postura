@@ -1,13 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
 
 import { useAppState } from "../context/AppStateContext";
 import { useTheme } from "../theme/ThemeProvider";
 import { computeStatsFromHistory, getActivityHistory } from "../activityTracker";
 import SummaryCard from "../components/SummaryCard";
 import { useUser } from "../UserContext";
+import { exercises } from "../data/exercises";
 
 const durationOptions = [30, 45, 60];
 const GREETINGS = [
@@ -50,7 +52,7 @@ export default function HomeScreen({ navigation }) {
   const { theme, mode } = useTheme();
   const { colors } = theme;
   const isDarkMode = mode === "dark";
-  const { discomfortLevel } = useAppState();
+  const { discomfortLevel, updateDiscomfort } = useAppState();
   const { user } = useUser();
 
   const [isNotificationsVisible, setNotificationsVisible] = useState(false);
@@ -67,6 +69,11 @@ export default function HomeScreen({ navigation }) {
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
   const [carouselWidth, setCarouselWidth] = useState(0);
   const [greeting, setGreeting] = useState("");
+  const [hasNotificationPermission, setHasNotificationPermission] = useState(false);
+  const [dailyExercise, setDailyExercise] = useState(null);
+  const [localDiscomfort, setLocalDiscomfort] = useState(discomfortLevel);
+
+  const DAILY_EXERCISE_KEY = "moveup_daily_exercise";
 
   const scrollRef = useRef(null);
   const snackbarTimeout = useRef(null);
@@ -86,13 +93,23 @@ export default function HomeScreen({ navigation }) {
     [colors.background, colors.border, colors.borderSoft, colors.card, colors.primary, colors.primaryText, colors.secondary, colors.secondaryText]
   );
 
-  const challengeOfDay = useMemo(
-    () => ({
+  const challengeOfDay = useMemo(() => {
+    const fallback = {
       title: "Estiramiento de cuello lateral",
       description: "Alivia tensión cervical con 3 series de 20 segundos por lado.",
-    }),
-    []
-  );
+      duration: 180,
+      area: "cuello",
+    };
+
+    if (!dailyExercise) return fallback;
+
+    return {
+      title: dailyExercise.name,
+      description: `${Math.round(dailyExercise.duration / 60)} min · Zona: ${dailyExercise.area}`,
+      duration: dailyExercise.duration,
+      area: dailyExercise.area,
+    };
+  }, [dailyExercise]);
 
   useEffect(() => {
     const loadWelcomeFlag = async () => {
@@ -127,12 +144,57 @@ export default function HomeScreen({ navigation }) {
   }, []);
 
   useEffect(() => {
+    (async () => {
+      const { status } = await Notifications.getPermissionsAsync();
+      setHasNotificationPermission(status === "granted");
+    })();
+  }, []);
+
+  useEffect(() => {
+    const pickDailyExercise = async () => {
+      const todayKey = new Date().toISOString().split("T")[0];
+      try {
+        const stored = await AsyncStorage.getItem(DAILY_EXERCISE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.date === todayKey && parsed?.exerciseId) {
+            const matched = exercises.find((ex) => ex.id === parsed.exerciseId);
+            if (matched) {
+              setDailyExercise(matched);
+              return;
+            }
+          }
+        }
+
+        const userLevel = user?.level || user?.planLevel;
+        const pool = userLevel
+          ? exercises.filter((ex) => ex.level === userLevel.toLowerCase())
+          : exercises;
+        const chosenPool = pool.length ? pool : exercises;
+        const randomExercise = chosenPool[Math.floor(Math.random() * chosenPool.length)];
+        const payload = { date: todayKey, exerciseId: randomExercise.id };
+        await AsyncStorage.setItem(DAILY_EXERCISE_KEY, JSON.stringify(payload));
+        setDailyExercise(randomExercise);
+      } catch (error) {
+        console.warn("No se pudo cargar el ejercicio del día", error);
+        setDailyExercise(exercises[0]);
+      }
+    };
+
+    pickDailyExercise();
+  }, [user?.level, user?.planLevel]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTipIndex((prev) => (prev + 1) % tipList.length);
-    }, 30000);
+    }, 7000);
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    setLocalDiscomfort(discomfortLevel);
+  }, [discomfortLevel]);
 
   useEffect(() => {
     if (scrollRef.current && carouselWidth) {
@@ -182,10 +244,19 @@ export default function HomeScreen({ navigation }) {
     navigation?.navigate?.("Ejercicios", { challenge: challengeOfDay });
   };
 
+  const handleDiscomfortChange = (value) => {
+    const clamped = Math.min(10, Math.max(0, value));
+    setLocalDiscomfort(clamped);
+    updateDiscomfort(clamped);
+  };
+
   const avatarInitials = (user?.name || user?.username || "Tú").slice(0, 2).toUpperCase();
   const progress = streakDays / streakGoal;
   const discomfortIcon = discomfortLevel <= 3 ? "🙂" : discomfortLevel <= 6 ? "😐" : "😣";
   const dailyExerciseTitle = challengeOfDay.title;
+  const streakIcon = streakDays === 0 ? "❄️" : "🔥";
+  const streakAccent = streakDays === 0 ? "#38BDF8" : "#F97316";
+  const streakSubtitle = streakDays === 0 ? "Racha en pausa, inicia hoy" : `Objetivo ${streakGoal} días`;
 
   const handleOpenNotifications = async () => {
     let type;
@@ -194,10 +265,17 @@ export default function HomeScreen({ navigation }) {
       type = "welcome";
       await AsyncStorage.setItem("moveup_hasSeenWelcome", "true");
       setHasSeenWelcome(true);
-    } else if (!user?.isPremium) {
-      type = "premium";
     } else {
-      type = "daily";
+      const { status } = await Notifications.getPermissionsAsync();
+      const granted = status === "granted";
+      setHasNotificationPermission(granted);
+      if (!granted) {
+        type = "subscribe";
+      } else if (!user?.isPremium) {
+        type = "premium";
+      } else {
+        type = "daily";
+      }
     }
 
     setNotificationType(type);
@@ -264,9 +342,9 @@ export default function HomeScreen({ navigation }) {
               <SummaryCard
                 title="Racha activa"
                 value={`${streakDays} días`}
-                subtitle={`Objetivo ${streakGoal} días`}
-                icon={<Text style={styles.summaryIcon}>🔥</Text>}
-                accentColor="#F97316"
+                subtitle={streakSubtitle}
+                icon={<Text style={styles.summaryIcon}>{streakIcon}</Text>}
+                accentColor={streakAccent}
                 progress={streakDays / streakGoal}
                 onPress={() => navigation.navigate("StreakScreen")}
               />
@@ -287,6 +365,39 @@ export default function HomeScreen({ navigation }) {
                 accentColor="#EAB308"
                 progress={1 - discomfortLevel / 10}
                 onPress={() => navigation.navigate("PainLevel")}
+              />
+            </View>
+          </View>
+
+          <View style={[styles.discomfortCard, { backgroundColor: palette.card, borderColor: palette.mutedBorder }]}>
+            <View style={styles.discomfortHeader}>
+              <Text style={[styles.sectionEyebrow, { color: palette.deepTeal }]}>Actualiza tu nivel</Text>
+              <Text style={[styles.discomfortValue, { color: discomfortColor }]}>{localDiscomfort} / 10</Text>
+            </View>
+            <Text style={[styles.helperText, { color: colors.textMuted }]}>Indica tu nivel de molestia actual</Text>
+            <View style={styles.discomfortScale}>
+              {Array.from({ length: 11 }).map((_, index) => {
+                const isActive = index === localDiscomfort;
+                return (
+                  <Pressable
+                    key={index}
+                    style={[styles.discomfortDot, isActive && { backgroundColor: discomfortColor, transform: [{ scale: 1.15 }] }]}
+                    onPress={() => handleDiscomfortChange(index)}
+                  >
+                    <Text style={[styles.discomfortLabel, { color: isActive ? "#fff" : colors.text }]}>{index}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <View style={[styles.discomfortTrack, { backgroundColor: colors.border }]}>
+              <View
+                style={[
+                  styles.discomfortFill,
+                  {
+                    backgroundColor: discomfortColor,
+                    width: `${(localDiscomfort / 10) * 100}%`,
+                  },
+                ]}
               />
             </View>
           </View>
@@ -321,7 +432,7 @@ export default function HomeScreen({ navigation }) {
                     ]}
                     onPress={() => setSelectedDuration(minutes)}
                   >
-                    <Text style={[styles.durationText, { color: colors.text }]}>
+                    <Text style={[styles.durationText, { color: isActive ? "#FFFFFF" : colors.text }]}>
                       {minutes}m
                     </Text>
                   </TouchableOpacity>
@@ -332,7 +443,7 @@ export default function HomeScreen({ navigation }) {
             <Text style={[styles.helperText, { color: colors.textMuted }]}>Puedes cambiarlo cuando quieras en Configuración.</Text>
 
             <TouchableOpacity style={[styles.primaryButton, { backgroundColor: palette.primary }]} onPress={handleStartSession}>
-              <Text style={[styles.primaryButtonText, { color: colors.text }]}>▶ Comenzar ahora</Text>
+              <Text style={[styles.primaryButtonText, { color: "#FFFFFF" }]}>▶ Comenzar ahora</Text>
             </TouchableOpacity>
           </View>
 
@@ -444,6 +555,32 @@ export default function HomeScreen({ navigation }) {
                   onPress={handleGoToPremium}
                 >
                   <Text style={[styles.modalPrimaryText, { color: colors.text }]}>Ver beneficios</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalSecondaryButton, { borderColor: palette.deepTeal }]}
+                  onPress={() => setNotificationsVisible(false)}
+                >
+                  <Text style={[styles.modalSecondaryText, { color: palette.deepTeal }]}>Después</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {notificationType === "subscribe" && (
+              <>
+                <Text style={[styles.modalTitle, { color: palette.deepTeal }]}>Activar notificaciones</Text>
+                <Text style={[styles.modalBody, { color: colors.textMuted }]}>
+                  Autoriza las notificaciones para recibir tu ejercicio del día y recordatorios de movimiento.
+                </Text>
+                <TouchableOpacity
+                  style={[styles.modalPrimaryButton, { backgroundColor: palette.primary }]}
+                  onPress={async () => {
+                    const { status } = await Notifications.requestPermissionsAsync();
+                    const granted = status === "granted";
+                    setHasNotificationPermission(granted);
+                    setNotificationType(granted ? "daily" : "subscribe");
+                  }}
+                >
+                  <Text style={[styles.modalPrimaryText, { color: colors.text }]}>Activar ahora</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalSecondaryButton, { borderColor: palette.deepTeal }]}
@@ -764,6 +901,49 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     textAlign: "center",
+  },
+  discomfortCard: {
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    gap: 10,
+  },
+  discomfortHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  discomfortValue: {
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  discomfortScale: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  discomfortDot: {
+    width: 42,
+    height: 32,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8FAFC",
+  },
+  discomfortLabel: {
+    fontWeight: "800",
+    fontSize: 13,
+  },
+  discomfortTrack: {
+    height: 10,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  discomfortFill: {
+    height: "100%",
+    borderRadius: 999,
   },
   overlay: {
     flex: 1,

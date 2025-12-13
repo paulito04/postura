@@ -81,6 +81,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     marginBottom: 10,
+    flexWrap: "wrap",
   },
   iconWrapper: {
     width: 36,
@@ -93,16 +94,20 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "800",
     color: "#111827",
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
   value: {
     fontSize: 24,
     fontWeight: "900",
+    flexShrink: 1,
   },
   subtitle: {
     marginTop: 2,
     fontSize: 13,
     color: "#6B7280",
     fontWeight: "600",
+    flexWrap: "wrap",
   },
   progressContainer: {
     marginTop: 10,

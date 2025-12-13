@@ -9,7 +9,6 @@ export default function LoginModal({ visible, onLogin, user }) {
   const initialEmail = user?.email || (initialUsername ? `${initialUsername}@posturau.app` : "");
   const [username, setUsername] = useState(initialUsername);
   const [email, setEmail] = useState(initialEmail);
-  const [emailEditedManually, setEmailEditedManually] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -20,14 +19,11 @@ export default function LoginModal({ visible, onLogin, user }) {
     setUsername(nextUsername);
     setPassword("");
     setEmail(nextEmail);
-    setEmailEditedManually(Boolean(user?.email));
   }, [user?.email, user?.name, user?.username]);
 
   useEffect(() => {
-    if (!emailEditedManually) {
-      setEmail(username ? `${username.trim()}@posturau.app` : "");
-    }
-  }, [emailEditedManually, username]);
+    setEmail(username ? `${username.trim()}@posturau.app` : "");
+  }, [username]);
 
   const derivedEmail = useMemo(() => email.trim(), [email]);
   const derivedName = useMemo(() => username.trim(), [username]);
@@ -120,13 +116,7 @@ export default function LoginModal({ visible, onLogin, user }) {
               placeholder="Correo"
               placeholderTextColor="#7a7a7a"
               value={email}
-              onChangeText={(value) => {
-                setEmailEditedManually(true);
-                setEmail(value);
-                if (emailError) {
-                  validateEmail(value);
-                }
-              }}
+              editable={false}
               autoCapitalize="none"
               keyboardType="email-address"
               onBlur={() => validateEmail(email)}
