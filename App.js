@@ -9,6 +9,7 @@ import { NotificationProvider } from "./src/NotificationManager";
 import { PointsProvider } from "./src/PointsManager";
 import { UserProvider } from "./src/UserContext";
 import { AuthProvider, useAuth } from "./src/AuthContext";
+import { ProfileProvider } from "./src/context/ProfileContext";
 
 function LoadingScreen() {
   const { theme } = useTheme();
@@ -92,13 +93,15 @@ export default function App() {
     <NotificationProvider>
       <PointsProvider>
         <ThemeProvider>
-          <UserProvider>
-            <AuthProvider>
-              <AppStateProvider>
-                <RootAppContainer />
-              </AppStateProvider>
-            </AuthProvider>
-          </UserProvider>
+          <ProfileProvider>
+            <UserProvider>
+              <AuthProvider>
+                <AppStateProvider>
+                  <RootAppContainer />
+                </AppStateProvider>
+              </AuthProvider>
+            </UserProvider>
+          </ProfileProvider>
         </ThemeProvider>
       </PointsProvider>
     </NotificationProvider>

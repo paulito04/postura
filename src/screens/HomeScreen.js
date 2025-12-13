@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
@@ -10,6 +10,7 @@ import { computeStatsFromHistory, getActivityHistory } from "../activityTracker"
 import SummaryCard from "../components/SummaryCard";
 import { useUser } from "../UserContext";
 import { exercises } from "../data/exercises";
+import { useProfile } from "../context/ProfileContext";
 
 const durationOptions = [30, 45, 60];
 const GREETINGS = [
@@ -59,6 +60,7 @@ export default function HomeScreen({ navigation }) {
   const isDarkMode = mode === "dark";
   const { discomfortLevel, updateDiscomfort } = useAppState();
   const { user } = useUser();
+  const { profileImageUri } = useProfile();
 
   const [isNotificationsVisible, setNotificationsVisible] = useState(false);
   const [notificationType, setNotificationType] = useState(null);
@@ -384,9 +386,15 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.headerTopRow}>
                 <View style={styles.greetingRow}>
                   <ProgressRing progress={progress} size={74} strokeWidth={6} strokeColor={palette.softAccent}>
-                    <View style={[styles.avatar, { backgroundColor: palette.darkGreen }]}>
-                      <Text style={[styles.avatarText, { color: isDarkMode ? colors.primaryText : "#FFFFFF" }]}>{avatarInitials}</Text>
-                    </View>
+                    {profileImageUri ? (
+                      <Image source={{ uri: profileImageUri }} style={styles.avatarImage} />
+                    ) : (
+                      <View style={[styles.avatar, { backgroundColor: palette.darkGreen }]}>
+                        <Text style={[styles.avatarText, { color: isDarkMode ? colors.primaryText : "#FFFFFF" }]}>
+                          {avatarInitials}
+                        </Text>
+                      </View>
+                    )}
                   </ProgressRing>
                   <View style={{ gap: 4 }}>
                     <Text style={[styles.headerGreeting, { color: isDarkMode ? colors.primaryText : "#FFFFFF" }]}>
@@ -782,6 +790,11 @@ const styles = StyleSheet.create({
     gap: 12,
     alignItems: "center",
     flex: 1,
+  },
+  avatarImage: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
   },
   avatar: {
     width: 58,
