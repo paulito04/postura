@@ -7,7 +7,8 @@ import { ThemeProvider, useTheme } from "./src/theme/ThemeProvider";
 import LoginModal from "./src/components/LoginModal";
 import { NotificationProvider } from "./src/NotificationManager";
 import { PointsProvider } from "./src/PointsManager";
-import { UserProvider, useUser } from "./src/UserContext";
+import { UserProvider } from "./src/UserContext";
+import { AuthProvider, useAuth } from "./src/AuthContext";
 
 function LoadingScreen() {
   const { theme } = useTheme();
@@ -20,17 +21,11 @@ function LoadingScreen() {
   );
 }
 
-function RootApp({
-  user,
-  setUser,
-  isLoggedIn,
-  setIsLoggedIn,
-  handleLogin,
-  userHydrated,
-}) {
+function RootApp({ user, handleLogin, userHydrated }) {
   const { hydrated: appHydrated } = useAppState();
   const [showIntro, setShowIntro] = useState(true);
   const [shouldShowLogin, setShouldShowLogin] = useState(false);
+  const isLoggedIn = Boolean(user);
 
   const handleFinishIntro = useCallback(() => {
     setShowIntro(false);
@@ -41,6 +36,14 @@ function RootApp({
     () => user?.username || user?.name || "Usuario",
     [user?.name, user?.username]
   );
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      setShouldShowLogin(false);
+    } else if (!showIntro) {
+      setShouldShowLogin(true);
+    }
+  }, [isLoggedIn, showIntro]);
 
   if (!appHydrated || !userHydrated) {
     return <LoadingScreen />;
@@ -55,8 +58,8 @@ function RootApp({
       user={user}
       userName={displayName}
       isLoggedIn={isLoggedIn}
-      setIsLoggedIn={setIsLoggedIn}
-      setUser={setUser}
+      setIsLoggedIn={() => {}}
+      setUser={() => {}}
       onLogin={(payload) => {
         handleLogin(payload);
         setShouldShowLogin(false);
@@ -68,35 +71,22 @@ function RootApp({
 }
 
 function RootAppContainer() {
-  const { user, setUser, hydrated: userHydrated } = useUser();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    setIsLoggedIn(Boolean(user));
-  }, [user]);
+  const { user, login, hydrated: userHydrated } = useAuth();
 
   const handleLogin = useCallback(
     ({ username, name, email }) => {
-      const trimmedName = name?.trim() || username?.trim() || "Usuario";
-      const generatedEmail = email?.trim() || `${trimmedName}@posturau.app`;
-
-      setUser({
-        ...(user || {}),
-        username: username?.trim() || undefined,
-        name: trimmedName,
-        email: generatedEmail,
+      login({
+        username: username?.trim(),
+        name: name?.trim() || username?.trim(),
+        email: email?.trim(),
       });
-      setIsLoggedIn(true);
     },
-    [setUser, user]
+    [login]
   );
 
   return (
     <RootApp
       user={user}
-      setUser={setUser}
-      isLoggedIn={isLoggedIn}
-      setIsLoggedIn={setIsLoggedIn}
       handleLogin={handleLogin}
       userHydrated={userHydrated}
     />
@@ -109,9 +99,11 @@ export default function App() {
       <PointsProvider>
         <ThemeProvider>
           <UserProvider>
-            <AppStateProvider>
-              <RootAppContainer />
-            </AppStateProvider>
+            <AuthProvider>
+              <AppStateProvider>
+                <RootAppContainer />
+              </AppStateProvider>
+            </AuthProvider>
           </UserProvider>
         </ThemeProvider>
       </PointsProvider>
