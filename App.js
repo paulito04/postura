@@ -93,15 +93,15 @@ export default function App() {
     <NotificationProvider>
       <PointsProvider>
         <ThemeProvider>
-          <ProfileProvider>
-            <UserProvider>
-              <AuthProvider>
+          <UserProvider>
+            <AuthProvider>
+              <ProfileProvider>
                 <AppStateProvider>
                   <RootAppContainer />
                 </AppStateProvider>
-              </AuthProvider>
-            </UserProvider>
-          </ProfileProvider>
+              </ProfileProvider>
+            </AuthProvider>
+          </UserProvider>
         </ThemeProvider>
       </PointsProvider>
     </NotificationProvider>

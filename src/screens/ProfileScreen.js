@@ -165,7 +165,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
     toggleFocusMode,
   } = useNotificationManager();
   const { user: contextUser, setUser } = useUser();
-  const { profileImageUri, setProfileImageUri } = useProfile();
+  const { profileImageUri, setProfileImageUri, displayName, setDisplayName } = useProfile();
 
   const resolvedUser = contextUser || user;
   const isProUser = isPremium || resolvedUser?.plan === "MoveUp Pro" || resolvedUser?.isPro;
@@ -178,7 +178,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   const [showTerms, setShowTerms] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: resolvedUser?.username || resolvedUser?.name || "",
+    name: displayName || resolvedUser?.username || resolvedUser?.name || "",
     email: resolvedUser?.email || "",
     goal: "Mejorar postura",
     notificationsEnabled: notificationPrefs?.enabled ?? true,
@@ -190,10 +190,10 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   useEffect(() => {
     setProfileData((prev) => ({
       ...prev,
-      name: resolvedUser?.name || resolvedUser?.username || prev.name || "",
+      name: displayName || resolvedUser?.name || resolvedUser?.username || prev.name || "",
       email: resolvedUser?.email || prev.email || "",
     }));
-  }, [resolvedUser?.email, resolvedUser?.name, resolvedUser?.username]);
+  }, [displayName, resolvedUser?.email, resolvedUser?.name, resolvedUser?.username]);
 
   useEffect(() => {
     setProfileData((prev) => ({
@@ -203,7 +203,7 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   }, [profileImageUri]);
 
   const currentName = isLoggedIn
-    ? resolvedUser?.name?.trim() || resolvedUser?.username?.trim() || profileData.name?.trim() || "Usuario"
+    ? displayName?.trim() || resolvedUser?.name?.trim() || resolvedUser?.username?.trim() || "Usuario"
     : "Sin iniciar sesión";
   const currentEmail = resolvedUser?.email || profileData.email || "usuario@posturau.app";
   const currentPhotoUri = profileImageUri || profileData.photoUri;
@@ -292,14 +292,17 @@ export default function ProfileScreen({ user, isLoggedIn, setIsLoggedIn, activeT
   };
 
   const handleSaveProfile = (data) => {
+    const trimmedName = data.name?.trim() || "";
+    const safeName = trimmedName || resolvedUser?.name?.trim() || resolvedUser?.username?.trim() || "Usuario";
     const updatedUser = {
       ...(resolvedUser || {}),
-      name: data.name?.trim() || resolvedUser?.name || resolvedUser?.username || "Usuario",
+      name: safeName,
       username: resolvedUser?.username,
       email: data.email || resolvedUser?.email || "",
     };
 
-    setProfileData((prev) => ({ ...prev, ...data }));
+    setProfileData((prev) => ({ ...prev, ...data, name: safeName }));
+    setDisplayName(safeName);
     setUser(updatedUser);
     updateNotificationPrefs({ enabled: data.notificationsEnabled });
     setProfileImageUri(data.photoUri ?? null);

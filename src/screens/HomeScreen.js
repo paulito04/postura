@@ -13,19 +13,6 @@ import { exercises } from "../data/exercises";
 import { useProfile } from "../context/ProfileContext";
 
 const durationOptions = [30, 45, 60];
-const GREETINGS = [
-  "Hola",
-  "Buenos días",
-  "¿Qué tal?",
-  "¿Cómo andas?",
-  "¿Listo para empezar?",
-  "¡A darle!",
-  "Dios te bendiga",
-  "¡Qué gusto verte!",
-  "Hola de nuevo",
-  "Hola, ¿cómo te sientes hoy?",
-  "¡Vamos a por ello!",
-];
 const tipList = [
   "Pantalla a la altura de los ojos",
   "Espalda recta apoyada en el respaldo",
@@ -60,7 +47,7 @@ export default function HomeScreen({ navigation }) {
   const isDarkMode = mode === "dark";
   const { discomfortLevel, updateDiscomfort } = useAppState();
   const { user } = useUser();
-  const { profileImageUri } = useProfile();
+  const { profileImageUri, displayName } = useProfile();
 
   const [isNotificationsVisible, setNotificationsVisible] = useState(false);
   const [notificationType, setNotificationType] = useState(null);
@@ -75,7 +62,6 @@ export default function HomeScreen({ navigation }) {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
   const [carouselWidth, setCarouselWidth] = useState(0);
-  const [greeting, setGreeting] = useState("");
   const [hasNotificationPermission, setHasNotificationPermission] = useState(false);
   const [dailyExercise, setDailyExercise] = useState(null);
   const [localDiscomfort, setLocalDiscomfort] = useState(discomfortLevel);
@@ -133,11 +119,6 @@ export default function HomeScreen({ navigation }) {
     };
     loadWelcomeFlag();
   }, []);
-
-  function getRandomGreeting() {
-    const index = Math.floor(Math.random() * GREETINGS.length);
-    return GREETINGS[index];
-  }
 
   useEffect(() => {
     async function loadActivity() {
@@ -274,19 +255,8 @@ export default function HomeScreen({ navigation }) {
     };
   }, []);
 
-  useEffect(() => {
-    setGreeting(getRandomGreeting());
-
-    if (!navigation?.addListener) return undefined;
-
-    const unsubscribe = navigation.addListener("focus", () => {
-      setGreeting(getRandomGreeting());
-    });
-
-    return unsubscribe;
-  }, [navigation]);
-
-  const displayName = user?.username?.trim() || user?.name?.trim() || "Usuario";
+  const headerDisplayName = displayName?.trim();
+  const headerGreeting = headerDisplayName ? `¡Vamos a por ello! ${headerDisplayName}!` : "¡Vamos a por ello!";
   const successColor = colors.secondary;
   const warningColor = colors.tabBarInactive;
   const dangerColor = colors.danger;
@@ -398,7 +368,7 @@ export default function HomeScreen({ navigation }) {
                   </ProgressRing>
                   <View style={{ gap: 4 }}>
                     <Text style={[styles.headerGreeting, { color: isDarkMode ? colors.primaryText : "#FFFFFF" }]}>
-                      {greeting} {displayName}!
+                      {headerGreeting}
                     </Text>
                     <Text style={[styles.headerSubtitle, { color: isDarkMode ? colors.secondaryText : "#E5E7EB" }]}>Tu bienestar postural empieza aquí</Text>
                     <Text style={[styles.headerStatus, { color: isDarkMode ? colors.primaryText : "#FFFFFF" }]}>Nivel: Principiante · Racha: {streakDays} días</Text>
