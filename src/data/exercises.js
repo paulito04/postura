@@ -4,7 +4,13 @@ export const exercises = [
   {
     id: "cuello-lateral",
     name: "Estiramiento de cuello lateral",
-    image: exerciseImage,
+    image: require("../../assets/ejercicios/postura6.png"), // opcional, para la lista
+    frames: [
+      require("../../assets/exercises/frames/postura6.png"),
+      require("../../assets/exercises/frames/postura8.png"),
+      require("../../assets/exercises/frames/postura7.png"),
+      require("../../assets/exercises/frames/postura8.png"),
+    ],
     duration: 180,
     area: "cuello",
     level: "principiante",
@@ -20,7 +26,11 @@ export const exercises = [
   {
     id: "espalda-puente",
     name: "Puente de glúteos",
-    image: exerciseImage,
+    image: require("../../assets/ejercicios/puentedegluteo1.png"), // opcional, para la lista
+    frames: [
+      require("../../assets/exercises/frames/puentedegluteo1.png"),
+      require("../../assets/exercises/frames/puentedegluteo2.png"),
+    ],
     duration: 240,
     area: "espalda",
     level: "intermedio",
@@ -33,10 +43,11 @@ export const exercises = [
       "Realiza 12 repeticiones descansando al final.",
     ],
   },
+
   {
     id: "plancha-abdominal",
     name: "Plancha abdominal",
-    image: exerciseImage,
+    image: require("../../assets/ejercicios/plancha_abdominal.png"),
     duration: 150,
     area: "hombros",
     level: "avanzado",
@@ -52,7 +63,11 @@ export const exercises = [
   {
     id: "gato-vaca",
     name: "Gato-vaca en cuatro puntos",
-    image: exerciseImage,
+    image: require("../../assets/ejercicios/gatovaca1.png"), // opcional, para la lista
+    frames: [
+      require("../../assets/exercises/frames/gatovaca1.png"),
+      require("../../assets/exercises/frames/gatovaca2.png"),
+    ],
     duration: 210,
     area: "espalda",
     level: "principiante",
@@ -68,7 +83,7 @@ export const exercises = [
   {
     id: "apertura-pecho",
     name: "Apertura de pecho en pared",
-    image: exerciseImage,
+    image: require("../../assets/ejercicios/apertura_de_pecho.png"),
     duration: 180,
     area: "hombros",
     level: "intermedio",
@@ -84,7 +99,11 @@ export const exercises = [
   {
     id: "correccion-sentada",
     name: "Corrección de postura sentada",
-    image: exerciseImage,
+    image: require("../../assets/ejercicios/correccion-sentada.png"),
+    frames: [
+      require("../../assets/exercises/frames/correccion-sentada1.png"),
+      require("../../assets/exercises/frames/correccion-sentada2.png"),
+    ],  
     duration: 180,
     area: "espalda",
     level: "principiante",
@@ -100,7 +119,14 @@ export const exercises = [
   {
     id: "alineacion-hombros",
     name: "Alineación de hombros",
-    image: exerciseImage,
+    image: require("../../assets/exercises/frames/alineacion-hombros2.png"),
+    frames: [
+      require("../../assets/exercises/frames/alineacion-hombros1.png"),
+      require("../../assets/exercises/frames/alineacion-hombros1.png"),
+      require("../../assets/exercises/frames/alineacion-hombros1.png"),
+      require("../../assets/exercises/frames/alineacion-hombros1.png"),
+      require("../../assets/exercises/frames/alineacion-hombros2.png"),
+    ],
     duration: 150,
     area: "hombros",
     level: "intermedio",
@@ -116,7 +142,14 @@ export const exercises = [
   {
     id: "postura-pared",
     name: "Chequeo de postura en pared",
-    image: exerciseImage,
+    image: require("../../assets/ejercicios/postura-pared.png"),
+    frames: [
+      require("../../assets/exercises/frames/postura-pared1.png"),
+      require("../../assets/exercises/frames/postura-pared1.png"),
+      require("../../assets/exercises/frames/postura-pared2.png"),
+      require("../../assets/exercises/frames/postura-pared2.png"),
+      require("../../assets/exercises/frames/postura-pared2.png"),
+    ], 
     duration: 210,
     area: "espalda",
     level: "principiante",

@@ -11,6 +11,8 @@ import {
   View,
 } from "react-native";
 import { areas, exercises, levels } from "../data/exercises";
+const ALL_EXERCISES = exercises as unknown as Exercise[];
+
 import { getActivityHistory, recordSession } from "../activityTracker";
 import { usePoints } from "../PointsManager";
 import { useUser } from "../UserContext";
@@ -27,6 +29,7 @@ type Exercise = {
   id: string;
   name: string;
   image: any;
+  frames?: any[];
   duration: number;
   area: "cuello" | "espalda" | "hombros";
   level: "principiante" | "intermedio" | "avanzado";
@@ -74,7 +77,11 @@ const RoutinePlayer = ({
   isPlayingRoutine,
   colors,
 }) => {
-  const frames = useMemo(() => [exercise.image || require("../../assets/logo.jpg")], [exercise.image]);
+  const frames = useMemo(() => {
+    if (exercise.frames && exercise.frames.length > 0) return exercise.frames;
+    return [exercise.image || require("../../assets/logo.jpg")];
+  }, [exercise.frames, exercise.image]);
+
   const [frameIndex, setFrameIndex] = useState(0);
 
   useEffect(() => {
@@ -188,10 +195,14 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
   const { user } = useUser();
   const challenge = tabParams?.challenge;
   const mode: ExercisesListParams["mode"] = tabParams?.mode ?? "all";
-  const [exerciseAreaFilter, setExerciseAreaFilter] = useState("todos");
-  const [exerciseLevelFilter, setExerciseLevelFilter] = useState("todos");
+  type AreaFilter = "todos" | Exercise["area"]; //añadí chatgpt 16:44
+  type LevelFilter = "todos" | Exercise["level"]; //añadí chatgpt 16:44
+
+  const [exerciseAreaFilter, setExerciseAreaFilter] = useState<AreaFilter>("todos"); //añadí chatgpt 16:44
+  const [exerciseLevelFilter, setExerciseLevelFilter] = useState<LevelFilter>("todos"); //añadí chatgpt 16:44
+
   const [favoriteExerciseIds, setFavoriteExerciseIds] = useState(() =>
-    exercises.filter((exercise: Exercise) => exercise.isFavorite).map((exercise) => exercise.id)
+    ALL_EXERCISES.filter((exercise: Exercise) => exercise.isFavorite).map((exercise) => exercise.id)
   );
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(mode === "favorites");
   const [selectedExercise, setSelectedExercise] = useState(null);
@@ -204,17 +215,17 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
   }, []);
 
   const filteredExercises = useMemo(() => {
-    let baseList: Exercise[] = exercises;
+    let baseList: Exercise[] = ALL_EXERCISES;
 
     if (mode === "correction") {
-      baseList = exercises.filter((exercise: Exercise) => exercise.category === "correction");
+      baseList = ALL_EXERCISES.filter((exercise: Exercise) => exercise.category === "correction");
     } else if (mode === "favorites") {
-      baseList = exercises.filter((exercise: Exercise) => favoriteExerciseIds.includes(exercise.id));
+      baseList = ALL_EXERCISES.filter((exercise: Exercise) => favoriteExerciseIds.includes(exercise.id));
     } else {
-      baseList = exercises.filter((exercise: Exercise) => exercise.category === "stretch");
+      baseList = ALL_EXERCISES.filter((exercise: Exercise) => exercise.category === "stretch");
     }
 
-    return baseList.filter((exercise: Exercise) => {
+    return baseList.filter((exercise) => {
       const matchesArea = exerciseAreaFilter === "todos" || exercise.area === exerciseAreaFilter;
       const matchesLevel = exerciseLevelFilter === "todos" || exercise.level === exerciseLevelFilter;
       const favoritesFiltered = mode === "favorites" || showFavoritesOnly;

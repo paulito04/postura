@@ -4,9 +4,9 @@ import { useTheme } from "../theme/ThemeProvider";
 import { ExercisesListParams } from "./ExercisesListScreen";
 
 const cardImages = {
-  correction: require("../../assets/logo.jpg"),
-  stretch: require("../../assets/logo.jpg"),
-  favorites: require("../../assets/logo.jpg"),
+  correction: require("../../assets/exercises/correction.png"),
+  stretch: require("../../assets/exercises/stretch.png"),
+  favorites: require("../../assets/exercises/favorites.png"),
 };
 
 type ExercisesHomeScreenProps = {

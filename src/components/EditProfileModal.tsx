@@ -40,10 +40,7 @@ async function pickAndSaveProfilePhoto(
   try {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(
-        'Permiso requerido',
-        'Activa el acceso a tus fotos para elegir una imagen.'
-      );
+      Alert.alert("Permiso requerido", "Activa el acceso a tus fotos para elegir una imagen.");
       return null;
     }
 
@@ -51,53 +48,61 @@ async function pickAndSaveProfilePhoto(
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 0.9,
-      base64: true,
+      base64: true, // importante
     });
 
     if (result.canceled) return null;
 
-    const uri = result.assets?.[0]?.uri;
-    if (!uri) throw new Error('No se recibió URI de la imagen');
+    const asset = result.assets?.[0];
+    const uri = asset?.uri;
+    if (!uri) throw new Error("No se recibió URI de la imagen");
 
-    const profileDir = `${FileSystem.documentDirectory}profile/`;
+    const fsAny = FileSystem as any;
+    console.log("FS dirs:", fsAny.documentDirectory, fsAny.cacheDirectory);
+
+    const baseDir: string | undefined = fsAny.documentDirectory || fsAny.cacheDirectory;
+
+    if (!baseDir) {
+      console.log("FS is not available. Fallback to saving original uri:", uri);
+
+      // Fallback: guarda el uri directo (temporal, pero te deja usar foto)
+      await AsyncStorage.setItem(PROFILE_IMAGE_URI_KEY, uri);
+      await setProfileImageUri(uri);
+      return uri;
+    }
+
+    const profileDir = `${baseDir}profile/`;
     await FileSystem.makeDirectoryAsync(profileDir, { intermediates: true }).catch(() => {});
 
-    const extGuess = uri.split('.').pop()?.split('?')[0];
-    const ext = extGuess && extGuess.length <= 5 ? extGuess : 'jpg';
-    const dest = `${profileDir}avatar.${ext}`;
+    // Usa jpg fijo para evitar problemas de extensión
+    const dest = `${profileDir}avatar.jpg`;
 
     await FileSystem.deleteAsync(dest, { idempotent: true }).catch(() => {});
 
-    let base64 = result.assets?.[0]?.base64 || null;
-
-    if (!base64) {
-      try {
-        const cleanUri = uri.split('?')[0];
-        base64 = await FileSystem.readAsStringAsync(cleanUri, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-      } catch (readErr) {
-        console.warn('No se pudo leer la imagen seleccionada', readErr);
+    // Intento 1: copiar archivo (si el uri es file:// funciona perfecto)
+    try {
+      await FileSystem.copyAsync({ from: uri, to: dest });
+    } catch (copyErr) {
+      // Intento 2 (Android content://): escribir base64 directo desde el picker
+      const base64 = asset?.base64;
+      if (!base64) {
+        console.warn("copyAsync falló y no vino base64. uri:", uri, "err:", copyErr);
+        throw new Error("No vino base64 del picker para fallback");
       }
-    }
 
-    if (!base64) {
-      throw new Error('No se pudo obtener la imagen en base64');
+      await FileSystem.writeAsStringAsync(dest, base64, { encoding: "base64" });
     }
-
-    await FileSystem.writeAsStringAsync(dest, base64, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
 
     await AsyncStorage.setItem(PROFILE_IMAGE_URI_KEY, dest);
     await setProfileImageUri(dest);
     return dest;
-  } catch (e: any) {
-    console.error('Error guardando foto:', e);
-    Alert.alert('Alert', 'No se pudo guardar la foto. Intenta nuevamente.');
+  } catch (e) {
+    console.error("Error guardando foto:", e);
+    Alert.alert("Alert", "No se pudo guardar la foto. Intenta nuevamente.");
     return null;
   }
 }
+
 
 export const EditProfileModal: React.FC<Props> = ({
   visible,
