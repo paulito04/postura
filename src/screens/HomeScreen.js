@@ -8,7 +8,7 @@ import { useAppState } from "../context/AppStateContext";
 import { useTheme } from "../theme/ThemeProvider";
 import SummaryCard from "../components/SummaryCard";
 import { useUser } from "../UserContext";
-import { exercises } from "../data/exercises";
+import { areas, exercises } from "../data/exercises";
 import { useProfile } from "../context/ProfileContext";
 import { getAvatarSource } from "../data/avatars";
 import { PROGRESS_STORAGE_KEYS, getTodayActivity, getProgressSnapshot, subscribeProgress } from "../utils/progressStorage";
@@ -100,9 +100,11 @@ export default function HomeScreen({ navigation }) {
 
     if (!dailyExercise) return fallback;
 
+    const areaLabel = areas.find((item) => item.key === dailyExercise.area)?.label ?? dailyExercise.area;
+
     return {
       title: dailyExercise.name,
-      description: `${Math.round(dailyExercise.duration / 60)} min · Zona: ${dailyExercise.area}`,
+      description: `${Math.round(dailyExercise.duration / 60)} min · Zona: ${areaLabel}`,
       duration: dailyExercise.duration,
       area: dailyExercise.area,
     };
@@ -165,9 +167,14 @@ export default function HomeScreen({ navigation }) {
         }
 
         const userLevel = user?.level || user?.planLevel;
-        const pool = userLevel
-          ? exercises.filter((ex) => ex.level === userLevel.toLowerCase())
-          : exercises;
+        const normalizedLevel = userLevel
+          ? userLevel
+              .toLowerCase()
+              .replace("principiante", "fácil")
+              .replace("intermedio", "medio")
+              .replace("avanzado", "medio")
+          : null;
+        const pool = normalizedLevel ? exercises.filter((ex) => ex.level === normalizedLevel) : exercises;
         const chosenPool = pool.length ? pool : exercises;
         const randomExercise = chosenPool[Math.floor(Math.random() * chosenPool.length)];
         const payload = { date: todayKey, exerciseId: randomExercise.id };
