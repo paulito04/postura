@@ -10,6 +10,7 @@ import SummaryCard from "../components/SummaryCard";
 import { useUser } from "../UserContext";
 import { exercises } from "../data/exercises";
 import { useProfile } from "../context/ProfileContext";
+import { getAvatarSource } from "../data/avatars";
 import { PROGRESS_STORAGE_KEYS, getTodayActivity, getProgressSnapshot, subscribeProgress } from "../utils/progressStorage";
 
 const durationOptions = [30, 45, 60];
@@ -47,7 +48,7 @@ export default function HomeScreen({ navigation }) {
   const isDarkMode = mode === "dark";
   const { discomfortLevel, updateDiscomfort } = useAppState();
   const { user } = useUser();
-  const { profileImageUri, displayName } = useProfile();
+  const { profileImageUri, displayName, avatarId } = useProfile();
 
   const [isNotificationsVisible, setNotificationsVisible] = useState(false);
   const [notificationType, setNotificationType] = useState(null);
@@ -303,6 +304,7 @@ export default function HomeScreen({ navigation }) {
   };
 
   const avatarInitials = (user?.username || user?.name || "Tú").slice(0, 2).toUpperCase();
+  const defaultAvatarSource = profileImageUri ? null : getAvatarSource(avatarId);
   const progress = streakDays / streakGoal;
   const discomfortIcon = discomfortLevel <= 3 ? "🙂" : discomfortLevel <= 6 ? "😐" : "😣";
   const dailyExerciseTitle = challengeOfDay.title;
@@ -364,6 +366,8 @@ export default function HomeScreen({ navigation }) {
                   <ProgressRing progress={progress} size={74} strokeWidth={6} strokeColor={palette.softAccent}>
                     {profileImageUri ? (
                       <Image source={{ uri: profileImageUri }} style={styles.avatarImage} />
+                    ) : defaultAvatarSource ? (
+                      <Image source={defaultAvatarSource} style={styles.avatarImage} />
                     ) : (
                       <View style={[styles.avatar, { backgroundColor: palette.darkGreen }]}>
                         <Text style={[styles.avatarText, { color: isDarkMode ? colors.primaryText : "#FFFFFF" }]}>

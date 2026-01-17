@@ -19,3 +19,16 @@ La app utiliza `expo-notifications` para programar recordatorios. Si el paquete 
 instalado en tu entorno, Metro detectará su ausencia y usará automáticamente un shim
 local (alertas en pantalla) para evitar errores de carga. Para tener notificaciones reales
 en segundo plano instala el paquete con `npx expo install expo-notifications`.
+
+## Avatares predeterminados
+
+Los avatares predeterminados viven en `assets/avatars/default/`. Esa carpeta contiene un
+`.gitkeep` para mantener la ruta en el repo; agrega ahí tus PNG (`avatar_01.png`, etc.).
+
+Para añadir más avatares:
+1. Copia el PNG en `assets/avatars/default/` con el nombre `avatar_XX.png`.
+2. Agrega el nuevo `id` en `src/data/avatarCatalog.js`.
+3. Declara el `require` correspondiente en `src/data/avatars.js`.
+
+El catálogo valida que haya entre 8 y 20 avatares. Puedes verificarlo con:
+`node scripts/validate-avatars.mjs`.

@@ -3,6 +3,7 @@ import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "r
 
 import ExercisesHomeScreen from "../screens/ExercisesHomeScreen";
 import ExercisesListScreen from "../screens/ExercisesListScreen";
+import AvatarPickerScreen from "../screens/AvatarPickerScreen";
 import HomeScreen from "../screens/HomeScreen";
 import LearnScreen from "../screens/LearnScreen";
 import ProfileScreen from "../screens/ProfileScreen";
@@ -49,6 +50,7 @@ export default function MainTabs({
 
   const stackRegistry = useMemo(
     () => ({
+      AvatarPicker: AvatarPickerScreen,
       StreakDetail: StreakDetailScreen,
       ExercisesList: ExercisesListScreen,
       DeveloperMode: DeveloperModeScreen,

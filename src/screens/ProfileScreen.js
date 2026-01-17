@@ -165,7 +165,7 @@ export default function ProfileScreen({ navigation, user, isLoggedIn, setIsLogge
     toggleFocusMode,
   } = useNotificationManager();
   const { user: contextUser, setUser } = useUser();
-  const { profileImageUri, setProfileImageUri, displayName, setDisplayName } = useProfile();
+  const { profileImageUri, setProfileImageUri, displayName, setDisplayName, avatarId, setAvatarId } = useProfile();
 
   const resolvedUser = contextUser || user;
   const isProUser = isPremium || resolvedUser?.plan === "MoveUp Pro" || resolvedUser?.isPro;
@@ -184,6 +184,7 @@ export default function ProfileScreen({ navigation, user, isLoggedIn, setIsLogge
     notificationsEnabled: notificationPrefs?.enabled ?? true,
     photoUri: profileImageUri || resolvedUser?.photoUrl || null,
     avatarColor: null,
+    avatarId: avatarId ?? null,
   });
 
   const isProfileTab = activeTabKey === "perfil" || activeTabKey === "profile";
@@ -201,6 +202,13 @@ export default function ProfileScreen({ navigation, user, isLoggedIn, setIsLogge
       photoUri: profileImageUri || prev.photoUri || null,
     }));
   }, [profileImageUri]);
+
+  useEffect(() => {
+    setProfileData((prev) => ({
+      ...prev,
+      avatarId: avatarId ?? prev.avatarId ?? null,
+    }));
+  }, [avatarId]);
 
   const currentName = isLoggedIn
     ? displayName?.trim() || resolvedUser?.name?.trim() || resolvedUser?.username?.trim() || "Usuario"
@@ -316,6 +324,7 @@ export default function ProfileScreen({ navigation, user, isLoggedIn, setIsLogge
     setUser(updatedUser);
     updateNotificationPrefs({ enabled: data.notificationsEnabled });
     setProfileImageUri(data.photoUri ?? null);
+    setAvatarId(data.avatarId ?? avatarId ?? null);
   };
 
   const planLabel = isProUser ? "Plan: MoveUp Pro" : "Plan: Gratis";
@@ -338,6 +347,7 @@ export default function ProfileScreen({ navigation, user, isLoggedIn, setIsLogge
             <UserAvatar
               photoUri={currentPhotoUri || undefined}
               avatarColor={profileData.avatarColor}
+              avatarId={profileData.avatarId}
               name={currentName}
               size={96}
               isPremium={isProUser}
@@ -692,6 +702,10 @@ export default function ProfileScreen({ navigation, user, isLoggedIn, setIsLogge
         }}
         onClose={() => setEditModalVisible(false)}
         onSave={handleSaveProfile}
+        onOpenAvatarPicker={() => {
+          setEditModalVisible(false);
+          navigation?.navigate?.("AvatarPicker");
+        }}
       />
 
       <TermsModal visible={showTerms} onClose={() => setShowTerms(false)} colors={colors} />

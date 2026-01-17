@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from "expo-file-system";
 import { PROFILE_IMAGE_URI_KEY, useProfile } from '../context/ProfileContext';
+import { getAvatarSource } from "../data/avatars";
 
 export type EditProfileData = {
   name: string;
@@ -23,6 +24,7 @@ export type EditProfileData = {
   notificationsEnabled: boolean;
   photoUri?: string | null;
   avatarColor?: string | null;
+  avatarId?: string | null;
 };
 
 type Props = {
@@ -30,9 +32,10 @@ type Props = {
   initialData: EditProfileData;
   onClose: () => void;
   onSave: (data: EditProfileData) => void;
+  onOpenAvatarPicker: () => void;
 };
 
-const AVATAR_COLORS = ['#FCD3AA', '#DD7631', '#708160', '#D8C593', '#BB3B0E', '#4E6E5D'];
+const DEFAULT_AVATAR_COLOR = "#055F67";
 
 async function pickAndSaveProfilePhoto(
   setProfileImageUri: (uri: string | null) => Promise<void>
@@ -109,6 +112,7 @@ export const EditProfileModal: React.FC<Props> = ({
   initialData,
   onClose,
   onSave,
+  onOpenAvatarPicker,
 }) => {
   const { setProfileImageUri } = useProfile();
   const [name, setName] = useState(initialData.name);
@@ -119,10 +123,9 @@ export const EditProfileModal: React.FC<Props> = ({
   const [photoUri, setPhotoUri] = useState<string | null | undefined>(
     initialData.photoUri
   );
-  const [selectedAvatarColor, setSelectedAvatarColor] = useState<string | null>(
-    initialData.avatarColor ?? null
+  const [selectedAvatarId, setSelectedAvatarId] = useState<string | null>(
+    initialData.avatarId ?? null
   );
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -130,8 +133,7 @@ export const EditProfileModal: React.FC<Props> = ({
       setGoal(initialData.goal);
       setNotificationsEnabled(initialData.notificationsEnabled);
       setPhotoUri(initialData.photoUri);
-      setSelectedAvatarColor(initialData.avatarColor ?? null);
-      setShowAvatarPicker(false);
+      setSelectedAvatarId(initialData.avatarId ?? null);
     }
   }, [visible, initialData]);
 
@@ -140,15 +142,7 @@ export const EditProfileModal: React.FC<Props> = ({
 
     if (savedUri) {
       setPhotoUri(savedUri);
-      setSelectedAvatarColor(null);
     }
-  };
-
-  const handleSelectAvatar = async (color: string) => {
-    setSelectedAvatarColor(color);
-    setPhotoUri(null);
-    await AsyncStorage.removeItem(PROFILE_IMAGE_URI_KEY);
-    await setProfileImageUri(null);
   };
 
   const handleSave = () => {
@@ -159,13 +153,15 @@ export const EditProfileModal: React.FC<Props> = ({
       goal,
       notificationsEnabled,
       photoUri: photoUri ?? null,
-      avatarColor: selectedAvatarColor ?? null,
+      avatarColor: initialData.avatarColor ?? null,
+      avatarId: selectedAvatarId ?? null,
     });
     onClose();
   };
 
   const initialLetter =
     name && name.trim().length > 0 ? name.trim().charAt(0).toUpperCase() : 'U';
+  const avatarSource = selectedAvatarId ? getAvatarSource(selectedAvatarId) : null;
 
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -184,12 +180,21 @@ export const EditProfileModal: React.FC<Props> = ({
                 >
                   <Image source={{ uri: photoUri }} style={styles.avatarImage} />
                 </View>
+              ) : avatarSource ? (
+                <View
+                  style={[
+                    styles.avatarCircle,
+                    { overflow: 'hidden', backgroundColor: '#fff' },
+                  ]}
+                >
+                  <Image source={avatarSource} style={styles.avatarImage} />
+                </View>
               ) : (
                 <View
                   style={[
                     styles.avatarCircle,
                     {
-                      backgroundColor: selectedAvatarColor ?? AVATAR_COLORS[0],
+                      backgroundColor: DEFAULT_AVATAR_COLOR,
                     },
                   ]}
                 >
@@ -244,34 +249,13 @@ export const EditProfileModal: React.FC<Props> = ({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.secondaryButtonInline, showAvatarPicker && styles.secondaryButtonInlineActive]}
-              onPress={() => setShowAvatarPicker((prev) => !prev)}
+              style={styles.secondaryButtonInline}
+              onPress={onOpenAvatarPicker}
+              accessibilityRole="button"
+              accessibilityLabel="Elegir avatar predeterminado"
             >
               <Text style={styles.secondaryButtonInlineText}>Elegir avatar predeterminado</Text>
             </TouchableOpacity>
-
-            {showAvatarPicker && (
-              <View style={styles.avatarPickerBox}>
-                <Text style={styles.helperText}>Elige un color:</Text>
-                <View style={styles.avatarRow}>
-                  {AVATAR_COLORS.map((color) => (
-                    <TouchableOpacity
-                      key={color}
-                      style={[
-                        styles.smallAvatar,
-                        {
-                          backgroundColor: color,
-                          borderWidth: selectedAvatarColor === color ? 3 : 0,
-                        },
-                      ]}
-                      onPress={() => handleSelectAvatar(color)}
-                    >
-                      <Text style={styles.avatarInitialSmall}>{initialLetter}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            )}
           </ScrollView>
 
           <View style={styles.footerButtons}>
@@ -389,25 +373,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
   },
-  avatarRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  smallAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderColor: '#055F67',
-  },
-  avatarInitialSmall: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
-  },
   footerButtons: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -430,10 +395,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 6,
   },
-  secondaryButtonInlineActive: {
-    borderColor: '#055F67',
-    backgroundColor: '#EAF4F4',
-  },
   secondaryButtonText: {
     color: '#333',
     fontWeight: '500',
@@ -451,15 +412,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#fff',
     fontWeight: '700',
-  },
-  avatarPickerBox: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    marginTop: 8,
-    marginBottom: 4,
   },
 });
 
