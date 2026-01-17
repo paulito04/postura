@@ -1,6 +1,8 @@
 import React, { useRef } from "react";
 import { View, Image, StyleSheet, Text } from "react-native";
 
+import { getAvatarSource } from "../data/avatars";
+
 // Coronas que ya tienes en assets/profile/crowns
 const crowns = [
   require("../../assets/profile/crowns/crown1.png"),
@@ -16,6 +18,7 @@ const crowns = [
  * @property {string | null} [photoUri] - foto real del usuario (opcional)
  * @property {boolean} [isPremium] - si es usuario premium o no
  * @property {string | null} [avatarColor] - color sólido para usar como avatar
+ * @property {string | null} [avatarId] - id del avatar predeterminado
  * @property {string} [name] - nombre para mostrar la inicial
  * @property {number} [size] - tamaño del avatar en px
  */
@@ -26,7 +29,14 @@ const crowns = [
  *
  * @param {Props} props
  */
-export default function UserAvatar({ photoUri, isPremium, avatarColor, name = "Usuario", size = AVATAR_SIZE }) {
+export default function UserAvatar({
+  photoUri,
+  isPremium,
+  avatarColor,
+  avatarId,
+  name = "Usuario",
+  size = AVATAR_SIZE,
+}) {
   // Elegimos UNA corona aleatoria por sesión (no cambia en cada render)
   const crownIndexRef = useRef(null);
 
@@ -49,14 +59,17 @@ export default function UserAvatar({ photoUri, isPremium, avatarColor, name = "U
     },
   ];
 
+  const avatarSource = avatarId ? getAvatarSource(avatarId) : null;
   const initialLetter = name?.trim()?.charAt(0)?.toUpperCase() || "U";
-  const showInitialAvatar = !photoUri;
+  const showInitialAvatar = !photoUri && !avatarSource;
   const initialBackgroundColor = avatarColor || DEFAULT_AVATAR_COLOR;
 
   return (
     <View style={containerStyle}>
       {photoUri ? (
         <Image source={{ uri: photoUri }} style={avatarStyle} />
+      ) : avatarSource ? (
+        <Image source={avatarSource} style={avatarStyle} />
       ) : showInitialAvatar ? (
         <View
           style={[
