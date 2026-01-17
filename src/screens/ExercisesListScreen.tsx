@@ -264,7 +264,7 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
       const favoritesFiltered = mode === "favorites" || showFavoritesOnly;
       const matchesFavorite = !favoritesFiltered || favoriteExerciseIds.includes(exercise.id);
       const matchesSearch = !searchValue
-        || `${exercise.name} ${exercise.description ?? \"\"}`.toLowerCase().includes(searchValue);
+        || `${exercise.name} ${exercise.description ?? ""}`.toLowerCase().includes(searchValue);
       return matchesArea && matchesLevel && matchesPosition && matchesFavorite && matchesSearch;
     });
   }, [
