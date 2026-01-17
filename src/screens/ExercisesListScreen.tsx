@@ -405,7 +405,7 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
                   onPress={() => setShowFavoritesOnly((prev) => !prev)}
                 >
                   <Text style={[styles.chipLabel, { color: showFavoritesOnly ? colors.primary : colors.textMuted }]}>
-                    {showFavoritesOnly ? \"Activado\" : \"Desactivado\"}
+                    {showFavoritesOnly ? "Activado" : "Desactivado"}
                   </Text>
                 </TouchableOpacity>
               </View>
