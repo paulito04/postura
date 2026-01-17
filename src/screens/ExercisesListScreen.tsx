@@ -2,15 +2,15 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   Image,
-  ImageBackground,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { areas, exercises, levels } from "../data/exercises";
+import { areas, exercises, levels, positions } from "../data/exercises";
 const ALL_EXERCISES = exercises as unknown as Exercise[];
 
 import { getActivityHistory, recordSession } from "../activityTracker";
@@ -31,11 +31,16 @@ type Exercise = {
   image: any;
   frames?: any[];
   duration: number;
-  area: "cuello" | "espalda" | "hombros";
-  level: "principiante" | "intermedio" | "avanzado";
+  durationLabel?: string;
+  area: "cuello" | "hombros" | "espalda-alta" | "espalda-baja" | "cadera" | "core";
+  level: "fácil" | "medio";
+  position: "sentado" | "de-pie" | "ambos";
   isFavorite: boolean;
   category: ExerciseCategory;
+  description?: string;
   steps: string[];
+  tips?: string;
+  targets?: string[];
 };
 
 type ExercisesListScreenProps = {
@@ -44,6 +49,9 @@ type ExercisesListScreenProps = {
 };
 
 const ExerciseCard = ({ exercise, onPress, onToggleFavorite, isFavorite, colors }) => {
+  const areaLabel = areas.find((area) => area.key === exercise.area)?.label ?? exercise.area;
+  const positionLabel = positions.find((item) => item.key === exercise.position)?.label ?? exercise.position;
+  const durationLabel = exercise.durationLabel ?? `${Math.round(exercise.duration / 60)} min`;
   return (
     <TouchableOpacity
       style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -60,7 +68,7 @@ const ExerciseCard = ({ exercise, onPress, onToggleFavorite, isFavorite, colors 
           </TouchableOpacity>
         </View>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-          {Math.round(exercise.duration / 60)} min · {exercise.area} · {exercise.level}
+          {durationLabel} · {areaLabel} · {positionLabel} · {exercise.level}
         </Text>
       </View>
     </TouchableOpacity>
@@ -120,6 +128,10 @@ const RoutinePlayer = ({
   }, [exercise.steps.length, setCurrentStepIndex]);
 
   const progress = ((currentStepIndex + 1) / exercise.steps.length) * 100;
+  const areaLabel = areas.find((area) => area.key === exercise.area)?.label ?? exercise.area;
+  const positionLabel = positions.find((item) => item.key === exercise.position)?.label ?? exercise.position;
+  const targetsLabel = exercise.targets?.length ? exercise.targets.join(", ") : areaLabel;
+  const durationLabel = exercise.durationLabel ?? `${Math.round(exercise.duration / 60)} min`;
 
   useEffect(() => {
     if (!isPlayingRoutine || routineTimeLeft <= 0) return undefined;
@@ -141,6 +153,21 @@ const RoutinePlayer = ({
         <Text style={[styles.timerValue, { color: colors.primary }]}>{formattedTime}</Text>
         {routineTimeLeft === 0 ? (
           <Text style={[styles.completedText, { color: colors.textMuted }]}>Rutina completada</Text>
+        ) : null}
+      </View>
+
+      <View style={[styles.detailCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Text style={[styles.detailTitle, { color: colors.text }]}>Detalles</Text>
+        {exercise.description ? (
+          <Text style={[styles.detailText, { color: colors.textMuted }]}>{exercise.description}</Text>
+        ) : null}
+        <Text style={[styles.detailText, { color: colors.textMuted }]}>
+          Duración sugerida: {durationLabel}
+        </Text>
+        <Text style={[styles.detailText, { color: colors.textMuted }]}>Posición: {positionLabel}</Text>
+        <Text style={[styles.detailText, { color: colors.textMuted }]}>Zonas objetivo: {targetsLabel}</Text>
+        {exercise.tips ? (
+          <Text style={[styles.detailText, { color: colors.textMuted }]}>Consejo: {exercise.tips}</Text>
         ) : null}
       </View>
 
@@ -182,7 +209,7 @@ const RoutinePlayer = ({
       </View>
 
       <TouchableOpacity style={[styles.finishButton, { backgroundColor: colors.primary }]} onPress={onFinish}>
-        <Text style={styles.finishButtonText}>Terminar rutina</Text>
+        <Text style={styles.finishButtonText}>Marcar como hecho</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -195,11 +222,14 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
   const { user } = useUser();
   const challenge = tabParams?.challenge;
   const mode: ExercisesListParams["mode"] = tabParams?.mode ?? "all";
-  type AreaFilter = "todos" | Exercise["area"]; //añadí chatgpt 16:44
-  type LevelFilter = "todos" | Exercise["level"]; //añadí chatgpt 16:44
+  type AreaFilter = "todos" | Exercise["area"];
+  type LevelFilter = "todos" | Exercise["level"];
+  type PositionFilter = "todos" | Exercise["position"];
 
-  const [exerciseAreaFilter, setExerciseAreaFilter] = useState<AreaFilter>("todos"); //añadí chatgpt 16:44
-  const [exerciseLevelFilter, setExerciseLevelFilter] = useState<LevelFilter>("todos"); //añadí chatgpt 16:44
+  const [exerciseAreaFilter, setExerciseAreaFilter] = useState<AreaFilter>("todos");
+  const [exerciseLevelFilter, setExerciseLevelFilter] = useState<LevelFilter>("todos");
+  const [exercisePositionFilter, setExercisePositionFilter] = useState<PositionFilter>("todos");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [favoriteExerciseIds, setFavoriteExerciseIds] = useState(() =>
     ALL_EXERCISES.filter((exercise: Exercise) => exercise.isFavorite).map((exercise) => exercise.id)
@@ -225,14 +255,27 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
       baseList = ALL_EXERCISES.filter((exercise: Exercise) => exercise.category === "stretch");
     }
 
+    const searchValue = searchTerm.trim().toLowerCase();
+
     return baseList.filter((exercise) => {
       const matchesArea = exerciseAreaFilter === "todos" || exercise.area === exerciseAreaFilter;
       const matchesLevel = exerciseLevelFilter === "todos" || exercise.level === exerciseLevelFilter;
+      const matchesPosition = exercisePositionFilter === "todos" || exercise.position === exercisePositionFilter;
       const favoritesFiltered = mode === "favorites" || showFavoritesOnly;
       const matchesFavorite = !favoritesFiltered || favoriteExerciseIds.includes(exercise.id);
-      return matchesArea && matchesLevel && matchesFavorite;
+      const matchesSearch = !searchValue
+        || `${exercise.name} ${exercise.description ?? \"\"}`.toLowerCase().includes(searchValue);
+      return matchesArea && matchesLevel && matchesPosition && matchesFavorite && matchesSearch;
     });
-  }, [exerciseAreaFilter, exerciseLevelFilter, favoriteExerciseIds, mode, showFavoritesOnly]);
+  }, [
+    exerciseAreaFilter,
+    exerciseLevelFilter,
+    exercisePositionFilter,
+    favoriteExerciseIds,
+    mode,
+    searchTerm,
+    showFavoritesOnly,
+  ]);
 
   const handleSelectExercise = useCallback((exercise) => {
     setSelectedExercise(exercise);
@@ -332,57 +375,21 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
               </View>
             ) : null}
 
-              <View style={styles.filtersBlock}>
-                <Text style={[styles.filtersTitle, { color: colors.text }]}>Zona corporal</Text>
-                <View style={styles.filterRow}>
-                  <TouchableOpacity
-                    style={[styles.filterChip, exerciseAreaFilter === "cuello" && styles.filterChipActive]}
-                    onPress={() => setExerciseAreaFilter("cuello")}
-                  >
-                    <ImageBackground
-                      source={require("../../assets/filtros/cuello.png")}
-                      style={styles.filterImage}
-                      imageStyle={styles.filterImageRadius}
-                    />
-                    <Text
-                      style={[styles.filterLabel, exerciseAreaFilter === "cuello" && styles.filterLabelActive]}
-                    >
-                      Cuello
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.filterChip, exerciseAreaFilter === "espalda" && styles.filterChipActive]}
-                    onPress={() => setExerciseAreaFilter("espalda")}
-                  >
-                    <ImageBackground
-                      source={require("../../assets/filtros/espalda.png")}
-                      style={styles.filterImage}
-                      imageStyle={styles.filterImageRadius}
-                    />
-                    <Text
-                      style={[styles.filterLabel, exerciseAreaFilter === "espalda" && styles.filterLabelActive]}
-                    >
-                      Espalda
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.filterChip, exerciseAreaFilter === "hombros" && styles.filterChipActive]}
-                    onPress={() => setExerciseAreaFilter("hombros")}
-                  >
-                    <ImageBackground
-                      source={require("../../assets/filtros/hombros.png")}
-                      style={styles.filterImage}
-                      imageStyle={styles.filterImageRadius}
-                    />
-                    <Text
-                      style={[styles.filterLabel, exerciseAreaFilter === "hombros" && styles.filterLabelActive]}
-                    >
-                      Hombros
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+            <View style={styles.filtersBlock}>
+              <Text style={[styles.filtersTitle, { color: colors.text }]}>Buscar</Text>
+              <View style={[styles.searchContainer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                <TextInput
+                  placeholder="Busca por nombre"
+                  placeholderTextColor={colors.textMuted}
+                  value={searchTerm}
+                  onChangeText={setSearchTerm}
+                  style={[styles.searchInput, { color: colors.text }]}
+                />
+              </View>
+              <Text style={[styles.filtersTitle, { color: colors.text }]}>Posición</Text>
+              {renderFilterRow(positions, exercisePositionFilter, setExercisePositionFilter)}
+              <Text style={[styles.filtersTitle, { color: colors.text }]}>Zona corporal</Text>
+              {renderFilterRow(areas, exerciseAreaFilter, setExerciseAreaFilter)}
               <Text style={[styles.filtersTitle, { color: colors.text }]}>Nivel</Text>
               {renderFilterRow(levels, exerciseLevelFilter, setExerciseLevelFilter)}
               <View style={styles.favoritesRow}>
@@ -398,7 +405,7 @@ export default function ExercisesListScreen({ navigation, tabParams }: Exercises
                   onPress={() => setShowFavoritesOnly((prev) => !prev)}
                 >
                   <Text style={[styles.chipLabel, { color: showFavoritesOnly ? colors.primary : colors.textMuted }]}>
-                    {showFavoritesOnly ? "Activado" : "Desactivado"}
+                    {showFavoritesOnly ? \"Activado\" : \"Desactivado\"}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -525,34 +532,19 @@ const styles = StyleSheet.create({
   },
   filterRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
     marginBottom: 12,
   },
-  filterChip: {
-    flex: 1,
-    marginHorizontal: 4,
-    alignItems: "center",
+  searchContainer: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  filterImage: {
-    width: "100%",
-    height: 80,
-  },
-  filterImageRadius: {
-    borderRadius: 16,
-  },
-  filterLabel: {
-    marginTop: 4,
-    fontSize: 13,
-    color: "#0A393C",
-    textAlign: "center",
-  },
-  filterLabelActive: {
-    fontWeight: "bold",
-  },
-  filterChipActive: {
-    borderWidth: 2,
-    borderColor: "#055F67",
-    borderRadius: 18,
+  searchInput: {
+    fontSize: 14,
+    fontWeight: "600",
   },
   chip: {
     borderRadius: 12,
@@ -624,6 +616,21 @@ const styles = StyleSheet.create({
   completedText: {
     fontSize: 14,
     fontWeight: "700",
+  },
+  detailCard: {
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    gap: 6,
+  },
+  detailTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  detailText: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
   },
   stepsSection: {
     gap: 8,
